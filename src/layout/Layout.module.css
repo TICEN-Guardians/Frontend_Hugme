@@ -1,0 +1,12 @@
+.pageWrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: var(--background);
+  color: var(--text);
+}
+
+.main {
+  flex: 1;
+  padding: 0;
+}

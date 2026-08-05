@@ -1,0 +1,49 @@
+.root {
+  padding: 4rem;
+}
+
+.nav {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.link {
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--background);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link.active {
+  box-shadow: inset 0 0 0 0.2rem var(--primary);
+}
+
+.subPage {
+  padding: 2rem 0;
+}
+
+.nav {
+  display: flex;
+  gap: 2rem;
+  margin: 2rem 0;
+}
+
+.link {
+  padding: 1rem 2rem;
+  border-radius: 1rem;
+  background: var(--surface);
+  color: var(--background);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.link.active {
+  box-shadow: inset 0 0 0 0.2rem var(--primary);
+}
+
+.subPage {
+  padding: 2rem 0;
+}
