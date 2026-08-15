@@ -1,0 +1,132 @@
+.root {
+  display: flex;
+  /* min-height:100%는 부모 체인(pageWrapper의 min-height:100vh)이 flex라 "정의된 높이"로
+     인정되지 않아 브라우저마다 불안정하다 — 헤더/푸터 실측 토큰으로 직접 계산한다.
+     좌우 컬럼은 이 높이를 기준으로 align-items:stretch(기본값)가 똑같이 늘려준다.
+     마지막 --space-8만큼은 root 높이 자체를 줄여서, footer 바로 위에 빈 여백으로 남긴다
+     (root에 padding-bottom을 주면 전체 페이지가 100vh를 넘어가버려서 대신 이 방식을 쓴다). */
+  min-height: calc(100vh - var(--header-height) - var(--footer-height) - var(--space-8));
+}
+
+.chatPane {
+  display: flex;
+  flex-direction: column;
+  flex: 0 0 60%;
+  min-width: 0;
+  border-right: 1px solid var(--border-subtle);
+}
+
+.messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5) var(--space-8);
+}
+
+.lockBox {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: var(--space-16) auto 0;
+  padding: var(--space-8);
+  border: 1.5px dashed var(--border-default);
+  border-radius: var(--radius-lg);
+  max-width: 380px;
+  text-align: center;
+}
+
+.lockIcon {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-2xl);
+}
+
+.lockTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1.5;
+}
+
+.lockDescription {
+  margin: 0;
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+}
+
+.subtypeRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: 0 var(--space-8) var(--space-4);
+}
+
+.subtypeButton {
+  padding: var(--space-2) var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: var(--on-accent);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.subtypeButton:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.sidePane {
+  flex: 0 0 40%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-y: auto;
+}
+
+.emptyPanel {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: var(--space-10);
+  padding: var(--space-10) var(--space-8);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-16);
+  height: var(--space-16);
+  margin-bottom: var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+  font-size: var(--text-2xl);
+}
+
+.emptyTitle {
+  margin: 0 0 var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+
+.emptyDescription {
+  margin: 0 0 var(--space-6);
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.emptyCta {
+  padding: var(--space-3) var(--space-6);
+  border: none;
+  border-radius: var(--radius-md);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}

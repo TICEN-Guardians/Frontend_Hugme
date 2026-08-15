@@ -1,12 +1,15 @@
-import Footer from '../components/Footer/Footer.jsx';
-import Header from '../components/Header/Header.jsx';
+import { Outlet } from 'react-router-dom';
+import Footer from '../components/common/Footer/Footer.jsx';
+import Header from '../components/common/Header/Header.jsx';
 import styles from './Layout.module.css';
 
-export default function Layout({ children }) {
+export default function Layout() {
   return (
     <div className={styles.pageWrapper}>
       <Header />
-      <main className={styles.main}>{children}</main>
+      <main className={`${styles.main} container`}>
+        <Outlet />
+      </main>
       <Footer />
     </div>
   );
