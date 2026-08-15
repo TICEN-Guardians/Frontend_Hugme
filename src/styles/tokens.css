@@ -19,6 +19,15 @@
   --text-green-dark: #245c28;
   --text-red-dark: #b3392f;
 
+  /* 위험/경고 시맨틱 상태색 (테마와 무관하게 항상 이 값). 매물위험도 리포트에서 사용. */
+  --red: #e0574c;
+  --red-tint-50: #fdeceb;
+  --red-tint-100: #f6c6bf;
+
+  --amber: #f2c94c;
+  --amber-tint-50: #fff4e0;
+  --text-amber-dark: #c9820a;
+
   --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 12px;

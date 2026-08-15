@@ -1,1 +1,276 @@
-/* TODO: 스타일은 다음 작업에서 구현 */
+.root {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: var(--space-16) var(--space-10);
+  background: var(--border-subtle);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 1040px;
+}
+
+.eyebrow {
+  margin: 0 0 var(--space-2);
+  color: var(--brand-blue);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.title {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 0 0 var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.card {
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  margin-bottom: var(--space-6);
+  padding: var(--space-10) var(--space-12);
+  border-radius: var(--radius-xl);
+  background: var(--on-accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.field {
+  margin-bottom: var(--space-8);
+}
+
+.field:last-of-type {
+  margin-bottom: 0;
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.required {
+  color: var(--red);
+}
+
+.inlineRow {
+  display: flex;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.input:not(:last-child) {
+  margin-bottom: var(--space-3);
+}
+
+.input::placeholder {
+  color: var(--text-disabled);
+}
+
+.searchButton {
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-5);
+  border: 1px solid var(--brand-blue);
+  border-radius: var(--radius-md);
+  background: var(--on-accent);
+  color: var(--brand-blue);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.housingTypeBox {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--blue-tint-50);
+}
+
+.housingTypeInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.infoIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-5);
+  height: var(--space-5);
+  border-radius: var(--radius-sm);
+  background: var(--brand-blue);
+  color: var(--on-accent);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+.housingTypeConfirmed {
+  flex-shrink: 0;
+  color: var(--brand-green);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.areaRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-5);
+}
+
+.unitInputWrapper {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: space-between;
+  box-sizing: border-box;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+}
+
+.unitInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.unitInput::placeholder {
+  color: var(--text-disabled);
+}
+
+.unit {
+  flex-shrink: 0;
+  margin-left: var(--space-2);
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+}
+
+.helperText {
+  flex: 1;
+  margin: 0;
+  padding-top: var(--space-3);
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  line-height: 1.6;
+}
+
+.dropzone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-4);
+  padding: var(--space-6);
+  border: 1.5px dashed var(--blue-tint-100);
+  border-radius: var(--radius-lg);
+  background: var(--blue-tint-50);
+}
+
+.dropzoneInfo {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.uploadIcon {
+  flex-shrink: 0;
+  color: var(--brand-blue);
+  font-size: var(--text-xl);
+}
+
+.dropzoneTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.dropzoneDescription {
+  margin: 0;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.hiddenInput {
+  display: none;
+}
+
+.fileSelectButton {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-5);
+  border: 1px solid var(--brand-blue);
+  border-radius: var(--radius-md);
+  background: var(--on-accent);
+  color: var(--brand-blue);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.infoBanner {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--blue-tint-50);
+  color: var(--text-blue-dark);
+  font-size: var(--text-sm);
+}
+
+.fieldError {
+  margin: var(--space-2) 0 0;
+  color: var(--text-red-dark);
+  font-size: var(--text-xs);
+}
+
+.agreeRow {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-6);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}
+
+.agreeLink {
+  color: var(--brand-blue);
+  font-weight: 600;
+  text-decoration: underline;
+}

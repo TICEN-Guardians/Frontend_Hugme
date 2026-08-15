@@ -1,1 +1,41 @@
-/* TODO: 스타일은 다음 작업에서 구현 */
+.root {
+  display: flex;
+  justify-content: center;
+  box-sizing: border-box;
+  padding: var(--space-10) var(--space-10) var(--space-16);
+  background: var(--border-subtle);
+}
+
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: 1360px;
+}
+
+.topRow {
+  display: grid;
+  grid-template-columns: 1fr 380px;
+  gap: var(--space-5);
+}
+
+.statGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-4);
+}
+
+.twoColRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+  align-items: stretch;
+}
+
+.disclaimer {
+  margin: var(--space-4) 0 0;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  text-align: center;
+}
