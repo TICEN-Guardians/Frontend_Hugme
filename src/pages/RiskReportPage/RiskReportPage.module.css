@@ -1,17 +1,14 @@
 .root {
-  display: flex;
-  justify-content: center;
   box-sizing: border-box;
-  padding: var(--space-10) var(--space-10) var(--space-16);
+  padding: var(--space-10) 0 var(--space-16);
   background: var(--border-subtle);
 }
 
-.container {
+.content {
   display: flex;
   flex-direction: column;
   gap: var(--space-5);
   width: 100%;
-  max-width: 1360px;
 }
 
 .topRow {

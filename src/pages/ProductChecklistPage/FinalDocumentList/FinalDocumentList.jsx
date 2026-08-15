@@ -1,16 +1,17 @@
 import { useState } from 'react';
 import DocumentCard from '../../../components/common/DocumentCard/DocumentCard.jsx';
+import Modal from '../../../components/common/Modal/Modal.jsx';
 import TabBar from '../../../components/common/TabBar/TabBar.jsx';
 import styles from './FinalDocumentList.module.css';
 
 /**
  * 질문 완료 후 확정된 서류 목록. 6차의 group pill/Item 계층 없이,
  * 섹션 탭 → Document 카드가 바로 그리드에 펼쳐지는 구조.
- * 카드는 acceptedVariants가 배열일 때만(확장형) 클릭 시 인라인으로 펼쳐진다.
+ * 카드는 acceptedVariants가 배열일 때만(확장형) 클릭 시 모달로 상세를 보여준다.
  */
 export default function FinalDocumentList({ sections, documents }) {
   const [activeSectionCode, setActiveSectionCode] = useState(sections[0]?.sectionCode ?? null);
-  const [expandedDocumentId, setExpandedDocumentId] = useState(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   const sectionTabs = sections.map((section) => ({
     key: section.sectionCode,
@@ -19,10 +20,7 @@ export default function FinalDocumentList({ sections, documents }) {
   }));
 
   const visibleDocuments = documents.filter((doc) => doc.sectionCode === activeSectionCode);
-
-  const toggleExpand = (documentId) => {
-    setExpandedDocumentId((prev) => (prev === documentId ? null : documentId));
-  };
+  const selectedDocument = documents.find((doc) => doc.documentId === selectedDocumentId) ?? null;
 
   return (
     <div>
@@ -45,33 +43,40 @@ export default function FinalDocumentList({ sections, documents }) {
         <div className={styles.grid}>
           {visibleDocuments.map((doc) => {
             const hasGroup = Array.isArray(doc.acceptedVariants) && doc.acceptedVariants.length > 0;
-            const isExpanded = expandedDocumentId === doc.documentId;
             return (
-              <div key={doc.documentId} className={styles.itemWrapper}>
-                <DocumentCard
-                  icon="📄"
-                  title={doc.title}
-                  description={doc.description}
-                  chip={doc.tag}
-                  status={doc.status}
-                  expanded={hasGroup ? isExpanded : undefined}
-                  onClick={hasGroup ? () => toggleExpand(doc.documentId) : undefined}
-                />
-                {hasGroup && isExpanded && (
-                  <ul className={styles.variantList}>
-                    {doc.acceptedVariants.map((variant) => (
-                      <li key={variant} className={styles.variantItem}>
-                        <span className={styles.variantDot} />
-                        {variant}
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
+              <DocumentCard
+                key={doc.documentId}
+                icon="📄"
+                title={doc.title}
+                description={doc.description}
+                chip={doc.tag}
+                status={doc.status}
+                onClick={hasGroup ? () => setSelectedDocumentId(doc.documentId) : undefined}
+              />
             );
           })}
         </div>
       )}
+
+      <Modal isOpen={selectedDocumentId != null} onClose={() => setSelectedDocumentId(null)}>
+        {selectedDocument && (
+          <div className={styles.detail}>
+            <h2 className={styles.detailTitle}>{selectedDocument.title}</h2>
+            {selectedDocument.description && (
+              <p className={styles.detailDescription}>{selectedDocument.description}</p>
+            )}
+            <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
+            <ul className={styles.variantList}>
+              {selectedDocument.acceptedVariants.map((variant) => (
+                <li key={variant} className={styles.variantItem}>
+                  <span className={styles.variantDot} />
+                  {variant}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 }

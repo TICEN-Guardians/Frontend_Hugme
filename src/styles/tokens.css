@@ -52,8 +52,21 @@
   --space-10: 40px;
   --space-12: 48px;
   --space-16: 64px;
+  --space-20: 80px;
+  --container-max: 1200px;
 
   --on-accent: #fff;
+
+  --footer-bg: #1B2A4A;
+  --footer-text: #ffffff;
+  --footer-text-muted: #a8b2c4;
+
+  /* Header 실측: .inner min-height(--space-16 + --space-12 = 112px) + border-bottom 1px */
+  --header-height: 113px;
+  /* Footer 실측 근사치: .inner padding(--space-20 상하 = 160px) + 3열 중 가장 높은
+     brandCol 콘텐츠(로고+태그라인+저작권, 약 120px). Footer.module.css의 min-height로
+     이 값 자체를 보장한다 — 폰트 렌더링에 따라 계산값이 달라지지 않도록 고정. */
+  --footer-height: 280px;
 
   /* data-theme이 없는 화면(랜딩, 인증, 챗봇 등)의 기본값. general(블루)과 동일 —
      [data-theme='special']가 걸리면 아래에서 그린으로 덮어써진다. */
@@ -76,3 +89,5 @@
   --accent-tint-50: var(--green-tint-50);
   --accent-tint-100: var(--green-tint-100);
 }
+
+

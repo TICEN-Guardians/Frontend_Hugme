@@ -103,7 +103,7 @@ export default function RiskReportPage() {
 
   return (
     <div className={styles.root}>
-      <div className={styles.container}>
+      <div className={`${styles.content} container`}>
         <div className={styles.topRow}>
           <RiskSummaryCard
             title={report.title}

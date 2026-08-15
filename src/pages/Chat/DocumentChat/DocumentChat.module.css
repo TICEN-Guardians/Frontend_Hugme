@@ -1,6 +1,11 @@
 .root {
   display: flex;
-  min-height: 100%;
+  /* min-height:100%는 부모 체인(pageWrapper의 min-height:100vh)이 flex라 "정의된 높이"로
+     인정되지 않아 브라우저마다 불안정하다 — 헤더/푸터 실측 토큰으로 직접 계산한다.
+     좌우 컬럼은 이 높이를 기준으로 align-items:stretch(기본값)가 똑같이 늘려준다.
+     마지막 --space-8만큼은 root 높이 자체를 줄여서, footer 바로 위에 빈 여백으로 남긴다
+     (root에 padding-bottom을 주면 전체 페이지가 100vh를 넘어가버려서 대신 이 방식을 쓴다). */
+  min-height: calc(100vh - var(--header-height) - var(--footer-height) - var(--space-8));
 }
 
 .chatPane {

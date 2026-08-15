@@ -1,16 +1,13 @@
 .root {
-  display: flex;
-  justify-content: center;
   box-sizing: border-box;
-  padding: var(--space-16) var(--space-10);
+  padding: var(--space-16) 0;
   background: var(--border-subtle);
 }
 
-.container {
+.form {
   display: flex;
   flex-direction: column;
   width: 100%;
-  max-width: 1040px;
 }
 
 .eyebrow {

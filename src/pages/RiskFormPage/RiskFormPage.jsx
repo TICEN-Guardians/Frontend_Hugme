@@ -74,7 +74,7 @@ export default function RiskFormPage() {
 
   return (
     <div className={styles.root}>
-      <form className={styles.container} onSubmit={handleSubmit} noValidate>
+      <form className={`${styles.form} container`} onSubmit={handleSubmit} noValidate>
         <p className={styles.eyebrow}>STEP 1 · 매물 정보 입력</p>
         <h1 className={styles.title}>진단할 매물 정보를 입력해 주세요</h1>
         <p className={styles.subtitle}>

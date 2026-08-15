@@ -1,5 +1,5 @@
 .root {
-  padding: var(--space-16) var(--space-10);
+  padding: var(--space-16) 0;
 }
 
 .pageTitle {

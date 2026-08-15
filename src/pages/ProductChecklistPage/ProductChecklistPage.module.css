@@ -1,6 +1,6 @@
 .root {
   box-sizing: border-box;
-  padding: var(--space-10) var(--space-10) var(--space-16);
+  padding: var(--space-10) 0 var(--space-16);
 }
 
 .eyebrow {
@@ -61,9 +61,30 @@
   gap: var(--space-5);
 }
 
-.itemWrapper {
+.detail {
   display: flex;
   flex-direction: column;
+}
+
+.detailTitle {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-xl);
+  font-weight: 800;
+}
+
+.detailDescription {
+  margin: 0 0 var(--space-5);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.detailSubtitle {
+  margin: 0 0 var(--space-3);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 700;
 }
 
 .variantList {

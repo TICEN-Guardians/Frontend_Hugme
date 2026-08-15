@@ -5,6 +5,7 @@ import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfi
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
 import Button from '../../components/common/Button/Button.jsx';
 import DocumentCard from '../../components/common/DocumentCard/DocumentCard.jsx';
+import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
 import { PRODUCT_THEME } from '../../constants/products.js';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
@@ -53,7 +54,7 @@ export default function ProductChecklistPage() {
     changePill,
   } = useProductChecklist(productCode);
 
-  const [expandedDocumentId, setExpandedDocumentId] = useState(null);
+  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
 
   const {
     step,
@@ -97,9 +98,7 @@ export default function ProductChecklistPage() {
   const pillTabs = (pills ?? []).map((pill) => ({ key: pill.itemId, label: pill.label }));
   const isDone = step === 'done' && finalDocuments;
 
-  const toggleExpand = (documentId) => {
-    setExpandedDocumentId((prev) => (prev === documentId ? null : documentId));
-  };
+  const selectedDocument = documents.find((doc) => doc.documentId === selectedDocumentId) ?? null;
 
   return (
     <div className={styles.root} data-theme={theme}>
@@ -148,28 +147,15 @@ export default function ProductChecklistPage() {
               <div className={styles.grid}>
                 {documents.map((doc) => {
                   const hasGroup = Array.isArray(doc.acceptedVariants) && doc.acceptedVariants.length > 0;
-                  const isExpanded = expandedDocumentId === doc.documentId;
                   return (
-                    <div key={doc.documentId} className={styles.itemWrapper}>
-                      <DocumentCard
-                        icon="📄"
-                        title={doc.title}
-                        description={doc.description}
-                        chip={doc.tag}
-                        expanded={hasGroup ? isExpanded : undefined}
-                        onClick={hasGroup ? () => toggleExpand(doc.documentId) : undefined}
-                      />
-                      {hasGroup && isExpanded && (
-                        <ul className={styles.variantList}>
-                          {doc.acceptedVariants.map((variant) => (
-                            <li key={variant} className={styles.variantItem}>
-                              <span className={styles.variantDot} />
-                              {variant}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                    </div>
+                    <DocumentCard
+                      key={doc.documentId}
+                      icon="📄"
+                      title={doc.title}
+                      description={doc.description}
+                      chip={doc.tag}
+                      onClick={hasGroup ? () => setSelectedDocumentId(doc.documentId) : undefined}
+                    />
                   );
                 })}
               </div>
@@ -177,6 +163,26 @@ export default function ProductChecklistPage() {
           </>
         )
       )}
+
+      <Modal isOpen={selectedDocumentId != null} onClose={() => setSelectedDocumentId(null)}>
+        {selectedDocument && (
+          <div className={styles.detail}>
+            <h2 className={styles.detailTitle}>{selectedDocument.title}</h2>
+            {selectedDocument.description && (
+              <p className={styles.detailDescription}>{selectedDocument.description}</p>
+            )}
+            <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
+            <ul className={styles.variantList}>
+              {selectedDocument.acceptedVariants.map((variant) => (
+                <li key={variant} className={styles.variantItem}>
+                  <span className={styles.variantDot} />
+                  {variant}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </Modal>
 
       <AnalyzingModal isOpen={step === 'analyzing'} />
 
