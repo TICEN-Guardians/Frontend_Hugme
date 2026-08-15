@@ -1,3 +1,4 @@
+import { FaCircle, FaCircleCheck } from 'react-icons/fa6';
 import { PRODUCT_CODES, PRODUCT_THEME } from '../../constants/products.js';
 import ProductGroup from './ProductGroup/ProductGroup.jsx';
 import styles from './ProductsPage.module.css';
@@ -6,7 +7,7 @@ const GROUPS = [
   {
     id: 'no-loan',
     theme: PRODUCT_THEME.GENERAL,
-    icon: '✓',
+    icon: <FaCircleCheck />,
     badgeLabel: '대출 없이 계약한 경우',
     title: '전세보증금반환보증',
     description: '2종류 중 상황에 맞는 보증을 선택하세요',
@@ -15,7 +16,7 @@ const GROUPS = [
         id: PRODUCT_CODES.GENERAL,
         title: '전세보증금반환보증',
         description: ['일반 전세계약 대상', '보증한도 최대 90%', '가입기간 전세계약과 동일'],
-        ctaLabel: '준비물 확인 →',
+        ctaLabel: '준비물 확인',
         to: `/products/${PRODUCT_CODES.GENERAL}/checklist`,
         disabled: false,
       },
@@ -23,7 +24,7 @@ const GROUPS = [
         id: PRODUCT_CODES.SPECIAL,
         title: '특례반환보증',
         description: ['청년·신혼부부 대상', '보증료 할인 적용'],
-        ctaLabel: '준비물 확인 →',
+        ctaLabel: '준비물 확인',
         to: `/products/${PRODUCT_CODES.SPECIAL}/checklist`,
         disabled: false,
       },
@@ -32,7 +33,7 @@ const GROUPS = [
   {
     id: 'with-loan',
     theme: PRODUCT_THEME.SPECIAL,
-    icon: '●',
+    icon: <FaCircle />,
     badgeLabel: '전세자금대출 받은 경우',
     title: '전세금안심대출보증',
     description: '보증금 반환과 대출 상환을 한 번에 맡깁니다',

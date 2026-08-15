@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FaFileLines } from 'react-icons/fa6';
 import Button from '../../components/common/Button/Button.jsx';
 import Chip from '../../components/common/Chip/Chip.jsx';
 import DocumentCard from '../../components/common/DocumentCard/DocumentCard.jsx';
@@ -72,7 +73,7 @@ function ThemeSection({ theme, label }) {
         <h3 className={styles.blockTitle}>DocumentCard</h3>
         <div className={styles.cardGrid}>
           <DocumentCard
-            icon="📄"
+            icon={<FaFileLines />}
             title="전체 표시"
             description="모든 항목이 채워진 카드입니다."
             chip="임대차계약서"
@@ -80,13 +81,17 @@ function ThemeSection({ theme, label }) {
             onClick={() => {}}
           />
           <DocumentCard
-            icon="📄"
+            icon={<FaFileLines />}
             title="description 없음"
             chip="등기부등본"
             status={{ label: '대기', tone: 'neutral' }}
           />
-          <DocumentCard icon="📄" title="chip·status 없음" description="설명만 있는 카드입니다." />
-          <DocumentCard icon="📄" title="제목만" />
+          <DocumentCard
+            icon={<FaFileLines />}
+            title="chip·status 없음"
+            description="설명만 있는 카드입니다."
+          />
+          <DocumentCard icon={<FaFileLines />} title="제목만" />
         </div>
       </div>
 

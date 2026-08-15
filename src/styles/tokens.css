@@ -53,7 +53,7 @@
   --space-12: 48px;
   --space-16: 64px;
   --space-20: 80px;
-  --container-max: 1200px;
+  --container-max: 1400px;
 
   --on-accent: #fff;
 
@@ -89,5 +89,4 @@
   --accent-tint-50: var(--green-tint-50);
   --accent-tint-100: var(--green-tint-100);
 }
-
 

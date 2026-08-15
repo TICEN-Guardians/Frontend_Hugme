@@ -1,3 +1,4 @@
+import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './RiskScoreCard.module.css';
 
 export default function RiskScoreCard({ score, maxScore, subScores }) {
@@ -5,7 +6,9 @@ export default function RiskScoreCard({ score, maxScore, subScores }) {
 
   return (
     <div className={styles.card}>
-      <p className={styles.label}>종합 위험 점수 ⓘ</p>
+      <p className={styles.label}>
+        종합 위험 점수 <FaCircleInfo aria-hidden="true" />
+      </p>
       <p className={styles.scoreRow}>
         <span className={styles.score}>{score}</span>
         <span className={styles.maxScore}>/ {maxScore}</span>

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import logo from '../../assets/images/logo.svg';
 import buttonStyles from '../../components/common/Button/Button.module.css';
 import Button from '../../components/common/Button/Button.jsx';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
 import styles from './SignupPage.module.css';
+
+const LOGO_SRC = '/images/Logo.png';
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -38,7 +39,7 @@ function LogoPanel() {
   return (
     <div className={styles.side}>
       <div className={styles.logoBox}>
-        <img src={logo} alt="Hugme" className={styles.logo} />
+        <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
       </div>
     </div>
   );

@@ -1,10 +1,13 @@
+import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './CollateralBar.module.css';
 
 export default function CollateralBar({ title, burdenRateLabel, segments, description }) {
   return (
     <div className={styles.card}>
       <div className={styles.headRow}>
-        <p className={styles.title}>{title} ⓘ</p>
+        <p className={styles.title}>
+          {title} <FaCircleInfo aria-hidden="true" />
+        </p>
         <span className={styles.burdenBadge}>{burdenRateLabel}</span>
       </div>
       <div className={styles.bar}>

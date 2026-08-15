@@ -1,12 +1,14 @@
 import { Link } from 'react-router-dom';
 import styles from './Footer.module.css';
 
+const FOOTER_LOGO_SRC = '/images/Footer_Logo.png';
+
 export default function Footer() {
   return (
     <footer className={styles.footer}>
       <div className={`${styles.inner} container`}>
         <div className={styles.brandCol}>
-          <div className={styles.logo}>HUGME</div>
+          <img src={FOOTER_LOGO_SRC} alt="Hugme" className={styles.logo} />
           <p className={styles.tagline}>
             AI 전세보증금 위험 진단 · 안심 전세 상담 서비스
           </p>

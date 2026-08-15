@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FaCircleQuestion } from 'react-icons/fa6';
 import Button from '../../common/Button/Button.jsx';
 import Modal from '../../common/Modal/Modal.jsx';
 import styles from './QuestionModal.module.css';
@@ -75,7 +76,7 @@ export default function QuestionModal({
                     }
                     aria-label="도움말 보기"
                   >
-                    ?
+                    <FaCircleQuestion aria-hidden="true" />
                   </button>
                   {openTooltipId === question.questionId && (
                     <span className={styles.tooltip} role="tooltip">

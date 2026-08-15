@@ -22,11 +22,16 @@
 }
 
 .brand {
+  display: inline-flex;
+  align-items: center;
   justify-self: start;
-  color: var(--text-primary);
-  font-size: var(--text-2xl);
-  font-weight: 800;
   text-decoration: none;
+}
+
+.logo {
+  display: block;
+  width: 148px;
+  height: auto;
 }
 
 .nav {
@@ -64,6 +69,10 @@
   justify-self: end;
   align-items: center;
   gap: var(--space-4);
+}
+
+.innerGuest .actions {
+  gap: var(--space-6);
 }
 
 .avatar {

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FaArrowRight, FaFileLines, FaLock } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
@@ -127,7 +128,9 @@ export default function DocumentChat() {
           <MessageList messages={messages} />
           {mode === 'locked' && (
             <div className={styles.lockBox}>
-              <div className={styles.lockIcon}>🔒</div>
+              <div className={styles.lockIcon}>
+                <FaLock aria-hidden="true" />
+              </div>
               <p className={styles.lockTitle}>
                 서류를 업로드하면
                 <br />
@@ -165,7 +168,9 @@ export default function DocumentChat() {
       <div className={styles.sidePane}>
         {mode === 'locked' ? (
           <div className={styles.emptyPanel}>
-            <div className={styles.emptyIcon}>📄</div>
+            <div className={styles.emptyIcon}>
+              <FaFileLines aria-hidden="true" />
+            </div>
             <p className={styles.emptyTitle}>아직 업로드된 서류가 없어요</p>
             <p className={styles.emptyDescription}>
               체크리스트에서 서류를 업로드하고 OCR 확인을 마치면
@@ -173,7 +178,7 @@ export default function DocumentChat() {
             </p>
             {/* TODO: 실제로는 체크리스트 완료 여부에 따라 자동으로 잠금 해제되어야 함 */}
             <button type="button" className={styles.emptyCta} onClick={handleUnlock}>
-              체크리스트로 이동 →
+              체크리스트로 이동 <FaArrowRight aria-hidden="true" />
             </button>
           </div>
         ) : (

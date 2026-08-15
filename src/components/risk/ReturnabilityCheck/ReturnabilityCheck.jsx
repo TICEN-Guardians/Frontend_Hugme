@@ -1,4 +1,15 @@
+import { FaCircleCheck, FaTriangleExclamation } from 'react-icons/fa6';
 import styles from './ReturnabilityCheck.module.css';
+
+const STATUS_ICON = {
+  Success: FaCircleCheck,
+  Warning: FaTriangleExclamation,
+};
+
+function StatusIcon({ tone }) {
+  const Icon = STATUS_ICON[tone];
+  return Icon ? <Icon aria-hidden="true" /> : null;
+}
 
 export default function ReturnabilityCheck({ title, items }) {
   return (
@@ -8,7 +19,10 @@ export default function ReturnabilityCheck({ title, items }) {
         {items.map((item) => (
           <div key={item.label} className={styles.row}>
             <span className={styles.label}>{item.label}</span>
-            <span className={`${styles.badge} ${styles[`badge${item.tone}`]}`}>{item.status}</span>
+            <span className={`${styles.badge} ${styles[`badge${item.tone}`]}`}>
+              <StatusIcon tone={item.tone} />
+              {item.status}
+            </span>
           </div>
         ))}
       </div>
