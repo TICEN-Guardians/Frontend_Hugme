@@ -1,0 +1,19 @@
+body {
+  min-width: 1280px;
+  font-family: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  font-size: var(--text-base);
+  color: var(--text-primary);
+}
+
+button {
+  font: inherit;
+}
+
+/* 페이지 공통 컨테이너. Header/Footer 안쪽 콘텐츠, Layout의 main이 공유해서 쓴다. */
+.container {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}

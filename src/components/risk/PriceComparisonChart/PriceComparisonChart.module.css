@@ -1,0 +1,92 @@
+.card {
+  box-sizing: border-box;
+  height: 100%;
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xl);
+  background: var(--on-accent);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.title {
+  margin: 0 0 var(--space-5);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.content {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-5);
+}
+
+.chart {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  height: 150px;
+}
+
+.barColumn {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  height: 100%;
+}
+
+.barValue {
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.barTrack {
+  display: flex;
+  align-items: flex-end;
+  flex: 1;
+  width: 100%;
+}
+
+.barFill {
+  width: 100%;
+  border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+}
+
+.barToneNeutral {
+  background: var(--border-default);
+}
+
+.barToneAccent {
+  background: var(--brand-blue);
+}
+
+.barToneSuccess {
+  background: var(--brand-green);
+}
+
+.barLabel {
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  text-align: center;
+}
+
+.diffs {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+}
+
+.diffLabel {
+  margin: 0 0 var(--space-1);
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.diffValue {
+  margin: 0;
+  color: var(--red);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}

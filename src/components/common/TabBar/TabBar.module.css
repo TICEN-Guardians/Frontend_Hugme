@@ -1,0 +1,43 @@
+.tabBar {
+  display: flex;
+  gap: var(--space-4);
+  border-bottom: 1px solid var(--border-default);
+}
+
+.tab {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-bottom: -1px;
+  padding: var(--space-2) var(--space-1);
+  border: none;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+.active {
+  border-bottom-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+.count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.6em;
+  padding: 0 var(--space-1);
+  border-radius: var(--radius-pill);
+  background: var(--border-subtle);
+  color: var(--text-secondary);
+  font-size: var(--text-xs);
+}
+
+.active .count {
+  background: var(--accent-tint-50);
+  color: var(--accent-text);
+}

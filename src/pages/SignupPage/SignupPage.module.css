@@ -1,3 +1,137 @@
-.root {
-  padding: 4rem;
+.shell {
+  display: flex;
+  min-height: 100%;
+}
+
+.side {
+  box-sizing: border-box;
+  display: flex;
+  align-items: flex-start;
+  width: 45%;
+  padding: var(--space-10);
+  background: linear-gradient(160deg, var(--brand-blue) 0%, var(--brand-green) 100%);
+}
+
+.logoBox {
+  display: inline-flex;
+  padding: var(--space-3) var(--space-5);
+  border-radius: var(--radius-lg);
+  background: var(--on-accent);
+}
+
+.logo {
+  height: 64px;
+  object-fit: contain;
+}
+
+.formSide {
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 55%;
+  padding: var(--space-10);
+}
+
+.form {
+  width: 100%;
+  max-width: 400px;
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.subtitle {
+  margin: 0 0 var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.formError {
+  margin: 0 0 var(--space-6);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--border-subtle);
+  color: var(--text-red-dark);
+  font-size: var(--text-sm);
+}
+
+.field {
+  margin-bottom: var(--space-6);
+}
+
+.label {
+  display: block;
+  margin-bottom: var(--space-2);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.inlineRow {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.inlineRow .input {
+  flex: 1;
+}
+
+.input {
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-4);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-md);
+  font: inherit;
+  font-size: var(--text-sm);
+  color: var(--text-primary);
+}
+
+.input::placeholder {
+  color: var(--text-disabled);
+}
+
+.fieldError {
+  margin: var(--space-1) 0 0;
+  color: var(--text-red-dark);
+  font-size: var(--text-xs);
+}
+
+.checkboxLabel {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+}
+
+.crossLink {
+  margin: var(--space-6) 0 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+.crossLink a {
+  color: var(--brand-green);
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.fullWidthLink {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: var(--space-2);
+  background: var(--brand-blue);
+  color: var(--on-accent);
+  text-decoration: none;
 }
