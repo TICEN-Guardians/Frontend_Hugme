@@ -1,0 +1,34 @@
+.root {
+  padding: var(--space-16) var(--space-10);
+}
+
+.pageTitle {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.pageSubtitle {
+  margin: 0 0 var(--space-8);
+  color: var(--text-secondary);
+  font-size: var(--text-base);
+  line-height: 1.7;
+}
+
+.count {
+  margin: 0 0 var(--space-5);
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 700;
+}
+
+.countNumber {
+  color: var(--brand-blue);
+}
+
+.groups {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-6);
+}

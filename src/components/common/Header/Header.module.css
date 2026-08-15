@@ -1,0 +1,41 @@
+.header {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 4rem;
+  background: var(--brand-blue);
+  color: var(--on-accent);
+}
+
+.brand {
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+.nav {
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+}
+
+.nav a {
+  color: var(--on-accent);
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.userName {
+  color: var(--on-accent);
+  font-weight: 500;
+}
+
+.logoutButton {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--on-accent);
+  font: inherit;
+  font-weight: 500;
+  cursor: pointer;
+}
