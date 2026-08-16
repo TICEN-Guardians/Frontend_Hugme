@@ -68,8 +68,8 @@ const SLIDES = [
   },
   {
     id: 'checklist',
-    label: '④ 보증 준비 체크리스트',
-    title: '기본 서류부터 내 계약에 필요한 서류까지 확인해요',
+    label: '④ 체크리스트',
+    title: '내 계약에 필요한 서류를 한눈에 확인하세요',
     heroTitle: ['내가 준비해야 할 서류를', '체크리스트로 확인하세요'],
     heroSubtitle: [
       '기본 준비 서류를 바로 확인하고,',
@@ -79,11 +79,12 @@ const SLIDES = [
     secondaryCtaLabel: '맞춤 서류 확인',
     heroNote: '기본 체크리스트 바로 이용 · 맞춤 서류 확인은 로그인 필요',
     description: [
-      '기본 체크리스트와 서류 정보를 확인하고,',
+      '기본 준비 서류를 확인하고,',
       '로그인하면 임대차계약서를 바탕으로 내게 필요한 서류만 확인할 수 있어요',
     ],
-    cardCtaLabel: '기본 체크리스트 보기',
-    image: '/images/landing/landing-feature-4.svg',
+    featurePoints: ['기본 준비 서류 확인', '서류별 상세 정보 제공', '계약서 기반 맞춤 서류 확인'],
+    cardCtaLabel: '체크리스트 확인하기',
+    image: '/images/landing/Carousel4.png',
     // TODO: 체크리스트는 상품(productCode)이 정해져야 이동 가능한 라우트라 우선 상품 목록으로 연결. 최종 목적지 확인 필요
     to: '/products',
   },
