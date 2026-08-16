@@ -5,8 +5,8 @@
   width: 100%;
   box-sizing: border-box;
   padding: var(--space-4);
-  border: 1px solid var(--border-default);
-  border-left: 3px solid var(--accent);
+  border: 0.1rem solid var(--border-default);
+  border-left: 0.3rem solid var(--accent);
   border-radius: var(--radius-lg);
 }
 

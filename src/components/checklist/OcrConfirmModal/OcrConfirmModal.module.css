@@ -64,7 +64,7 @@
   box-sizing: border-box;
   width: 100%;
   padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--border-default);
+  border: 0.1rem solid var(--border-default);
   border-radius: var(--radius-md);
   font: inherit;
   font-size: var(--text-sm);
@@ -91,7 +91,7 @@
   justify-content: space-between;
   gap: var(--space-4);
   padding-top: var(--space-4);
-  border-top: 1px solid var(--border-subtle);
+  border-top: 0.1rem solid var(--border-subtle);
 }
 
 .footerNote {

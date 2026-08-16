@@ -8,46 +8,68 @@
 
 .inner {
   margin: 0 auto;
-  padding: 80px 24px;
+  min-height: var(--footer-height);
+  padding-top: 1.8rem;
+  padding-bottom: 1.8rem;
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
-  gap: 64px;
-  align-items: start;
-  justify-items: center;
+  gap: 9.6rem;
+  align-items: center;
+  justify-items: stretch;
 }
 
 .brandCol {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  text-align: center;
+  align-items: flex-start;
+  justify-self: start;
+  align-self: center;
+  text-align: left;
 }
 
 .logo {
   display: block;
-  width: 132px;
+  width: 18rem;
   height: auto;
-  margin-bottom: 24px;
+  margin-bottom: 0.8rem;
+}
+
+.brandText {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  text-align: left;
 }
 
 .tagline,
 .copyright {
-  font-size: 14px;
+  font-size: 1.4rem;
   color: var(--footer-text-muted);
-  line-height: 1.7;
+  line-height: 1.45;
   margin: 0;
+}
+
+.tagline {
+  margin-bottom: 0.2rem;
 }
 
 .linkCol {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 1.4rem;
   align-items: center;
   text-align: center;
 }
 
+.linkCol:last-child {
+  align-items: flex-end;
+  text-align: right;
+}
+
 .linkCol a {
-  font-size: 14px;
+  font-size: 1.5rem;
+  font-weight: 600;
   color: var(--footer-text);
   text-decoration: none;
 }

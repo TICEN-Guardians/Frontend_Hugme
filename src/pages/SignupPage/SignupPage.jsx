@@ -150,7 +150,7 @@ export default function SignupPage() {
                 type="button"
                 variant="secondary"
                 size="sm"
-                style={{ border: '1px solid var(--brand-blue)', color: 'var(--brand-blue)', flexShrink: 0 }}
+                style={{ border: '0.1rem solid var(--brand-blue)', color: 'var(--brand-blue)', flexShrink: 0 }}
               >
                 인증
               </Button>

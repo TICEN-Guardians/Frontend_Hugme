@@ -28,32 +28,32 @@
   --amber-tint-50: #fff4e0;
   --text-amber-dark: #c9820a;
 
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
-  --radius-pill: 999px;
+  --radius-sm: 0.6rem;
+  --radius-md: 0.8rem;
+  --radius-lg: 1.2rem;
+  --radius-xl: 1.6rem;
+  --radius-pill: 99.9rem;
 
-  --text-xs: 12px;
-  --text-sm: 14px;
-  --text-base: 16px;
-  --text-lg: 20px;
-  --text-xl: 24px;
-  --text-2xl: 30px;
-  --text-3xl: 38px;
+  --text-xs: 1.2rem;
+  --text-sm: 1.4rem;
+  --text-base: 1.6rem;
+  --text-lg: 2rem;
+  --text-xl: 2.4rem;
+  --text-2xl: 3rem;
+  --text-3xl: 3.8rem;
 
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
-  --space-16: 64px;
-  --space-20: 80px;
-  --container-max: 1400px;
+  --space-1: 0.4rem;
+  --space-2: 0.8rem;
+  --space-3: 1.2rem;
+  --space-4: 1.6rem;
+  --space-5: 2rem;
+  --space-6: 2.4rem;
+  --space-8: 3.2rem;
+  --space-10: 4rem;
+  --space-12: 4.8rem;
+  --space-16: 6.4rem;
+  --space-20: 8rem;
+  --container-max: 140rem;
 
   --on-accent: #fff;
 
@@ -61,12 +61,12 @@
   --footer-text: #ffffff;
   --footer-text-muted: #a8b2c4;
 
-  /* Header 실측: .inner min-height(--space-16 + --space-12 = 112px) + border-bottom 1px */
-  --header-height: 113px;
-  /* Footer 실측 근사치: .inner padding(--space-20 상하 = 160px) + 3열 중 가장 높은
-     brandCol 콘텐츠(로고+태그라인+저작권, 약 120px). Footer.module.css의 min-height로
+  /* Header 실측: .inner min-height(9.9rem) + border-bottom 0.1rem */
+  --header-height: 10rem;
+  /* Footer 실측 근사치: .inner padding(--space-20 상하 = 16rem) + 3열 중 가장 높은
+     brandCol 콘텐츠(로고+태그라인+저작권, 약 12rem). Footer.module.css의 min-height로
      이 값 자체를 보장한다 — 폰트 렌더링에 따라 계산값이 달라지지 않도록 고정. */
-  --footer-height: 280px;
+  --footer-height: 21rem;
 
   /* data-theme이 없는 화면(랜딩, 인증, 챗봇 등)의 기본값. general(블루)과 동일 —
      [data-theme='special']가 걸리면 아래에서 그린으로 덮어써진다. */
@@ -89,4 +89,3 @@
   --accent-tint-50: var(--green-tint-50);
   --accent-tint-100: var(--green-tint-100);
 }
-

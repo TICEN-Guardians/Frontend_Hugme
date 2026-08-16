@@ -9,12 +9,14 @@ export default function Footer() {
       <div className={`${styles.inner} container`}>
         <div className={styles.brandCol}>
           <img src={FOOTER_LOGO_SRC} alt="Hugme" className={styles.logo} />
-          <p className={styles.tagline}>
-            AI 전세보증금 위험 진단 · 안심 전세 상담 서비스
-          </p>
-          <p className={styles.copyright}>
-            © HUGME. All rights reserved.
-          </p>
+          <div className={styles.brandText}>
+            <p className={styles.tagline}>
+              AI 전세보증금 위험 진단 · 안심 전세 상담 서비스
+            </p>
+            <p className={styles.copyright}>
+              © HUGME. All rights reserved.
+            </p>
+          </div>
         </div>
 
         <nav className={styles.linkCol}>

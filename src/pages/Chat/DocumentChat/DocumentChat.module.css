@@ -13,7 +13,7 @@
   flex-direction: column;
   flex: 0 0 60%;
   min-width: 0;
-  border-right: 1px solid var(--border-subtle);
+  border-right: 0.1rem solid var(--border-subtle);
 }
 
 .messages {
@@ -28,9 +28,9 @@
   align-items: center;
   margin: var(--space-16) auto 0;
   padding: var(--space-8);
-  border: 1.5px dashed var(--border-default);
+  border: 0.15rem dashed var(--border-default);
   border-radius: var(--radius-lg);
-  max-width: 380px;
+  max-width: 38rem;
   text-align: center;
 }
 
@@ -62,7 +62,7 @@
 
 .subtypeButton {
   padding: var(--space-2) var(--space-4);
-  border: 1px solid var(--border-default);
+  border: 0.1rem solid var(--border-default);
   border-radius: var(--radius-pill);
   background: var(--on-accent);
   color: var(--text-strong);
@@ -89,7 +89,7 @@
   align-items: center;
   margin: var(--space-10);
   padding: var(--space-10) var(--space-8);
-  border: 1px solid var(--border-subtle);
+  border: 0.1rem solid var(--border-subtle);
   border-radius: var(--radius-lg);
   text-align: center;
 }

@@ -1,38 +1,129 @@
 .hero {
+  position: relative;
+  overflow: hidden;
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: var(--space-16) var(--space-10);
+  padding: var(--space-10) var(--space-10);
   text-align: center;
   background: linear-gradient(155deg, var(--brand-blue) 0%, var(--brand-green) 100%);
 }
 
+.landing1Hero {
+  background: none;
+  box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.05);
+}
+
+.landing1Hero::before,
+.landing1Hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.landing1Hero::before {
+  z-index: 0;
+  background-image: url('/images/landing/Landing1.png');
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+.landing1Hero::after {
+  z-index: 1;
+  background:
+    radial-gradient(
+      ellipse at 50% 48%,
+      rgba(2, 9, 16, 0.48) 0%,
+      rgba(2, 9, 16, 0.32) 28%,
+      rgba(2, 9, 16, 0.15) 48%,
+      rgba(2, 9, 16, 0) 72%
+    ),
+    linear-gradient(
+      180deg,
+      rgba(4, 13, 22, 0.24) 0%,
+      rgba(4, 13, 22, 0.3) 100%
+    );
+  box-shadow: inset 0 0 10rem rgba(0, 0, 0, 0.12);
+}
+
 .content {
+  position: relative;
+  z-index: 2;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-6);
-  min-height: 274px;
+  min-height: 23rem;
+}
+
+.landing1Content {
+  isolation: isolate;
+  max-width: 76rem;
+  gap: 0;
+}
+
+.riskBadge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: fit-content;
+  margin-bottom: 1.2rem;
+  padding: 0.7rem 1.3rem;
+  border: 0.1rem solid rgba(255, 255, 255, 0.26);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.12);
+  backdrop-filter: blur(1rem);
+  -webkit-backdrop-filter: blur(1rem);
+  color: rgba(255, 255, 255, 0.94);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.riskBadge svg {
+  color: #72c676;
+  font-size: 1.5rem;
 }
 
 .title {
-  max-width: 720px;
+  max-width: 72rem;
   margin: 0;
   color: var(--on-accent);
   font-size: var(--text-3xl);
   font-weight: 800;
   line-height: 1.3;
-  min-height: 99px;
+  min-height: 8.8rem;
+}
+
+.landing1Content .title {
+  font-size: 3.9rem;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  line-height: 1.22;
+  text-shadow:
+    0 0.2rem 0.8rem rgba(0, 0, 0, 0.24),
+    0 0.8rem 2.8rem rgba(0, 0, 0, 0.2);
 }
 
 .subtitle {
-  max-width: 560px;
+  max-width: 56rem;
   margin: 0;
   color: var(--on-accent);
   opacity: 0.85;
   font-size: var(--text-sm);
   line-height: 1.6;
-  min-height: 45px;
+  min-height: 4.5rem;
+}
+
+.landing1Content .subtitle {
+  margin-top: 1.4rem;
+  color: rgba(255, 255, 255, 0.88);
+  opacity: 1;
+  font-size: 1.5rem;
+  line-height: 1.68;
+  text-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.18);
 }
 
 .actions {
@@ -47,8 +138,54 @@
   border-color: transparent;
 }
 
+.riskCtaMotion {
+  margin-top: 2.2rem;
+}
+
+.actions .riskPrimaryCta {
+  gap: var(--space-2);
+  padding: 1.4rem 2.6rem;
+  border: 0.1rem solid rgba(255, 255, 255, 0.75);
+  border-radius: 1.2rem;
+  background: var(--on-accent);
+  color: var(--brand-blue);
+  box-shadow:
+    0 0.8rem 2.4rem rgba(0, 0, 0, 0.16),
+    0 0.2rem 0.6rem rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+  text-decoration: none;
+  transition:
+    color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.actions .riskPrimaryCta:hover {
+  background: var(--on-accent);
+  color: #0a5f9a;
+  box-shadow:
+    0 1.2rem 3.2rem rgba(0, 0, 0, 0.2),
+    0 0.4rem 1rem rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+}
+
+.actions .riskPrimaryCta:visited,
+.actions .riskPrimaryCta:focus {
+  text-decoration: none;
+}
+
+.actions .riskPrimaryCta:focus-visible {
+  outline: 0.3rem solid rgba(255, 255, 255, 0.72);
+  outline-offset: 0.3rem;
+}
+
+.riskCtaArrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
 .actions .secondaryCta {
-  border: 1px solid var(--on-accent);
+  border: 0.1rem solid var(--on-accent);
   color: var(--on-accent);
 }
 
@@ -57,4 +194,21 @@
   color: var(--on-accent);
   opacity: 0.75;
   font-size: var(--text-xs);
+}
+
+.riskNote {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+  color: rgba(255, 255, 255, 0.78);
+  opacity: 1;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.riskNote svg {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.95em;
 }
