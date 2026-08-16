@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
 import HeroSection from './HeroSection/HeroSection.jsx';
 import styles from './LandingPage.module.css';
@@ -93,18 +93,7 @@ const SLIDES = [
 export default function LandingPage() {
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
-  const [isInitialRender, setIsInitialRender] = useState(true);
   const activeSlide = SLIDES[activeIndex];
-
-  useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setIsInitialRender(false);
-    }, 1400);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, []);
 
   const paginate = (nextDirection) => {
     setDirection(nextDirection);
@@ -124,12 +113,11 @@ export default function LandingPage() {
 
   return (
     <div className={styles.root}>
-      <HeroSection slide={activeSlide} direction={direction} isInitialRender={isInitialRender} />
+      <HeroSection slide={activeSlide} direction={direction} />
       <FeatureCarousel
         slides={SLIDES}
         activeIndex={activeIndex}
         direction={direction}
-        isInitialRender={isInitialRender}
         onPrev={() => paginate(-1)}
         onNext={() => paginate(1)}
         onGoTo={goTo}

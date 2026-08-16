@@ -16,9 +16,9 @@ const ENTRY_EASE = [0.16, 1, 0.3, 1];
 const EXIT_EASE = [0.4, 0, 1, 1];
 
 const heroVariants = {
-  enter: ({ reducedMotion, isInitialRender }) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    y: reducedMotion ? 0 : isInitialRender ? 34 : 28,
+    y: reducedMotion ? 0 : 28,
   }),
   center: {
     opacity: 1,
@@ -39,9 +39,9 @@ const heroVariants = {
 };
 
 const heroBackdropVariants = {
-  enter: ({ reducedMotion, isInitialRender }) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    scale: reducedMotion ? 1 : isInitialRender ? 1.035 : 1.025,
+    scale: reducedMotion ? 1 : 1.025,
   }),
   center: {
     opacity: 1,
@@ -62,9 +62,9 @@ const heroBackdropVariants = {
 };
 
 const imageHeroItemVariants = {
-  enter: ({ reducedMotion, isInitialRender }) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    y: reducedMotion ? 0 : isInitialRender ? 34 : 28,
+    y: reducedMotion ? 0 : 28,
   }),
   center: {
     opacity: 1,
@@ -77,9 +77,9 @@ const imageHeroItemVariants = {
 };
 
 const imageHeroTitleVariants = {
-  enter: ({ reducedMotion, isInitialRender }) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    y: reducedMotion ? 0 : isInitialRender ? 42 : 34,
+    y: reducedMotion ? 0 : 34,
   }),
   center: {
     opacity: 1,
@@ -118,14 +118,14 @@ const heroBackgrounds = {
   checklist: '/images/landing/Landing4.png',
 };
 
-export default function HeroSection({ slide, direction, isInitialRender }) {
+export default function HeroSection({ slide, direction }) {
   const isRiskSlide = slide.id === 'risk';
   const isDocChatSlide = slide.id === 'doc-chat';
   const isConditionChatSlide = slide.id === 'user-chat';
   const isChecklistSlide = slide.id === 'checklist';
   const isImageHero = isRiskSlide || isDocChatSlide || isConditionChatSlide || isChecklistSlide;
   const prefersReducedMotion = useReducedMotion();
-  const motionCustom = { reducedMotion: prefersReducedMotion, isInitialRender };
+  const motionCustom = { direction, reducedMotion: prefersReducedMotion };
   const BadgeIcon = isChecklistSlide
     ? FiCheckSquare
     : isConditionChatSlide

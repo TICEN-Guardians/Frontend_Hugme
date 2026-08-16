@@ -20,11 +20,11 @@ const slideVariants = {
 };
 
 const imageVariants = {
-  enter: ({ direction, reducedMotion, isInitialRender }) => ({
+  enter: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: reducedMotion ? 0 : isInitialRender ? -30 : direction * 70,
-    y: reducedMotion ? 0 : isInitialRender ? 38 : 0,
-    scale: reducedMotion ? 1 : isInitialRender ? 0.98 : 0.985,
+    x: reducedMotion ? 0 : direction * 70,
+    y: 0,
+    scale: reducedMotion ? 1 : 0.985,
   }),
   center: {
     opacity: 1,
@@ -48,10 +48,10 @@ const imageVariants = {
 };
 
 const contentVariants = {
-  enter: ({ direction, reducedMotion, isInitialRender }) => ({
+  enter: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: reducedMotion ? 0 : isInitialRender ? 30 : direction * -45,
-    y: reducedMotion ? 0 : isInitialRender ? 32 : 0,
+    x: reducedMotion ? 0 : direction * -45,
+    y: 0,
   }),
   center: {
     opacity: 1,
@@ -119,14 +119,13 @@ export default function FeatureCarousel({
   slides,
   activeIndex,
   direction,
-  isInitialRender,
   onPrev,
   onNext,
   onGoTo,
 }) {
   const slide = slides[activeIndex];
   const prefersReducedMotion = useReducedMotion();
-  const motionCustom = { direction, reducedMotion: prefersReducedMotion, isInitialRender };
+  const motionCustom = { direction, reducedMotion: prefersReducedMotion };
 
   return (
     <section className={styles.carousel}>
@@ -139,7 +138,7 @@ export default function FeatureCarousel({
         animate={{ opacity: 1 }}
         whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
         whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
-        transition={{ duration: 0.6, delay: isInitialRender ? 0.55 : 0, ease: 'easeOut' }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <FiChevronLeft aria-hidden="true" />
       </motion.button>
@@ -258,7 +257,7 @@ export default function FeatureCarousel({
         animate={{ opacity: 1 }}
         whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
         whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
-        transition={{ duration: 0.6, delay: isInitialRender ? 0.55 : 0, ease: 'easeOut' }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <FiChevronRight aria-hidden="true" />
       </motion.button>
@@ -267,7 +266,7 @@ export default function FeatureCarousel({
         className={styles.dots}
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.65, delay: isInitialRender ? 0.65 : 0, ease: ENTRY_EASE }}
+        transition={{ duration: 0.65, ease: ENTRY_EASE }}
       >
         {slides.map((item, index) => (
           <motion.button
