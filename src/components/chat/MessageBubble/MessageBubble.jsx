@@ -14,9 +14,9 @@ export default function MessageBubble({ role, content, animate = false }) {
   return (
     <motion.div
       className={className}
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.65, ease: ENTRY_EASE }}
+      initial={{ opacity: 0, y: role === 'user' ? 20 : 24, scale: role === 'user' ? 0.99 : 1 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: role === 'user' ? 0.62 : 0.72, ease: ENTRY_EASE }}
     >
       {bubble}
     </motion.div>

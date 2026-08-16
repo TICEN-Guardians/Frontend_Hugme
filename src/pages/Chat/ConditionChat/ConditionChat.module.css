@@ -175,6 +175,7 @@
   margin-bottom: var(--space-6);
   border-radius: var(--radius-pill);
   background: linear-gradient(135deg, var(--blue-tint-50) 0%, var(--green-tint-50) 100%);
+  color: var(--brand-blue);
   font-size: var(--text-2xl);
 }
 
