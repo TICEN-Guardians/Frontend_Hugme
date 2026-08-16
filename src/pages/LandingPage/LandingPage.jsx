@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { PRODUCT_CODES } from '../../constants/products.js';
 import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
 import HeroSection from './HeroSection/HeroSection.jsx';
 import styles from './LandingPage.module.css';
@@ -22,7 +23,7 @@ const SLIDES = [
     featurePoints: ['매물 정보 분석', '여러 위험 요소 진단', '종합 결과 제공'],
     cardCtaLabel: '로그인하고 진단하기',
     image: '/images/landing/Carousel1.png',
-    to: '/risk/new',
+    to: '/auth/login',
   },
   {
     id: 'doc-chat',
@@ -43,7 +44,7 @@ const SLIDES = [
     featurePoints: ['서류별 상세 안내', '궁금한 내용 추가 질문', '대화로 계속 확인'],
     cardCtaLabel: '로그인하고 질문하기',
     image: '/images/landing/Carousel2.png',
-    to: '/doc-chat',
+    to: '/auth/login',
   },
   {
     id: 'user-chat',
@@ -85,8 +86,7 @@ const SLIDES = [
     featurePoints: ['기본 준비 서류 확인', '서류별 상세 정보 제공', '계약서 기반 맞춤 서류 확인'],
     cardCtaLabel: '체크리스트 확인하기',
     image: '/images/landing/Carousel4.png',
-    // TODO: 체크리스트는 상품(productCode)이 정해져야 이동 가능한 라우트라 우선 상품 목록으로 연결. 최종 목적지 확인 필요
-    to: '/products',
+    to: `/products/${PRODUCT_CODES.GENERAL}/checklist`,
   },
 ];
 

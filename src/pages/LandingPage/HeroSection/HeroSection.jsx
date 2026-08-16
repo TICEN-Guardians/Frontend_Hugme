@@ -12,47 +12,81 @@ import { Link } from 'react-router-dom';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
 import styles from './HeroSection.module.css';
 
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
+const EXIT_EASE = [0.4, 0, 1, 1];
+
 const heroVariants = {
-  enter: (direction) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    y: direction > 0 ? 22 : -22,
+    y: reducedMotion ? 0 : 28,
   }),
   center: {
     opacity: 1,
     y: 0,
+    transition: {
+      delayChildren: 0.12,
+      staggerChildren: 0.08,
+    },
   },
-  exit: (direction) => ({
+  exit: () => ({
     opacity: 0,
-    y: direction > 0 ? -22 : 22,
+    y: -18,
+    transition: {
+      duration: 0.48,
+      ease: EXIT_EASE,
+    },
   }),
 };
 
 const heroBackdropVariants = {
-  enter: (reducedMotion) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    scale: reducedMotion ? 1 : 1.035,
+    scale: reducedMotion ? 1 : 1.025,
   }),
   center: {
     opacity: 1,
     scale: 1,
+    transition: {
+      duration: 1.15,
+      ease: ENTRY_EASE,
+    },
   },
-  exit: (reducedMotion) => ({
+  exit: ({ reducedMotion }) => ({
     opacity: 0,
-    scale: reducedMotion ? 1 : 0.985,
+    scale: reducedMotion ? 1 : 1.01,
+    transition: {
+      duration: 0.6,
+      ease: EXIT_EASE,
+    },
   }),
 };
 
 const imageHeroItemVariants = {
-  hidden: (reducedMotion) => ({
+  enter: ({ reducedMotion }) => ({
     opacity: 0,
-    y: reducedMotion ? 0 : 10,
+    y: reducedMotion ? 0 : 28,
   }),
-  visible: {
+  center: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.42,
-      ease: [0.16, 1, 0.3, 1],
+      duration: 0.78,
+      ease: ENTRY_EASE,
+    },
+  },
+};
+
+const imageHeroTitleVariants = {
+  enter: ({ reducedMotion }) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 34,
+  }),
+  center: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.85,
+      ease: ENTRY_EASE,
     },
   },
 };
@@ -69,9 +103,11 @@ const imageHeroArrowVariants = {
 const imageHeroCtaVariants = {
   rest: {
     y: 0,
+    scale: 1,
   },
   hover: {
     y: -2,
+    scale: 1.01,
   },
 };
 
@@ -89,6 +125,7 @@ export default function HeroSection({ slide, direction }) {
   const isChecklistSlide = slide.id === 'checklist';
   const isImageHero = isRiskSlide || isDocChatSlide || isConditionChatSlide || isChecklistSlide;
   const prefersReducedMotion = useReducedMotion();
+  const motionCustom = { direction, reducedMotion: prefersReducedMotion };
   const BadgeIcon = isChecklistSlide
     ? FiCheckSquare
     : isConditionChatSlide
@@ -111,39 +148,36 @@ export default function HeroSection({ slide, direction }) {
       } ${isConditionChatSlide ? styles.landing3Hero : ''} ${isChecklistSlide ? styles.landing4Hero : ''}`}
     >
       {isImageHero && (
-        <AnimatePresence initial={false} mode="sync">
+        <AnimatePresence mode="sync">
           <motion.div
             key={slide.id}
             className={styles.imageHeroBackdrop}
-            custom={prefersReducedMotion}
+            custom={motionCustom}
             style={{ backgroundImage: `url(${heroBackgrounds[slide.id]})` }}
             variants={heroBackdropVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
             aria-hidden="true"
           />
         </AnimatePresence>
       )}
-      <AnimatePresence initial={false} mode="wait" custom={direction}>
+      <AnimatePresence mode="wait">
         <motion.div
           key={slide.id}
           className={`${styles.content} ${isImageHero ? styles.imageHeroContent : ''}`}
-          custom={direction}
+          custom={motionCustom}
           variants={heroVariants}
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.85, ease: ENTRY_EASE }}
         >
           {isImageHero && (
             <motion.div
               className={styles.imageHeroBadge}
-              custom={prefersReducedMotion}
+              custom={motionCustom}
               variants={imageHeroItemVariants}
-              initial="hidden"
-              animate="visible"
             >
               <BadgeIcon aria-hidden="true" />
               {imageHeroBadgeLabel}
@@ -151,11 +185,8 @@ export default function HeroSection({ slide, direction }) {
           )}
           <motion.h1
             className={styles.title}
-            custom={prefersReducedMotion}
-            variants={isImageHero ? imageHeroItemVariants : undefined}
-            initial={isImageHero ? 'hidden' : undefined}
-            animate={isImageHero ? 'visible' : undefined}
-            transition={isImageHero ? { delay: 0.05 } : undefined}
+            custom={motionCustom}
+            variants={isImageHero ? imageHeroTitleVariants : undefined}
           >
             {slide.heroTitle.map((line) => (
               <span key={line}>
@@ -166,11 +197,8 @@ export default function HeroSection({ slide, direction }) {
           </motion.h1>
           <motion.p
             className={styles.subtitle}
-            custom={prefersReducedMotion}
+            custom={motionCustom}
             variants={isImageHero ? imageHeroItemVariants : undefined}
-            initial={isImageHero ? 'hidden' : undefined}
-            animate={isImageHero ? 'visible' : undefined}
-            transition={isImageHero ? { delay: 0.1 } : undefined}
           >
             {slide.heroSubtitle.map((line) => (
               <span key={line}>
@@ -179,15 +207,19 @@ export default function HeroSection({ slide, direction }) {
               </span>
             ))}
           </motion.p>
-          <div className={styles.actions}>
+          <motion.div
+            className={styles.actions}
+            custom={motionCustom}
+            variants={isImageHero ? imageHeroItemVariants : undefined}
+          >
             {isImageHero ? (
               <motion.div
                 className={styles.imageHeroCtaMotion}
                 variants={imageHeroCtaVariants}
                 initial="rest"
                 whileHover={prefersReducedMotion ? undefined : 'hover'}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
+                whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.985 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 <Link
                   to={slide.to}
@@ -220,8 +252,12 @@ export default function HeroSection({ slide, direction }) {
                 {slide.secondaryCtaLabel}
               </Link>
             )}
-          </div>
-          <p className={`${styles.note} ${isImageHero ? styles.imageHeroNote : ''}`}>
+          </motion.div>
+          <motion.p
+            className={`${styles.note} ${isImageHero ? styles.imageHeroNote : ''}`}
+            custom={motionCustom}
+            variants={isImageHero ? imageHeroItemVariants : undefined}
+          >
             {isImageHero ? (
               <>
                 {isConditionChatSlide ? (
@@ -249,7 +285,7 @@ export default function HeroSection({ slide, direction }) {
             ) : (
               <>* {slide.heroNote}</>
             )}
-          </p>
+          </motion.p>
         </motion.div>
       </AnimatePresence>
     </section>

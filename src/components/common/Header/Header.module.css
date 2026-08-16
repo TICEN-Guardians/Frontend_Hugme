@@ -100,23 +100,64 @@
 }
 
 .outlineButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-3) var(--space-6);
   border: 0.15rem solid var(--brand-blue);
   border-radius: var(--radius-md);
+  background: var(--on-accent);
   color: var(--brand-blue);
   font-size: var(--text-sm);
   font-weight: 700;
   text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
 }
 
 .filledButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: var(--space-3) var(--space-6);
   border: 0.15rem solid var(--brand-blue);
   border-radius: var(--radius-md);
   background: var(--brand-blue);
-  /* 파란 배경 위 텍스트라 --on-accent가 맞는 용도 — 흰 헤더 배경 위 텍스트가 아님 */
   color: var(--on-accent);
   font-size: var(--text-sm);
   font-weight: 700;
   text-decoration: none;
+  transition:
+    transform 0.18s ease,
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.outlineButton:hover {
+  transform: translateY(-0.15rem);
+  background: rgba(15, 117, 189, 0.08);
+  border-color: #0a67a8;
+  color: #0a67a8;
+}
+
+.filledButton:hover {
+  transform: translateY(-0.15rem);
+  border-color: #0a67a8;
+  background: #0a67a8;
+  color: var(--on-accent);
+}
+
+.outlineButton:active,
+.filledButton:active {
+  transform: translateY(0);
+}
+
+.outlineButton:focus-visible,
+.filledButton:focus-visible {
+  outline: 0.3rem solid rgba(15, 117, 189, 0.18);
+  outline-offset: 0.3rem;
 }
