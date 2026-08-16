@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FaCircleCheck } from 'react-icons/fa6';
 import Button from '../../common/Button/Button.jsx';
 import Modal from '../../common/Modal/Modal.jsx';
 import styles from './OcrConfirmModal.module.css';
@@ -58,7 +59,9 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
     <Modal isOpen={isOpen} onClose={onClose}>
       <form onSubmit={handleSubmit}>
         <div className={styles.headerRow}>
-          <span className={styles.badge}>✓ 분석 완료</span>
+          <span className={styles.badge}>
+            <FaCircleCheck aria-hidden="true" /> 분석 완료
+          </span>
           <span className={styles.headerNote}>계약서에서 읽어온 정보예요</span>
         </div>
 

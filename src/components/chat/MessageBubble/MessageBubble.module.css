@@ -21,6 +21,6 @@
 
 .assistant {
   background: var(--green-tint-50);
-  border: 1px solid var(--green-tint-100);
+  border: 0.1rem solid var(--green-tint-100);
   color: var(--text-green-dark);
 }

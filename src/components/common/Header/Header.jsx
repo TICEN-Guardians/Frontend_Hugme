@@ -2,6 +2,8 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import styles from './Header.module.css';
 
+const LOGO_SRC = '/images/Logo.png';
+
 const NAV_ITEMS = [
 
 
@@ -25,7 +27,7 @@ export default function Header() {
       <header className={styles.header}>
         <div className={`${styles.inner} ${styles.innerGuest} container`}>
           <Link to="/" className={styles.brand}>
-            HUGME
+            <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
           </Link>
           <div />
         </div>
@@ -38,7 +40,7 @@ export default function Header() {
       <header className={styles.header}>
         <div className={`${styles.inner} ${styles.innerAuthed} container`}>
           <Link to="/" className={styles.brand}>
-            HUGME
+            <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
           </Link>
 
           <nav className={styles.nav}>
@@ -71,7 +73,7 @@ export default function Header() {
     <header className={styles.header}>
       <div className={`${styles.inner} ${styles.innerGuest} container`}>
         <Link to="/" className={styles.brand}>
-          HUGME
+          <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
         </Link>
         <div className={styles.actions}>
           <Link to="/auth/login" className={styles.outlineButton}>

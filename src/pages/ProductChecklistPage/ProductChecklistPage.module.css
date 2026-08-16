@@ -42,7 +42,7 @@
   gap: var(--space-4);
   margin-bottom: var(--space-8);
   padding: var(--space-6);
-  border: 1px solid var(--accent-tint-100);
+  border: 0.1rem solid var(--accent-tint-100);
   border-radius: var(--radius-lg);
   background: var(--accent-tint-50);
 }
@@ -101,7 +101,7 @@
   align-items: center;
   gap: var(--space-2);
   padding: var(--space-3);
-  border: 1px solid var(--border-subtle);
+  border: 0.1rem solid var(--border-subtle);
   border-radius: var(--radius-md);
   background: var(--on-accent);
   color: var(--text-strong);

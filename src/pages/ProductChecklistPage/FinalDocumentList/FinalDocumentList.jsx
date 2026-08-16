@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FaFileLines } from 'react-icons/fa6';
 import DocumentCard from '../../../components/common/DocumentCard/DocumentCard.jsx';
 import Modal from '../../../components/common/Modal/Modal.jsx';
 import TabBar from '../../../components/common/TabBar/TabBar.jsx';
@@ -46,7 +47,7 @@ export default function FinalDocumentList({ sections, documents }) {
             return (
               <DocumentCard
                 key={doc.documentId}
-                icon="📄"
+                icon={<FaFileLines />}
                 title={doc.title}
                 description={doc.description}
                 chip={doc.tag}

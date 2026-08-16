@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { FaArrowUp, FaCircleCheck, FaCircleInfo } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
 import styles from './RiskFormPage.module.css';
@@ -114,10 +115,14 @@ export default function RiskFormPage() {
             {detectedHousingType && (
               <div className={styles.housingTypeBox}>
                 <span className={styles.housingTypeInfo}>
-                  <span className={styles.infoIcon}>ⓘ</span>
+                  <span className={styles.infoIcon}>
+                    <FaCircleInfo aria-hidden="true" />
+                  </span>
                   확인된 주택유형 · {detectedHousingType}
                 </span>
-                <span className={styles.housingTypeConfirmed}>✓ 주소 확인 완료</span>
+                <span className={styles.housingTypeConfirmed}>
+                  <FaCircleCheck aria-hidden="true" /> 주소 확인 완료
+                </span>
               </div>
             )}
           </div>
@@ -187,7 +192,9 @@ export default function RiskFormPage() {
             </span>
             <div className={styles.dropzone}>
               <div className={styles.dropzoneInfo}>
-                <span className={styles.uploadIcon}>⬆</span>
+                <span className={styles.uploadIcon}>
+                  <FaArrowUp aria-hidden="true" />
+                </span>
                 <div>
                   <p className={styles.dropzoneTitle}>
                     {file ? file.name : 'PDF 파일을 드래그하거나 클릭하여 업로드하세요'}
@@ -213,7 +220,9 @@ export default function RiskFormPage() {
           </div>
 
           <div className={styles.infoBanner}>
-            <span className={styles.infoIcon}>ⓘ</span>
+            <span className={styles.infoIcon}>
+              <FaCircleInfo aria-hidden="true" />
+            </span>
             <span>
               전용면적, 연면적, 대지면적, 대지권면적, 층수 등은 가능한 범위 내에서 자동
               조회됩니다.

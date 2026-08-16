@@ -1,3 +1,4 @@
+import { FaAngleDown } from 'react-icons/fa6';
 import Chip from '../Chip/Chip.jsx';
 import StatusBadge from '../StatusBadge/StatusBadge.jsx';
 import styles from './DocumentCard.module.css';
@@ -13,7 +14,7 @@ export default function DocumentCard({ icon, title, description, chip, status, e
             className={`${styles.arrow} ${expanded ? styles.arrowExpanded : ''}`}
             aria-hidden="true"
           >
-            ▾
+            <FaAngleDown />
           </span>
         )}
       </div>

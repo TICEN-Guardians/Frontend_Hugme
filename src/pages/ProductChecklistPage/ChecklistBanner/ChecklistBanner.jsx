@@ -1,4 +1,5 @@
 import { useRef, useState } from 'react';
+import { FaFileLines } from 'react-icons/fa6';
 import { Link, useLocation } from 'react-router-dom';
 import Button from '../../../components/common/Button/Button.jsx';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
@@ -49,7 +50,9 @@ export default function ChecklistBanner({ onFileSelected }) {
       <div>
         <div className={`${styles.banner} ${styles.uploadBanner}`}>
           <div className={styles.content}>
-            <span className={styles.icon}>📄</span>
+            <span className={styles.icon}>
+              <FaFileLines aria-hidden="true" />
+            </span>
             <div>
               <p className={styles.title}>임대차계약서를 업로드하세요</p>
               <p className={styles.description}>계약서를 분석하면 내가 낼 서류만 골라 보여드려요.</p>

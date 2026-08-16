@@ -20,7 +20,7 @@
 }
 
 .logo {
-  height: 64px;
+  height: 6.4rem;
   object-fit: contain;
 }
 
@@ -35,7 +35,7 @@
 
 .form {
   width: 100%;
-  max-width: 400px;
+  max-width: 40rem;
 }
 
 .title {
@@ -86,7 +86,7 @@
   box-sizing: border-box;
   width: 100%;
   padding: var(--space-4);
-  border: 1px solid var(--border-default);
+  border: 0.1rem solid var(--border-default);
   border-radius: var(--radius-md);
   font: inherit;
   font-size: var(--text-sm);

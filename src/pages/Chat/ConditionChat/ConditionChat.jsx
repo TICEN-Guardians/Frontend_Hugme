@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { FaComments } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import styles from './ConditionChat.module.css';
@@ -34,7 +35,9 @@ export default function ConditionChat() {
     return (
       <div className={styles.emptyRoot}>
         <div className={styles.empty}>
-          <div className={styles.emptyIcon}>💬</div>
+          <div className={styles.emptyIcon}>
+            <FaComments aria-hidden="true" />
+          </div>
           <h1 className={styles.emptyTitle}>어떤 가입조건이 궁금하세요?</h1>
           <p className={styles.emptyDescription}>
             아래 조건 중 하나를 선택하면 해당 조건에 대한 상담이 시작돼요.

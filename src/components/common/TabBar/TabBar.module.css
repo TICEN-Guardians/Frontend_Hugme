@@ -1,17 +1,17 @@
 .tabBar {
   display: flex;
   gap: var(--space-4);
-  border-bottom: 1px solid var(--border-default);
+  border-bottom: 0.1rem solid var(--border-default);
 }
 
 .tab {
   display: flex;
   align-items: center;
   gap: var(--space-1);
-  margin-bottom: -1px;
+  margin-bottom: -0.1rem;
   padding: var(--space-2) var(--space-1);
   border: none;
-  border-bottom: 2px solid transparent;
+  border-bottom: 0.2rem solid transparent;
   background: none;
   font: inherit;
   font-size: var(--text-sm);

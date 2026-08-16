@@ -1,121 +1,188 @@
-import { useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { FiArrowRight, FiCheck, FiChevronLeft, FiChevronRight } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
-import feature1 from '../../../assets/images/landing-feature-1.svg';
-import feature2 from '../../../assets/images/landing-feature-2.svg';
-import feature3 from '../../../assets/images/landing-feature-3.svg';
-import feature4 from '../../../assets/images/landing-feature-4.svg';
 import styles from './FeatureCarousel.module.css';
 
-const SLIDES = [
-  {
-    id: 'risk',
-    label: '① 매물 위험도 진단',
-    title: '공공데이터로 계약 전 위험도 진단',
-    description: [
-      '등기부등본, 실거래가, 권리관계를 자동으로 불러와',
-      '위험 요소를 한눈에 확인할 수 있어요',
-      '전세보증금 반환 가능성을 미리 점검하세요',
-    ],
-    image: feature1,
-    to: '/risk/new',
+const slideVariants = {
+  enter: () => ({
+    opacity: 0,
+  }),
+  center: {
+    opacity: 1,
   },
-  {
-    id: 'doc-chat',
-    label: '② 서류안내 챗봇',
-    title: '필요한 서류를 바로 안내받아요',
-    description: ['계약에 필요한 서류를 챗봇이 안내하고', '준비 상태를 확인해드려요'],
-    image: feature2,
-    to: '/doc-chat',
-  },
-  {
-    id: 'user-chat',
-    label: '③ 조건상담 챗봇',
-    title: '전세 조건, 챗봇에게 바로 물어보세요',
-    description: ['계약 조건을 입력하면', '위험 여부를 바로 안내해드려요'],
-    image: feature3,
-    to: '/user-chat',
-  },
-  {
-    id: 'checklist',
-    label: '④ 체크리스트',
-    title: '계약 전 확인할 항목을 한 번에',
-    description: ['놓치기 쉬운 확인 사항을', '체크리스트로 정리해드려요'],
-    image: feature4,
-    // TODO: 체크리스트는 상품(productCode)이 정해져야 이동 가능한 라우트라 우선 상품 목록으로 연결. 최종 목적지 확인 필요
-    to: '/products',
-  },
-];
+  exit: () => ({
+    opacity: 0,
+  }),
+};
 
-export default function FeatureCarousel() {
-  const [activeIndex, setActiveIndex] = useState(0);
-  const slide = SLIDES[activeIndex];
+const imageVariants = {
+  enter: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? -34 : 34,
+    scale: 0.985,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+    scale: 1,
+  },
+  exit: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? 34 : -34,
+    scale: 0.985,
+  }),
+};
 
-  const goPrev = () => {
-    setActiveIndex((prev) => (prev === 0 ? SLIDES.length - 1 : prev - 1));
-  };
+const contentVariants = {
+  enter: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? 34 : -34,
+  }),
+  center: {
+    opacity: 1,
+    x: 0,
+  },
+  exit: (direction) => ({
+    opacity: 0,
+    x: direction > 0 ? -34 : 34,
+  }),
+};
 
-  const goNext = () => {
-    setActiveIndex((prev) => (prev === SLIDES.length - 1 ? 0 : prev + 1));
-  };
+const ctaArrowVariants = {
+  rest: { x: 0 },
+  hover: { x: 3 },
+};
+
+export default function FeatureCarousel({ slides, activeIndex, direction, onPrev, onNext, onGoTo }) {
+  const slide = slides[activeIndex];
+  const prefersReducedMotion = useReducedMotion();
 
   return (
     <section className={styles.carousel}>
-      <button
+      <motion.button
         type="button"
         className={`${styles.arrow} ${styles.arrowLeft}`}
-        onClick={goPrev}
+        onClick={onPrev}
         aria-label="이전 슬라이드"
+        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.04 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
       >
-        ‹
-      </button>
+        <FiChevronLeft aria-hidden="true" />
+      </motion.button>
 
-      <div className={styles.slide}>
-        <img
-          className={styles.image}
-          src={slide.image}
-          alt={slide.title}
-          width={420}
-          height={290}
-        />
-        <div className={styles.content}>
-          <div className={styles.label}>{slide.label}</div>
-          <h2 className={styles.featureTitle}>{slide.title}</h2>
-          <p className={styles.description}>
-            {slide.description.map((line) => (
-              <span key={line}>
-                {line}
-                <br />
-              </span>
-            ))}
-          </p>
-          <Link
-            to={slide.to}
-            className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.sm} ${styles.cta}`}
+      <div className={styles.slideFrame}>
+        <AnimatePresence initial={false} custom={direction}>
+          <motion.div
+            key={slide.id}
+            className={styles.slide}
+            custom={direction}
+            variants={slideVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
           >
-            🔒 로그인하고 진단
-          </Link>
-        </div>
+            <motion.div
+              className={styles.visual}
+              custom={direction}
+              variants={imageVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <img
+                className={styles.image}
+                src={slide.image}
+                alt={slide.title}
+                width={650}
+                height={380}
+              />
+            </motion.div>
+            <motion.div
+              className={styles.content}
+              custom={direction}
+              variants={contentVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <div className={styles.label}>
+                <span className={styles.labelNumber}>{String(activeIndex + 1).padStart(2, '0')}</span>
+                <span>{slide.label.replace(/^[①②③④]\s*/, '')}</span>
+              </div>
+              <h2 className={styles.featureTitle}>{slide.title}</h2>
+              <p className={styles.description}>
+                {slide.description.map((line) => (
+                  <span key={line}>
+                    {line}
+                    <br />
+                  </span>
+                ))}
+              </p>
+              {slide.featurePoints && (
+                <ul className={styles.points}>
+                  {slide.featurePoints.map((point) => (
+                    <li key={point}>
+                      <FiCheck aria-hidden="true" />
+                      {point}
+                    </li>
+                  ))}
+                </ul>
+              )}
+              <motion.div
+                className={styles.ctaMotion}
+                initial="rest"
+                whileHover={prefersReducedMotion ? undefined : 'hover'}
+                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+              >
+                <Link
+                  to={slide.to}
+                  className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.sm} ${styles.cta}`}
+                >
+                  {slide.cardCtaLabel}
+                  <motion.span
+                    className={styles.ctaArrow}
+                    variants={ctaArrowVariants}
+                    transition={{ duration: 0.18, ease: 'easeOut' }}
+                    aria-hidden="true"
+                  >
+                    <FiArrowRight />
+                  </motion.span>
+                </Link>
+              </motion.div>
+            </motion.div>
+          </motion.div>
+        </AnimatePresence>
       </div>
 
-      <button
+      <motion.button
         type="button"
         className={`${styles.arrow} ${styles.arrowRight}`}
-        onClick={goNext}
+        onClick={onNext}
         aria-label="다음 슬라이드"
+        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.04 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
+        transition={{ duration: 0.18, ease: 'easeOut' }}
       >
-        ›
-      </button>
+        <FiChevronRight aria-hidden="true" />
+      </motion.button>
 
       <div className={styles.dots}>
-        {SLIDES.map((item, index) => (
+        {slides.map((item, index) => (
           <button
             key={item.id}
             type="button"
             className={`${styles.dot} ${index === activeIndex ? styles.dotActive : ''}`}
-            onClick={() => setActiveIndex(index)}
+            onClick={() => onGoTo(index)}
             aria-label={`${index + 1}번째 슬라이드로 이동`}
-          />
+          >
+            {index === activeIndex && <motion.span layoutId="activeCarouselDot" />}
+          </button>
         ))}
       </div>
     </section>
