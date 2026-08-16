@@ -48,7 +48,7 @@ const SLIDES = [
   {
     id: 'user-chat',
     label: '③ 조건상담 챗봇',
-    title: '내 조건으로 보증 가입이 가능한지 확인해요',
+    title: '내 조건으로 HUG 보증 가입이 가능한지 상담해보세요',
     heroTitle: ['내 조건으로 HUG 보증 가입이 가능한지', '챗봇에게 바로 물어보세요'],
     heroSubtitle: [
       '내 상황과 조건을 바탕으로',
@@ -56,13 +56,14 @@ const SLIDES = [
     ],
     primaryCtaLabel: '조건 상담 시작',
     secondaryCtaLabel: '보증 조건 알아보기',
-    heroNote: '로그인 없이 바로 조건상담 챗봇을 사용할 수 있어요',
+    heroNote: '로그인 없이 바로 이용 가능',
     description: [
-      '내 상황과 조건을 바탕으로',
-      'HUG 보증 가입 가능 여부에 대해 챗봇과 상담할 수 있어요',
+      '보증금, 전세가율 등 내 상황과 조건을 바탕으로',
+      '챗봇과 대화하며 가입 가능 여부를 확인할 수 있어요',
     ],
-    cardCtaLabel: '로그인 없이 상담하기',
-    image: '/images/landing/landing-feature-3.svg',
+    featurePoints: ['가입 가능 여부 상담', '조건별 추가 질문', '로그인 없이 바로 이용'],
+    cardCtaLabel: '바로 상담하기',
+    image: '/images/landing/Carousel3.png',
     to: '/user-chat',
   },
   {
@@ -76,8 +77,7 @@ const SLIDES = [
     ],
     primaryCtaLabel: '체크리스트 확인',
     secondaryCtaLabel: '맞춤 서류 확인',
-    heroNote:
-      '기본 체크리스트는 로그인 없이 사용할 수 있으며, 임대차계약서 기반 맞춤 확인은 로그인이 필요해요',
+    heroNote: '기본 체크리스트 바로 이용 · 맞춤 서류 확인은 로그인 필요',
     description: [
       '기본 체크리스트와 서류 정보를 확인하고,',
       '로그인하면 임대차계약서를 바탕으로 내게 필요한 서류만 확인할 수 있어요',

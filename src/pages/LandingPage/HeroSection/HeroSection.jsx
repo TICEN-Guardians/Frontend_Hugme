@@ -1,5 +1,13 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { FiArrowRight, FiFileText, FiHome, FiLock } from 'react-icons/fi';
+import {
+  FiArrowRight,
+  FiCheckCircle,
+  FiCheckSquare,
+  FiFileText,
+  FiHome,
+  FiLock,
+  FiMessageSquare,
+} from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
 import styles from './HeroSection.module.css';
@@ -55,15 +63,30 @@ const imageHeroCtaVariants = {
 export default function HeroSection({ slide, direction }) {
   const isRiskSlide = slide.id === 'risk';
   const isDocChatSlide = slide.id === 'doc-chat';
-  const isImageHero = isRiskSlide || isDocChatSlide;
+  const isConditionChatSlide = slide.id === 'user-chat';
+  const isChecklistSlide = slide.id === 'checklist';
+  const isImageHero = isRiskSlide || isDocChatSlide || isConditionChatSlide || isChecklistSlide;
   const prefersReducedMotion = useReducedMotion();
-  const BadgeIcon = isDocChatSlide ? FiFileText : FiHome;
+  const BadgeIcon = isChecklistSlide
+    ? FiCheckSquare
+    : isConditionChatSlide
+      ? FiMessageSquare
+      : isDocChatSlide
+        ? FiFileText
+        : FiHome;
+  const imageHeroBadgeLabel = isConditionChatSlide
+    ? '조건상담 챗봇'
+    : isChecklistSlide
+      ? '체크리스트'
+      : isDocChatSlide
+        ? '서류안내 챗봇'
+        : '매물 위험도 진단';
 
   return (
     <section
       className={`${styles.hero} ${isRiskSlide ? styles.landing1Hero : ''} ${
         isDocChatSlide ? styles.landing2Hero : ''
-      }`}
+      } ${isConditionChatSlide ? styles.landing3Hero : ''} ${isChecklistSlide ? styles.landing4Hero : ''}`}
     >
       <AnimatePresence initial={false} mode="wait" custom={direction}>
         <motion.div
@@ -85,7 +108,7 @@ export default function HeroSection({ slide, direction }) {
               animate="visible"
             >
               <BadgeIcon aria-hidden="true" />
-              {isDocChatSlide ? '서류안내 챗봇' : '매물 위험도 진단'}
+              {imageHeroBadgeLabel}
             </motion.div>
           )}
           <motion.h1
@@ -163,8 +186,27 @@ export default function HeroSection({ slide, direction }) {
           <p className={`${styles.note} ${isImageHero ? styles.imageHeroNote : ''}`}>
             {isImageHero ? (
               <>
-                <FiLock aria-hidden="true" />
-                로그인 후 이용 가능
+                {isConditionChatSlide ? (
+                  <>
+                    <FiCheckCircle className={styles.availableIcon} aria-hidden="true" />
+                    로그인 없이 바로 이용 가능
+                  </>
+                ) : isChecklistSlide ? (
+                  <>
+                    <FiCheckCircle className={styles.availableIcon} aria-hidden="true" />
+                    <span>기본 체크리스트 바로 이용</span>
+                    <span className={styles.noteDivider} aria-hidden="true">
+                      ·
+                    </span>
+                    <FiLock className={styles.lockIcon} aria-hidden="true" />
+                    <span>맞춤 서류 확인은 로그인 필요</span>
+                  </>
+                ) : (
+                  <>
+                    <FiLock aria-hidden="true" />
+                    로그인 후 이용 가능
+                  </>
+                )}
               </>
             ) : (
               <>* {slide.heroNote}</>
