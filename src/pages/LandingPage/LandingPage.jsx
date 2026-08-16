@@ -35,13 +35,14 @@ const SLIDES = [
     ],
     primaryCtaLabel: '서류 질문하기',
     secondaryCtaLabel: '체크리스트 보기',
-    heroNote: '로그인 후 서류안내 챗봇을 이용할 수 있어요',
+    heroNote: '로그인 후 이용 가능',
     description: [
       '특정 서류가 무엇인지 궁금하거나 추가로 확인하고 싶은 내용을',
       '챗봇과 대화하며 계속 질문할 수 있어요',
     ],
+    featurePoints: ['서류별 상세 안내', '궁금한 내용 추가 질문', '대화로 계속 확인'],
     cardCtaLabel: '로그인하고 질문하기',
-    image: '/images/landing/landing-feature-2.svg',
+    image: '/images/landing/Carousel2.png',
     to: '/doc-chat',
   },
   {

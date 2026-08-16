@@ -1,5 +1,5 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { FiArrowRight, FiHome, FiLock } from 'react-icons/fi';
+import { FiArrowRight, FiFileText, FiHome, FiLock } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
 import styles from './HeroSection.module.css';
@@ -19,7 +19,7 @@ const heroVariants = {
   }),
 };
 
-const riskItemVariants = {
+const imageHeroItemVariants = {
   hidden: (reducedMotion) => ({
     opacity: 0,
     y: reducedMotion ? 0 : 8,
@@ -34,7 +34,7 @@ const riskItemVariants = {
   },
 };
 
-const riskArrowVariants = {
+const imageHeroArrowVariants = {
   rest: {
     x: 0,
   },
@@ -43,7 +43,7 @@ const riskArrowVariants = {
   },
 };
 
-const riskCtaVariants = {
+const imageHeroCtaVariants = {
   rest: {
     y: 0,
   },
@@ -54,14 +54,21 @@ const riskCtaVariants = {
 
 export default function HeroSection({ slide, direction }) {
   const isRiskSlide = slide.id === 'risk';
+  const isDocChatSlide = slide.id === 'doc-chat';
+  const isImageHero = isRiskSlide || isDocChatSlide;
   const prefersReducedMotion = useReducedMotion();
+  const BadgeIcon = isDocChatSlide ? FiFileText : FiHome;
 
   return (
-    <section className={`${styles.hero} ${isRiskSlide ? styles.landing1Hero : ''}`}>
+    <section
+      className={`${styles.hero} ${isRiskSlide ? styles.landing1Hero : ''} ${
+        isDocChatSlide ? styles.landing2Hero : ''
+      }`}
+    >
       <AnimatePresence initial={false} mode="wait" custom={direction}>
         <motion.div
           key={slide.id}
-          className={`${styles.content} ${isRiskSlide ? styles.landing1Content : ''}`}
+          className={`${styles.content} ${isImageHero ? styles.imageHeroContent : ''}`}
           custom={direction}
           variants={heroVariants}
           initial="enter"
@@ -69,25 +76,25 @@ export default function HeroSection({ slide, direction }) {
           exit="exit"
           transition={{ duration: 0.26, ease: 'easeOut' }}
         >
-          {isRiskSlide && (
+          {isImageHero && (
             <motion.div
-              className={styles.riskBadge}
+              className={styles.imageHeroBadge}
               custom={prefersReducedMotion}
-              variants={riskItemVariants}
+              variants={imageHeroItemVariants}
               initial="hidden"
               animate="visible"
             >
-              <FiHome aria-hidden="true" />
-              매물 위험도 진단
+              <BadgeIcon aria-hidden="true" />
+              {isDocChatSlide ? '서류안내 챗봇' : '매물 위험도 진단'}
             </motion.div>
           )}
           <motion.h1
             className={styles.title}
             custom={prefersReducedMotion}
-            variants={isRiskSlide ? riskItemVariants : undefined}
-            initial={isRiskSlide ? 'hidden' : undefined}
-            animate={isRiskSlide ? 'visible' : undefined}
-            transition={isRiskSlide ? { delay: 0.05 } : undefined}
+            variants={isImageHero ? imageHeroItemVariants : undefined}
+            initial={isImageHero ? 'hidden' : undefined}
+            animate={isImageHero ? 'visible' : undefined}
+            transition={isImageHero ? { delay: 0.05 } : undefined}
           >
             {slide.heroTitle.map((line) => (
               <span key={line}>
@@ -99,10 +106,10 @@ export default function HeroSection({ slide, direction }) {
           <motion.p
             className={styles.subtitle}
             custom={prefersReducedMotion}
-            variants={isRiskSlide ? riskItemVariants : undefined}
-            initial={isRiskSlide ? 'hidden' : undefined}
-            animate={isRiskSlide ? 'visible' : undefined}
-            transition={isRiskSlide ? { delay: 0.1 } : undefined}
+            variants={isImageHero ? imageHeroItemVariants : undefined}
+            initial={isImageHero ? 'hidden' : undefined}
+            animate={isImageHero ? 'visible' : undefined}
+            transition={isImageHero ? { delay: 0.1 } : undefined}
           >
             {slide.heroSubtitle.map((line) => (
               <span key={line}>
@@ -112,10 +119,10 @@ export default function HeroSection({ slide, direction }) {
             ))}
           </motion.p>
           <div className={styles.actions}>
-            {isRiskSlide ? (
+            {isImageHero ? (
               <motion.div
-                className={styles.riskCtaMotion}
-                variants={riskCtaVariants}
+                className={styles.imageHeroCtaMotion}
+                variants={imageHeroCtaVariants}
                 initial="rest"
                 whileHover={prefersReducedMotion ? undefined : 'hover'}
                 whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
@@ -123,12 +130,12 @@ export default function HeroSection({ slide, direction }) {
               >
                 <Link
                   to={slide.to}
-                  className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.md} ${styles.primaryCta} ${styles.riskPrimaryCta}`}
+                  className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.md} ${styles.primaryCta} ${styles.imageHeroPrimaryCta}`}
                 >
-                  매물 위험도 진단하기
+                  {slide.primaryCtaLabel}
                   <motion.span
-                    className={styles.riskCtaArrow}
-                    variants={riskArrowVariants}
+                    className={styles.imageHeroCtaArrow}
+                    variants={imageHeroArrowVariants}
                     transition={{ duration: 0.18, ease: 'easeOut' }}
                     aria-hidden="true"
                   >
@@ -144,7 +151,7 @@ export default function HeroSection({ slide, direction }) {
                 {slide.primaryCtaLabel}
               </Link>
             )}
-            {!isRiskSlide && (
+            {!isImageHero && (
               <Link
                 to="/products"
                 className={`${buttonStyles.button} ${buttonStyles.secondary} ${buttonStyles.md} ${styles.secondaryCta}`}
@@ -153,8 +160,8 @@ export default function HeroSection({ slide, direction }) {
               </Link>
             )}
           </div>
-          <p className={`${styles.note} ${isRiskSlide ? styles.riskNote : ''}`}>
-            {isRiskSlide ? (
+          <p className={`${styles.note} ${isImageHero ? styles.imageHeroNote : ''}`}>
+            {isImageHero ? (
               <>
                 <FiLock aria-hidden="true" />
                 로그인 후 이용 가능
