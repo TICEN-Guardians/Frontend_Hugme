@@ -148,7 +148,7 @@ export default function HeroSection({ slide, direction }) {
       } ${isConditionChatSlide ? styles.landing3Hero : ''} ${isChecklistSlide ? styles.landing4Hero : ''}`}
     >
       {isImageHero && (
-        <AnimatePresence mode="sync">
+        <AnimatePresence mode="sync" initial={false}>
           <motion.div
             key={slide.id}
             className={styles.imageHeroBackdrop}

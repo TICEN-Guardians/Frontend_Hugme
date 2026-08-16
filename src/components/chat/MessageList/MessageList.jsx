@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import MessageBubble from '../MessageBubble/MessageBubble.jsx';
 import styles from './MessageList.module.css';
 
-export default function MessageList({ messages }) {
+export default function MessageList({ messages, animateMessages = false }) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -12,7 +12,12 @@ export default function MessageList({ messages }) {
   return (
     <div className={styles.list}>
       {messages.map((message, index) => (
-        <MessageBubble key={index} role={message.role} content={message.content} />
+        <MessageBubble
+          key={index}
+          role={message.role}
+          content={message.content}
+          animate={animateMessages}
+        />
       ))}
       <div ref={bottomRef} />
     </div>

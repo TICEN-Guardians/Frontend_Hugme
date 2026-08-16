@@ -4,6 +4,25 @@
   min-height: 100vh;
 }
 
+.chatPageWrapper {
+  display: block;
+  min-height: 0;
+}
+
 .main {
   flex: 1;
+}
+
+.chatMain {
+  display: flex;
+  flex: none;
+  flex-direction: column;
+  width: 100%;
+  max-width: none;
+  height: calc(100vh - var(--header-height));
+  height: calc(100dvh - var(--header-height));
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
 }

@@ -7,7 +7,7 @@
 }
 
 .bubble {
-  max-width: 80%;
+  max-width: 76%;
   padding: var(--space-2) var(--space-3);
   border-radius: var(--radius-md);
   font-size: var(--text-sm);
@@ -15,6 +15,7 @@
 }
 
 .user {
+  max-width: 68%;
   background: var(--blue-tint-50);
   color: var(--text-blue-dark);
 }
