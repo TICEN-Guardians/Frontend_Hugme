@@ -1,72 +1,20 @@
-.shell {
-  display: flex;
-  min-height: 100%;
-}
-
-.side {
-  box-sizing: border-box;
-  display: flex;
-  align-items: flex-start;
-  width: 45%;
-  padding: var(--space-10);
-  background: linear-gradient(160deg, var(--brand-blue) 0%, var(--brand-green) 100%);
-}
-
-.logoBox {
-  display: inline-flex;
-  padding: var(--space-3) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--on-accent);
-}
-
-.logo {
-  height: 6.4rem;
-  object-fit: contain;
-}
-
-.formSide {
-  box-sizing: border-box;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 55%;
-  padding: var(--space-10);
-}
-
 .form {
   width: 100%;
-  max-width: 40rem;
-}
-
-.title {
-  margin: 0 0 var(--space-2);
-  color: var(--text-primary);
-  font-size: var(--text-2xl);
-  font-weight: 800;
-}
-
-.subtitle {
-  margin: 0 0 var(--space-8);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.formError {
-  margin: 0 0 var(--space-6);
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--border-subtle);
-  color: var(--text-red-dark);
-  font-size: var(--text-sm);
 }
 
 .field {
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-5);
+}
+
+.labelRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
 }
 
 .label {
-  display: block;
-  margin-bottom: var(--space-2);
   color: var(--text-strong);
   font-size: var(--text-sm);
   font-weight: 600;
@@ -75,43 +23,116 @@
 .input {
   box-sizing: border-box;
   width: 100%;
-  padding: var(--space-4);
+  min-height: 5.4rem;
+  padding: 0 var(--space-4);
   border: 0.1rem solid var(--border-default);
-  border-radius: var(--radius-md);
+  border-radius: 1.2rem;
+  background: var(--on-accent);
+  color: var(--text-primary);
   font: inherit;
   font-size: var(--text-sm);
-  color: var(--text-primary);
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .input::placeholder {
   color: var(--text-disabled);
 }
 
+.input:focus {
+  border-color: var(--brand-blue);
+  box-shadow: 0 0 0 0.3rem rgba(15, 117, 189, 0.12);
+  outline: none;
+}
+
+.passwordWrap {
+  position: relative;
+}
+
+.passwordInput {
+  padding-right: 5.2rem;
+}
+
+.passwordToggle {
+  position: absolute;
+  top: 50%;
+  right: var(--space-4);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  cursor: pointer;
+  transform: translateY(-50%);
+}
+
+.passwordToggle:hover {
+  color: var(--brand-blue);
+}
+
+.passwordToggle:focus-visible {
+  outline: 0.3rem solid rgba(15, 117, 189, 0.16);
+  outline-offset: 0.3rem;
+}
+
 .fieldError {
-  margin: var(--space-1) 0 0;
+  margin: 0;
   color: var(--text-red-dark);
   font-size: var(--text-xs);
+  font-weight: 600;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
 }
 
 .row {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: var(--space-6);
+  margin: var(--space-1) 0 var(--space-6);
 }
 
 .checkboxLabel {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   color: var(--text-secondary);
   font-size: var(--text-sm);
 }
 
-.linkLike {
-  color: var(--brand-blue);
-  font-size: var(--text-sm);
-  font-weight: 600;
+.checkboxLabel input {
+  width: 1.6rem;
+  height: 1.6rem;
+  accent-color: var(--brand-blue);
+}
+
+.submitButton {
+  width: 100%;
+  min-height: 5.4rem;
+  border-color: var(--brand-blue);
+  border-radius: 1.2rem;
+  background: var(--brand-blue);
+  color: var(--on-accent);
+  font-size: var(--text-base);
+  font-weight: 700;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.submitButton:hover:not(:disabled) {
+  border-color: #0a67a8;
+  background: #0a67a8;
+  transform: translateY(-0.1rem);
+}
+
+.submitButton:active:not(:disabled) {
+  transform: translateY(0);
 }
 
 .crossLink {
@@ -122,7 +143,11 @@
 }
 
 .crossLink a {
-  color: var(--brand-green);
+  color: var(--brand-blue);
   font-weight: 700;
   text-decoration: none;
+}
+
+.crossLink a:hover {
+  text-decoration: underline;
 }

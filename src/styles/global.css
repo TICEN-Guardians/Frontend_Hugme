@@ -5,6 +5,12 @@ body {
   color: var(--text-primary);
 }
 
+@media (max-width: 76.7rem) {
+  body {
+    min-width: 0;
+  }
+}
+
 button {
   font: inherit;
 }

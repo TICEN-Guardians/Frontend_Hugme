@@ -4,6 +4,9 @@ import { Link } from 'react-router-dom';
 import buttonStyles from '../../../components/common/Button/Button.module.css';
 import styles from './FeatureCarousel.module.css';
 
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
+const EXIT_EASE = [0.4, 0, 1, 1];
+
 const slideVariants = {
   enter: () => ({
     opacity: 0,
@@ -17,36 +20,94 @@ const slideVariants = {
 };
 
 const imageVariants = {
-  enter: (direction) => ({
+  enter: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: direction > 0 ? -34 : 34,
-    scale: 0.985,
+    x: reducedMotion ? 0 : direction * 70,
+    y: 0,
+    scale: reducedMotion ? 1 : 0.985,
   }),
   center: {
     opacity: 1,
     x: 0,
+    y: 0,
     scale: 1,
+    transition: {
+      duration: 0.95,
+      ease: ENTRY_EASE,
+    },
   },
-  exit: (direction) => ({
+  exit: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: direction > 0 ? 34 : -34,
-    scale: 0.985,
+    x: reducedMotion ? 0 : direction * -40,
+    scale: reducedMotion ? 1 : 0.99,
+    transition: {
+      duration: 0.5,
+      ease: EXIT_EASE,
+    },
   }),
 };
 
 const contentVariants = {
-  enter: (direction) => ({
+  enter: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: direction > 0 ? 34 : -34,
+    x: reducedMotion ? 0 : direction * -45,
+    y: 0,
   }),
   center: {
     opacity: 1,
     x: 0,
+    y: 0,
+    transition: {
+      duration: 0.9,
+      ease: ENTRY_EASE,
+      delayChildren: 0.36,
+      staggerChildren: 0.075,
+    },
   },
-  exit: (direction) => ({
+  exit: ({ direction, reducedMotion }) => ({
     opacity: 0,
-    x: direction > 0 ? -34 : 34,
+    x: reducedMotion ? 0 : direction * 30,
+    transition: {
+      duration: 0.48,
+      ease: EXIT_EASE,
+    },
   }),
+};
+
+const detailItemVariants = {
+  enter: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 20,
+  }),
+  center: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.68,
+      ease: ENTRY_EASE,
+    },
+  },
+};
+
+const ctaMotionVariants = {
+  enter: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 20,
+    scale: 1,
+  }),
+  center: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.68,
+      ease: ENTRY_EASE,
+    },
+  },
+  hover: {
+    y: -2,
+    scale: 1.01,
+  },
 };
 
 const ctaArrowVariants = {
@@ -54,9 +115,17 @@ const ctaArrowVariants = {
   hover: { x: 3 },
 };
 
-export default function FeatureCarousel({ slides, activeIndex, direction, onPrev, onNext, onGoTo }) {
+export default function FeatureCarousel({
+  slides,
+  activeIndex,
+  direction,
+  onPrev,
+  onNext,
+  onGoTo,
+}) {
   const slide = slides[activeIndex];
   const prefersReducedMotion = useReducedMotion();
+  const motionCustom = { direction, reducedMotion: prefersReducedMotion };
 
   return (
     <section className={styles.carousel}>
@@ -65,33 +134,34 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
         className={`${styles.arrow} ${styles.arrowLeft}`}
         onClick={onPrev}
         aria-label="이전 슬라이드"
-        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.04 }}
-        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <FiChevronLeft aria-hidden="true" />
       </motion.button>
 
       <div className={styles.slideFrame}>
-        <AnimatePresence initial={false} custom={direction}>
+        <AnimatePresence custom={direction}>
           <motion.div
             key={slide.id}
             className={styles.slide}
-            custom={direction}
+            custom={motionCustom}
             variants={slideVariants}
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.85, ease: ENTRY_EASE }}
           >
             <motion.div
               className={styles.visual}
-              custom={direction}
+              custom={motionCustom}
               variants={imageVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
             >
               <img
                 className={styles.image}
@@ -103,42 +173,60 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
             </motion.div>
             <motion.div
               className={styles.content}
-              custom={direction}
+              custom={motionCustom}
               variants={contentVariants}
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
             >
-              <div className={styles.label}>
+              <motion.div
+                className={styles.label}
+                custom={prefersReducedMotion}
+                variants={detailItemVariants}
+              >
                 <span className={styles.labelNumber}>{String(activeIndex + 1).padStart(2, '0')}</span>
                 <span>{slide.label.replace(/^[①②③④]\s*/, '')}</span>
-              </div>
-              <h2 className={styles.featureTitle}>{slide.title}</h2>
-              <p className={styles.description}>
+              </motion.div>
+              <motion.h2
+                className={styles.featureTitle}
+                custom={prefersReducedMotion}
+                variants={detailItemVariants}
+              >
+                {slide.title}
+              </motion.h2>
+              <motion.p
+                className={styles.description}
+                custom={prefersReducedMotion}
+                variants={detailItemVariants}
+              >
                 {slide.description.map((line) => (
                   <span key={line}>
                     {line}
                     <br />
                   </span>
                 ))}
-              </p>
+              </motion.p>
               {slide.featurePoints && (
-                <ul className={styles.points}>
+                <motion.ul
+                  className={styles.points}
+                  custom={prefersReducedMotion}
+                  variants={detailItemVariants}
+                >
                   {slide.featurePoints.map((point) => (
                     <li key={point}>
                       <FiCheck aria-hidden="true" />
                       {point}
                     </li>
                   ))}
-                </ul>
+                </motion.ul>
               )}
               <motion.div
                 className={styles.ctaMotion}
-                initial="rest"
+                custom={prefersReducedMotion}
+                variants={ctaMotionVariants}
                 whileHover={prefersReducedMotion ? undefined : 'hover'}
-                whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-                transition={{ duration: 0.18, ease: 'easeOut' }}
+                whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.985 }}
+                transition={{ duration: 0.2, ease: 'easeOut' }}
               >
                 <Link
                   to={slide.to}
@@ -165,26 +253,35 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
         className={`${styles.arrow} ${styles.arrowRight}`}
         onClick={onNext}
         aria-label="다음 슬라이드"
-        whileHover={prefersReducedMotion ? undefined : { y: -1, scale: 1.04 }}
-        whileTap={prefersReducedMotion ? undefined : { scale: 0.98 }}
-        transition={{ duration: 0.18, ease: 'easeOut' }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        whileHover={prefersReducedMotion ? undefined : { scale: 1.06 }}
+        whileTap={prefersReducedMotion ? undefined : { scale: 0.94 }}
+        transition={{ duration: 0.6, ease: 'easeOut' }}
       >
         <FiChevronRight aria-hidden="true" />
       </motion.button>
 
-      <div className={styles.dots}>
+      <motion.div
+        className={styles.dots}
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.65, ease: ENTRY_EASE }}
+      >
         {slides.map((item, index) => (
-          <button
+          <motion.button
             key={item.id}
             type="button"
+            layout
             className={`${styles.dot} ${index === activeIndex ? styles.dotActive : ''}`}
             onClick={() => onGoTo(index)}
             aria-label={`${index + 1}번째 슬라이드로 이동`}
+            transition={{ duration: 0.35, ease: ENTRY_EASE }}
           >
             {index === activeIndex && <motion.span layoutId="activeCarouselDot" />}
-          </button>
+          </motion.button>
         ))}
-      </div>
+      </motion.div>
     </section>
   );
 }

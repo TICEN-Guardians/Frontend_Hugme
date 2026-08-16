@@ -1,12 +1,55 @@
 import { useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
+import { FiEye, FiEyeOff } from 'react-icons/fi';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
+import SuccessModal from '../../components/common/Modal/SuccessModal.jsx';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
+import AuthLayout from '../../layout/AuthLayout/AuthLayout.jsx';
 import styles from './LoginPage.module.css';
 
-const LOGO_SRC = '/images/Logo.png';
-
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
+
+const formVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      delayChildren: 0.16,
+      staggerChildren: 0.09,
+    },
+  },
+};
+
+const fieldVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 24,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.72,
+      ease: ENTRY_EASE,
+    },
+  },
+};
+
+const ctaVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 20,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.7,
+      ease: ENTRY_EASE,
+    },
+  },
+};
 
 function validate(email, password) {
   const errors = {};
@@ -25,13 +68,16 @@ export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const prefersReducedMotion = useReducedMotion();
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [rememberMe, setRememberMe] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
-  const [formError, setFormError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [successModal, setSuccessModal] = useState({ isOpen: false, redirectTo: '/' });
+  const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -39,96 +85,130 @@ export default function LoginPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
-    setFormError('');
     setIsSubmitting(true);
     try {
       await login(email, password);
       const redirectTo = location.state?.from?.pathname ?? '/';
-      navigate(redirectTo, { replace: true });
+      setSuccessModal({ isOpen: true, redirectTo });
     } catch (error) {
-      setFormError(error?.response?.data?.message ?? '로그인에 실패했습니다. 다시 시도해주세요.');
+      setErrorModal({
+        isOpen: true,
+        message: error?.response?.data?.message ?? '이메일 또는 비밀번호를 다시 확인해주세요.',
+      });
     } finally {
       setIsSubmitting(false);
     }
   };
 
+  const handleSuccessConfirm = () => {
+    navigate(successModal.redirectTo, { replace: true });
+  };
+
+  const handleErrorConfirm = () => {
+    setErrorModal({ isOpen: false, message: '' });
+  };
+
   return (
-    <div className={styles.shell}>
-      <div className={styles.side}>
-        <div className={styles.logoBox}>
-          <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
-        </div>
-      </div>
-
-      <div className={styles.formSide}>
-        <form className={styles.form} onSubmit={handleSubmit} noValidate>
-          <h1 className={styles.title}>로그인</h1>
-          <p className={styles.subtitle}>가입한 계정으로 로그인하세요</p>
-
-          {formError && (
-            <p className={styles.formError} role="alert">
-              {formError}
-            </p>
-          )}
-
-          <div className={styles.field}>
+    <AuthLayout title="로그인">
+      <motion.form
+        className={styles.form}
+        onSubmit={handleSubmit}
+        noValidate
+        variants={formVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div className={styles.field} custom={prefersReducedMotion} variants={fieldVariants}>
+          <div className={styles.labelRow}>
             <label className={styles.label} htmlFor="login-email">
               이메일
             </label>
-            <input
-              id="login-email"
-              type="email"
-              className={styles.input}
-              placeholder="이메일 주소"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-            />
             {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
           </div>
+          <input
+            id="login-email"
+            type="email"
+            className={styles.input}
+            placeholder="이메일을 입력해 주세요"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+          />
+        </motion.div>
 
-          <div className={styles.field}>
+        <motion.div className={styles.field} custom={prefersReducedMotion} variants={fieldVariants}>
+          <div className={styles.labelRow}>
             <label className={styles.label} htmlFor="login-password">
               비밀번호
             </label>
+            {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
+          </div>
+          <div className={styles.passwordWrap}>
             <input
               id="login-password"
-              type="password"
-              className={styles.input}
-              placeholder="비밀번호"
+              type={showPassword ? 'text' : 'password'}
+              className={`${styles.input} ${styles.passwordInput}`}
+              placeholder="비밀번호를 입력해 주세요"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               autoComplete="current-password"
             />
-            {errors.password && <p className={styles.fieldError}>{errors.password}</p>}
+            <button
+              type="button"
+              className={styles.passwordToggle}
+              onClick={() => setShowPassword((prev) => !prev)}
+              aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 보기'}
+            >
+              {showPassword ? <FiEyeOff aria-hidden="true" /> : <FiEye aria-hidden="true" />}
+            </button>
           </div>
+        </motion.div>
 
-          <div className={styles.row}>
-            <label className={styles.checkboxLabel}>
-              <input
-                type="checkbox"
-                checked={rememberMe}
-                onChange={(event) => setRememberMe(event.target.checked)}
-              />
-              자동 로그인
-            </label>
-            {/* TODO: 비밀번호 찾기 플로우/라우트 미정 */}
-            <span className={styles.linkLike}>비밀번호 찾기</span>
-          </div>
+        <motion.div className={styles.row} custom={prefersReducedMotion} variants={fieldVariants}>
+          <label className={styles.checkboxLabel}>
+            <input
+              type="checkbox"
+              checked={rememberMe}
+              onChange={(event) => setRememberMe(event.target.checked)}
+            />
+            로그인 유지
+          </label>
+        </motion.div>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            style={{ width: '100%', background: 'var(--brand-blue)', color: 'var(--on-accent)' }}
-          >
+        <motion.div
+          custom={prefersReducedMotion}
+          variants={ctaVariants}
+          whileHover={prefersReducedMotion ? undefined : { y: -2, scale: 1.005 }}
+          whileTap={prefersReducedMotion ? undefined : { y: 0, scale: 0.99 }}
+          transition={{ duration: 0.2, ease: 'easeOut' }}
+        >
+          <Button type="submit" disabled={isSubmitting} className={styles.submitButton}>
             {isSubmitting ? '로그인 중...' : '로그인'}
           </Button>
+        </motion.div>
 
-          <p className={styles.crossLink}>
-            계정이 없으신가요? <Link to="/auth/signup">회원가입</Link>
-          </p>
-        </form>
-      </div>
-    </div>
+        <motion.p className={styles.crossLink} custom={prefersReducedMotion} variants={ctaVariants}>
+          아직 회원이 아니신가요? <Link to="/auth/signup">회원가입</Link>
+        </motion.p>
+      </motion.form>
+
+      <SuccessModal
+        isOpen={successModal.isOpen}
+        title="로그인 완료"
+        description="HUGME 서비스를 바로 이용할 수 있어요."
+        actionLabel="시작하기"
+        onAction={handleSuccessConfirm}
+        onClose={handleSuccessConfirm}
+      />
+      <SuccessModal
+        isOpen={errorModal.isOpen}
+        tone="error"
+        title="로그인 실패"
+        description={errorModal.message}
+        actionLabel="다시 입력하기"
+        onAction={handleErrorConfirm}
+        onClose={handleErrorConfirm}
+      />
+    </AuthLayout>
   );
 }
