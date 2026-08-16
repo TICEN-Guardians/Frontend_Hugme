@@ -31,6 +31,17 @@
   pointer-events: none;
 }
 
+.imageHeroBackdrop {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  pointer-events: none;
+  will-change: opacity, transform;
+}
+
 .landing1Hero::before {
   z-index: 0;
   background-image: url('/images/landing/Landing1.png');

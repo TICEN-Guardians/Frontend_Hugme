@@ -25,19 +25,19 @@
   border: 0.1rem solid rgba(15, 23, 42, 0.1);
   background: var(--on-accent);
   color: var(--text-secondary);
-  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.06);
+  box-shadow: none;
   font-size: 2.2rem;
   cursor: pointer;
   transition:
+    background-color 0.2s ease,
     border-color 0.2s ease,
-    color 0.2s ease,
-    box-shadow 0.2s ease;
+    color 0.2s ease;
 }
 
 .arrow:hover {
   border-color: var(--brand-blue);
+  background: rgba(15, 117, 189, 0.08);
   color: var(--brand-blue);
-  box-shadow: 0 1rem 2.6rem rgba(15, 117, 189, 0.14);
 }
 
 .arrow:focus-visible {
@@ -182,9 +182,9 @@
 }
 
 .content .cta:hover {
-  background: var(--brand-blue);
+  background: #0a67a8;
   color: var(--on-accent);
-  box-shadow: 0 1.2rem 2.8rem rgba(15, 117, 189, 0.24);
+  box-shadow: 0 0.8rem 2rem rgba(15, 117, 189, 0.2);
   text-decoration: none;
 }
 

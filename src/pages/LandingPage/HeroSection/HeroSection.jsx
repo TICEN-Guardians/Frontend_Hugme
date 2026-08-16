@@ -15,7 +15,7 @@ import styles from './HeroSection.module.css';
 const heroVariants = {
   enter: (direction) => ({
     opacity: 0,
-    y: direction > 0 ? 18 : -18,
+    y: direction > 0 ? 22 : -22,
   }),
   center: {
     opacity: 1,
@@ -23,21 +23,36 @@ const heroVariants = {
   },
   exit: (direction) => ({
     opacity: 0,
-    y: direction > 0 ? -18 : 18,
+    y: direction > 0 ? -22 : 22,
+  }),
+};
+
+const heroBackdropVariants = {
+  enter: (reducedMotion) => ({
+    opacity: 0,
+    scale: reducedMotion ? 1 : 1.035,
+  }),
+  center: {
+    opacity: 1,
+    scale: 1,
+  },
+  exit: (reducedMotion) => ({
+    opacity: 0,
+    scale: reducedMotion ? 1 : 0.985,
   }),
 };
 
 const imageHeroItemVariants = {
   hidden: (reducedMotion) => ({
     opacity: 0,
-    y: reducedMotion ? 0 : 8,
+    y: reducedMotion ? 0 : 10,
   }),
   visible: {
     opacity: 1,
     y: 0,
     transition: {
-      duration: 0.38,
-      ease: [0.22, 1, 0.36, 1],
+      duration: 0.42,
+      ease: [0.16, 1, 0.3, 1],
     },
   },
 };
@@ -58,6 +73,13 @@ const imageHeroCtaVariants = {
   hover: {
     y: -2,
   },
+};
+
+const heroBackgrounds = {
+  risk: '/images/landing/Landing1.png',
+  'doc-chat': '/images/landing/Landing2.png',
+  'user-chat': '/images/landing/Landing3.png',
+  checklist: '/images/landing/Landing4.png',
 };
 
 export default function HeroSection({ slide, direction }) {
@@ -88,6 +110,22 @@ export default function HeroSection({ slide, direction }) {
         isDocChatSlide ? styles.landing2Hero : ''
       } ${isConditionChatSlide ? styles.landing3Hero : ''} ${isChecklistSlide ? styles.landing4Hero : ''}`}
     >
+      {isImageHero && (
+        <AnimatePresence initial={false} mode="sync">
+          <motion.div
+            key={slide.id}
+            className={styles.imageHeroBackdrop}
+            custom={prefersReducedMotion}
+            style={{ backgroundImage: `url(${heroBackgrounds[slide.id]})` }}
+            variants={heroBackdropVariants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.78, ease: [0.16, 1, 0.3, 1] }}
+            aria-hidden="true"
+          />
+        </AnimatePresence>
+      )}
       <AnimatePresence initial={false} mode="wait" custom={direction}>
         <motion.div
           key={slide.id}
@@ -97,7 +135,7 @@ export default function HeroSection({ slide, direction }) {
           initial="enter"
           animate="center"
           exit="exit"
-          transition={{ duration: 0.26, ease: 'easeOut' }}
+          transition={{ duration: 0.34, ease: [0.16, 1, 0.3, 1] }}
         >
           {isImageHero && (
             <motion.div

@@ -19,22 +19,25 @@ const slideVariants = {
 const imageVariants = {
   enter: (direction) => ({
     opacity: 0,
-    x: direction > 0 ? -12 : 12,
+    x: direction > 0 ? -34 : 34,
+    scale: 0.985,
   }),
   center: {
     opacity: 1,
     x: 0,
+    scale: 1,
   },
   exit: (direction) => ({
     opacity: 0,
-    x: direction > 0 ? 12 : -12,
+    x: direction > 0 ? 34 : -34,
+    scale: 0.985,
   }),
 };
 
 const contentVariants = {
   enter: (direction) => ({
     opacity: 0,
-    x: direction > 0 ? 12 : -12,
+    x: direction > 0 ? 34 : -34,
   }),
   center: {
     opacity: 1,
@@ -42,7 +45,7 @@ const contentVariants = {
   },
   exit: (direction) => ({
     opacity: 0,
-    x: direction > 0 ? -12 : 12,
+    x: direction > 0 ? -34 : 34,
   }),
 };
 
@@ -79,7 +82,7 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
             initial="enter"
             animate="center"
             exit="exit"
-            transition={{ duration: 0.38, ease: [0.22, 1, 0.36, 1] }}
+            transition={{ duration: 0.68, ease: [0.16, 1, 0.3, 1] }}
           >
             <motion.div
               className={styles.visual}
@@ -88,7 +91,7 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
             >
               <img
                 className={styles.image}
@@ -105,7 +108,7 @@ export default function FeatureCarousel({ slides, activeIndex, direction, onPrev
               initial="enter"
               animate="center"
               exit="exit"
-              transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+              transition={{ duration: 0.82, ease: [0.16, 1, 0.3, 1] }}
             >
               <div className={styles.label}>
                 <span className={styles.labelNumber}>{String(activeIndex + 1).padStart(2, '0')}</span>
