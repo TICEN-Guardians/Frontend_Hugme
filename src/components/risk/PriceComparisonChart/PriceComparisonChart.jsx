@@ -1,9 +1,12 @@
+import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './PriceComparisonChart.module.css';
 
 export default function PriceComparisonChart({ title, bars, diffs }) {
   return (
     <div className={styles.card}>
-      <p className={styles.title}>{title} ⓘ</p>
+      <p className={styles.title}>
+        {title} <FaCircleInfo aria-hidden="true" />
+      </p>
       <div className={styles.content}>
         <div className={styles.chart}>
           {bars.map((bar) => (

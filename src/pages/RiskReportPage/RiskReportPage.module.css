@@ -13,7 +13,7 @@
 
 .topRow {
   display: grid;
-  grid-template-columns: 1fr 380px;
+  grid-template-columns: 1fr 38rem;
   gap: var(--space-5);
 }
 

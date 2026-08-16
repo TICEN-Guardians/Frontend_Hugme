@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { FaCircleCheck, FaFileLines } from 'react-icons/fa6';
 import { useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
@@ -107,7 +108,9 @@ export default function ProductChecklistPage() {
 
       {isDone ? (
         <div className={styles.doneBanner}>
-          <p className={styles.doneBannerTitle}>✓ 임대차계약서 분석 완료</p>
+          <p className={styles.doneBannerTitle}>
+            <FaCircleCheck aria-hidden="true" /> 임대차계약서 분석 완료
+          </p>
           {/* TODO: 다시 분석(재업로드) 플로우는 다음 차수에서 연결 */}
           <Button type="button" variant="secondary" onClick={() => {}}>
             다시 분석
@@ -150,7 +153,7 @@ export default function ProductChecklistPage() {
                   return (
                     <DocumentCard
                       key={doc.documentId}
-                      icon="📄"
+                      icon={<FaFileLines />}
                       title={doc.title}
                       description={doc.description}
                       chip={doc.tag}

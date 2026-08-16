@@ -1,3 +1,4 @@
+import { FaCircleCheck } from 'react-icons/fa6';
 import TabBar from '../../../../components/common/TabBar/TabBar.jsx';
 import styles from './ChecklistPanel.module.css';
 
@@ -70,7 +71,8 @@ export default function ChecklistPanel({
                   onClick={() => onToggleReady(doc.id)}
                   aria-pressed={doc.ready}
                 >
-                  {doc.ready ? '✓ 완료' : '완료'}
+                  {doc.ready && <FaCircleCheck aria-hidden="true" />}
+                  완료
                 </button>
               </div>
             </div>

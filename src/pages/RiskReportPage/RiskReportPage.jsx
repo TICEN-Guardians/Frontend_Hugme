@@ -1,3 +1,12 @@
+import {
+  FaClipboardCheck,
+  FaFileLines,
+  FaHouse,
+  FaHouseChimney,
+  FaShieldHalved,
+  FaUser,
+  FaWonSign,
+} from 'react-icons/fa6';
 import CollateralBar from '../../components/risk/CollateralBar/CollateralBar.jsx';
 import MetricSummary from '../../components/risk/MetricSummary/MetricSummary.jsx';
 import ModelFactorList from '../../components/risk/ModelFactorList/ModelFactorList.jsx';
@@ -14,7 +23,7 @@ import styles from './RiskReportPage.module.css';
 // reportId(useParams)는 아직 아무 데도 안 쓰인다 — 리포트가 항상 이 mock 하나뿐이라서다.
 const MOCK_REPORT = {
   title: '전세보증금 안전 진단 리포트',
-  badgeLabel: '⚠️ 주의',
+  badgeLabel: '주의',
   badgeTone: 'warning',
   address: '서울특별시 강남구 테헤란로 123, 101동 1203호',
   housingType: '아파트',
@@ -29,10 +38,10 @@ const MOCK_REPORT = {
     { label: '임대인 위험', score: 2, max: 25 },
   ],
   keyStats: [
-    { icon: '🏠', label: 'AI 예상 매매가', value: '3.0억 원' },
-    { icon: '🏡', label: 'AI 예상 전세가', value: '1.7억 원' },
-    { icon: '🔒', label: '계약 보증금', value: '2.0억 원' },
-    { icon: '🛡️', label: '등기부상 채권최고액', value: '0.5억 원' },
+    { icon: <FaHouse />, label: 'AI 예상 매매가', value: '3.0억 원' },
+    { icon: <FaHouseChimney />, label: 'AI 예상 전세가', value: '1.7억 원' },
+    { icon: <FaWonSign />, label: '계약 보증금', value: '2.0억 원' },
+    { icon: <FaShieldHalved />, label: '등기부상 채권최고액', value: '0.5억 원' },
   ],
   priceComparison: {
     bars: [
@@ -68,30 +77,30 @@ const MOCK_REPORT = {
     { label: '금리 수준', percent: 12 },
   ],
   refundChecks: [
-    { label: '전세권 등기 없음', status: '✓ 양호', tone: 'Success' },
-    { label: '선순위 관리금액 있음', status: '⚠ 주의', tone: 'Warning' },
-    { label: '신탁 등기 없음', status: '✓ 양호', tone: 'Success' },
-    { label: '경매 진행 없음', status: '✓ 양호', tone: 'Success' },
-    { label: '반환 위험 보통 이상', status: '⚠ 보통', tone: 'Warning' },
+    { label: '전세권 등기 없음', status: '양호', tone: 'Success' },
+    { label: '선순위 관리금액 있음', status: '주의', tone: 'Warning' },
+    { label: '신탁 등기 없음', status: '양호', tone: 'Success' },
+    { label: '경매 진행 없음', status: '양호', tone: 'Success' },
+    { label: '반환 위험 보통 이상', status: '보통', tone: 'Warning' },
   ],
   riskReasons: [
-    { icon: '💰', label: '계약가격', description: 'AI 예상 전세시세보다 높은 계약' },
-    { icon: '🛡️', label: '담보 안전성', description: '담보부담율이 높은 수준' },
-    { icon: '📄', label: '등기부 상태', description: '압류·경매 등은 확인되지 않음' },
+    { icon: <FaWonSign />, label: '계약가격', description: 'AI 예상 전세시세보다 높은 계약' },
+    { icon: <FaShieldHalved />, label: '담보 안전성', description: '담보부담율이 높은 수준' },
+    { icon: <FaFileLines />, label: '등기부 상태', description: '압류·경매 등은 확인되지 않음' },
   ],
   recommendedActions: [
     {
-      icon: '👤',
+      icon: <FaUser />,
       title: '보증금 규모 재협상 검토',
       description: 'AI 시세 및 담보여력을 고려하여 보증금 조정 여부를 검토하세요.',
     },
     {
-      icon: '📋',
+      icon: <FaClipboardCheck />,
       title: '선순위 채권 상세 확인',
       description: '근저당권의 설정일, 금액, 말소 조건을 반드시 확인하세요.',
     },
     {
-      icon: '🛡️',
+      icon: <FaShieldHalved />,
       title: '보증보험 가입조건 동시 체크',
       description: '보증보험 가입 가능 여부와 보증한도를 사전에 확인하세요.',
     },

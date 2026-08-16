@@ -19,13 +19,13 @@
 }
 
 .primary {
-  border: 1px solid var(--accent);
+  border: 0.1rem solid var(--accent);
   background: var(--accent);
   color: var(--on-accent);
 }
 
 .secondary {
-  border: 1px solid var(--accent);
+  border: 0.1rem solid var(--accent);
   background: transparent;
   color: var(--accent-text);
 }
