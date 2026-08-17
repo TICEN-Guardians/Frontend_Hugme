@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaCircleCheck, FaFileLines } from 'react-icons/fa6';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
@@ -26,6 +26,7 @@ const PRODUCT_TITLES = {
 };
 
 export default function ProductChecklistPage() {
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const { productCode: productCodeParam, guaranteeType } = useParams();
   const productCode = PRODUCT_ROUTE_TO_CODE[productCodeParam] ?? PRODUCT_ROUTE_TO_CODE[guaranteeType];
@@ -129,6 +130,12 @@ export default function ProductChecklistPage() {
           {/* TODO: 다시 분석(재업로드) 플로우는 다음 차수에서 연결 */}
           <Button type="button" variant="secondary" onClick={() => {}}>
             다시 분석
+          </Button>
+          <Button
+            type="button"
+            onClick={() => navigate('/doc-chat', { state: { applicationId } })}
+          >
+            서류안내 챗봇
           </Button>
         </div>
       ) : (
