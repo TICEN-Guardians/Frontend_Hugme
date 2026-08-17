@@ -7,6 +7,7 @@ import ErrorPage from './pages/ErrorPage/ErrorPage.jsx';
 import LandingPage from './pages/LandingPage/LandingPage.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
 import MainPage from './pages/MainPage/MainPage.jsx';
+import EmailVerifyPage from './pages/EmailVerifyPage/EmailVerifyPage.jsx';
 import ProductChecklistPage from './pages/ProductChecklistPage/ProductChecklistPage.jsx';
 import ProductsPage from './pages/ProductsPage/ProductsPage.jsx';
 import RiskFormPage from './pages/RiskFormPage/RiskFormPage.jsx';
@@ -23,6 +24,8 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/signup" element={<SignupPage />} />
+        <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
+        <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
         {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
         <Route path="/risk/new" element={<RiskFormPage />} />
         <Route path="/risk/:reportId" element={<RiskReportPage />} />

@@ -21,17 +21,20 @@ export function AuthProvider({ children }) {
       .then(() => getMe())
       .then((me) => {
         if (ignore) return;
+
         setUser(me);
         setIsAuthenticated(true);
       })
       .catch(() => {
-        // 세션 없음 = 정상적인 비로그인 상태. 에러로 취급하지 않는다.
         if (ignore) return;
+
         setUser(null);
         setIsAuthenticated(false);
       })
       .finally(() => {
-        if (!ignore) setIsAuthLoading(false);
+        if (!ignore) {
+          setIsAuthLoading(false);
+        }
       });
 
     return () => {
@@ -39,15 +42,17 @@ export function AuthProvider({ children }) {
     };
   }, []);
 
+  const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
+
   const login = useCallback(async (email, password) => {
     await loginRequest(email, password);
     const me = await getMe();
+
     setUser(me);
     setIsAuthenticated(true);
+
     return me;
   }, []);
-
-  const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
   const logout = useCallback(async () => {
     try {
@@ -59,13 +64,26 @@ export function AuthProvider({ children }) {
   }, []);
 
   const value = useMemo(
-    () => ({ user, isAuthenticated, isAuthLoading, login, signup, logout }),
-    [user, isAuthenticated, isAuthLoading, login, signup, logout],
+    () => ({
+      user,
+      isAuthenticated,
+      isAuthLoading,
+      signup,
+      login,
+      logout,
+    }),
+    [user, isAuthenticated, isAuthLoading, signup, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
 export function useAuth() {
-  return useContext(AuthContext);
+  const context = useContext(AuthContext);
+
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+
+  return context;
 }
