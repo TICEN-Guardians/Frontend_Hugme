@@ -34,6 +34,7 @@ export default function App() {
       {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
       <Route element={<Layout />}>
         <Route path="/guarantee-checklist" element={<ProductsPage />} />
+        <Route path="/guarantee-checklist/:guaranteeType" element={<ProductChecklistPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
         <Route path="/doc-chat" element={<DocumentChat />} />
