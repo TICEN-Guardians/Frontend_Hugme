@@ -57,37 +57,8 @@
   outline: none;
 }
 
-.emailInputWrap,
 .passwordWrap {
   position: relative;
-}
-
-.emailInput {
-  padding-right: 8.8rem;
-}
-
-.verifyButton {
-  position: absolute;
-  top: 50%;
-  right: 0.8rem;
-  min-height: 3.6rem;
-  padding: 0 var(--space-4);
-  border-color: rgba(15, 117, 189, 0.28);
-  border-radius: 0.9rem;
-  background: rgba(15, 117, 189, 0.08);
-  color: var(--brand-blue);
-  font-weight: 700;
-  transform: translateY(-50%);
-  transition:
-    background-color 0.18s ease,
-    border-color 0.18s ease,
-    color 0.18s ease;
-}
-
-.verifyButton:hover {
-  border-color: rgba(15, 117, 189, 0.42);
-  background: rgba(15, 117, 189, 0.12);
-  color: #0a67a8;
 }
 
 .passwordInput {
