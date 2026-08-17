@@ -17,7 +17,7 @@ const CONTRACT_TYPE_OPTIONS = [
 ];
 
 const PARTY_TYPE_OPTIONS = [
-  { value: 'INDIVIDUAL', label: '개인' },
+  { value: 'PERSON', label: '개인' },
   { value: 'CORPORATION', label: '법인' },
 ];
 

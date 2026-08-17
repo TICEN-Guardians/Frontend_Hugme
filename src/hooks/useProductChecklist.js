@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  getChecklist,
   getChecklistBySection,
   getItemDocuments,
 } from '../services/products/productsService.js';
+
+const SECTION_CODES = ['BASIC', 'ADDITIONAL', 'DISCOUNT'];
 
 /**
  * 상품 체크리스트 화면의 데이터 fetch를 담당한다.
@@ -14,7 +15,7 @@ export function useProductChecklist(productCode) {
   const [sections, setSections] = useState([]);
   const [activeSectionCode, setActiveSectionCode] = useState(null);
 
-  const [pills, setPills] = useState(null); // null | []| [{itemId, label}, ...]
+  const [pills, setPills] = useState([]);
   const [activePillId, setActivePillId] = useState(null);
 
   const [documents, setDocuments] = useState([]);
@@ -30,7 +31,7 @@ export function useProductChecklist(productCode) {
       setIsDocumentsLoading(true);
       setDocumentsError(null);
       getItemDocuments(productCode, itemId)
-        .then((docs) => setDocuments(docs ?? []))
+        .then((result) => setDocuments(Array.isArray(result) ? result : []))
         .catch((err) => setDocumentsError(err))
         .finally(() => setIsDocumentsLoading(false));
     },
@@ -41,19 +42,12 @@ export function useProductChecklist(productCode) {
     (section) => {
       setActiveSectionCode(section?.sectionCode ?? null);
 
-      const nextPills = section?.items ?? null;
+      const nextPills = section?.items ?? [];
       setPills(nextPills);
-
-      if (nextPills === null) {
-        // pill 없음 — section 응답에 이미 담겨 온 documents를 그대로 사용
-        setActivePillId(null);
-        setDocuments(section?.documents ?? []);
-        return;
-      }
 
       if (nextPills.length === 0) {
         setActivePillId(null);
-        setDocuments([]);
+        setDocuments(section?.documents ?? []);
         return;
       }
 
@@ -69,10 +63,10 @@ export function useProductChecklist(productCode) {
     setStatus('loading');
     setError(null);
 
-    getChecklist(productCode)
+    Promise.all(SECTION_CODES.map((sectionCode) => getChecklistBySection(productCode, sectionCode)))
       .then((data) => {
         if (ignore) return;
-        const nextSections = data?.sections ?? [];
+        const nextSections = data.filter(Boolean);
         setSections(nextSections);
         applySection(nextSections[0] ?? null);
         setStatus('success');
