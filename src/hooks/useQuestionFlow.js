@@ -45,9 +45,18 @@ export function useQuestionFlow(applicationId) {
         if (result.done) {
           return true;
         }
+
+        let nextQuestions = result.questions;
+        let nextIsFinalStep = result.isFinalStep;
+        if (!nextQuestions) {
+          const nextData = await getQuestions(applicationId, result.questionStep);
+          nextQuestions = nextData.questions;
+          nextIsFinalStep = nextData.isFinalStep;
+        }
+
         setQuestionStep(result.questionStep);
-        setQuestions(result.questions);
-        setIsFinalStep(result.isFinalStep);
+        setQuestions(nextQuestions ?? []);
+        setIsFinalStep(nextIsFinalStep);
         setVisitedSteps((prev) => [...prev, result.questionStep]);
         return false;
       } catch (err) {

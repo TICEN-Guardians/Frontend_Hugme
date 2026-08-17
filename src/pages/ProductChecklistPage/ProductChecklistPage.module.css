@@ -132,6 +132,16 @@
   background: var(--accent);
 }
 
+.sampleImage {
+  width: 100%;
+  max-height: 36rem;
+  object-fit: contain;
+  margin-top: var(--space-5);
+  border: 0.1rem solid var(--accent-tint-100);
+  border-radius: var(--radius-md);
+  background: var(--accent-tint-50);
+}
+
 @media (max-width: 110rem) {
   .grid {
     grid-template-columns: repeat(2, 1fr);

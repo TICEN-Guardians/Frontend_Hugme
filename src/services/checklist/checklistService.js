@@ -10,15 +10,98 @@ import {
 
 const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
+function toYesNo(value) {
+  if (value === true) return 'YES';
+  if (value === false) return 'NO';
+  return value ?? '';
+}
+
+function toBoolean(value) {
+  if (value === 'YES') return true;
+  if (value === 'NO') return false;
+  return Boolean(value);
+}
+
+function normalizeOcrInfo(data) {
+  return {
+    ...data,
+    housingType: data.housingTypeCode ?? data.housingType ?? '',
+    contractType: data.contractType ?? '',
+    tenantType: data.tenantType ?? '',
+    landlordType: data.landlordType ?? '',
+    fixedDateStatus:
+      data.fixedDateStatus ?? (data.fixedDateConfirmed === true ? 'RECEIVED' : 'NOT_RECEIVED'),
+    officetelResidential: data.officetelResidential ?? toYesNo(data.officetelResidentialMarked),
+    landlordProxyContract: toYesNo(data.landlordProxyContract),
+  };
+}
+
+function toOcrUpdateRequest(formValues) {
+  return {
+    housingTypeCode: formValues.housingTypeCode ?? formValues.housingType,
+    contractAddress: formValues.contractAddress,
+    contractType: formValues.contractType,
+    tenantType: formValues.tenantType,
+    landlordType: formValues.landlordType,
+    fixedDateConfirmed:
+      formValues.fixedDateConfirmed ?? formValues.fixedDateStatus === 'RECEIVED',
+    officetelResidentialMarked:
+      formValues.officetelResidentialMarked ?? toBoolean(formValues.officetelResidential),
+    landlordProxyContract: toBoolean(formValues.landlordProxyContract),
+  };
+}
+
+function normalizeDocument(document, sectionCode) {
+  return {
+    documentId: document.documentId,
+    sectionCode,
+    title: document.documentName ?? document.title,
+    description: document.description ?? null,
+    tag: document.documentGroupName ?? document.tag ?? '서류',
+    sampleImageUrl: document.sampleImageUrl ?? null,
+    acceptedVariants: document.acceptedVariants ?? null,
+    status: document.status ?? { label: '제출 확정', tone: 'accent' },
+  };
+}
+
+function normalizeFinalDocuments(data) {
+  if (Array.isArray(data)) {
+    const sectionCodes = [...new Set(data.map((doc) => doc.sectionCode).filter(Boolean))];
+    return {
+      sections: sectionCodes.map((sectionCode) => ({
+        sectionCode,
+        sectionTitle:
+          sectionCode === 'BASIC'
+            ? '기본서류'
+            : sectionCode === 'ADDITIONAL'
+              ? '추가서류'
+              : '보증료 할인서류',
+      })),
+      documents: data,
+    };
+  }
+
+  const sections = data?.sections ?? [];
+  return {
+    sections: sections.map((section) => ({
+      sectionCode: section.sectionCode,
+      sectionTitle: section.sectionName ?? section.sectionTitle,
+    })),
+    documents: sections.flatMap((section) =>
+      (section.documents ?? []).map((document) => normalizeDocument(document, section.sectionCode)),
+    ),
+  };
+}
+
 /**
  * 새 보증 신청 건을 생성한다.
  * @returns {Promise<object>} 생성된 신청 정보
  */
-export async function createApplication() {
+export async function createApplication(productCode) {
   if (isMock()) {
-    return Promise.resolve(mockApplication);
+    return Promise.resolve({ ...mockApplication, productCode });
   }
-  const res = await axiosInstance.post('/api/applications');
+  const res = await axiosInstance.post('/api/applications', { productCode });
   return res.data;
 }
 
@@ -39,7 +122,7 @@ export async function uploadLeaseContract(applicationId, file) {
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } },
   );
-  return res.data;
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -52,7 +135,7 @@ export async function getInfo(applicationId) {
     return Promise.resolve(mockApplicationInfo);
   }
   const res = await axiosInstance.get(`/api/applications/${applicationId}/info`);
-  return res.data;
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -65,8 +148,11 @@ export async function updateInfo(applicationId, data) {
   if (isMock()) {
     return Promise.resolve({ ...mockApplicationInfo, ...data });
   }
-  const res = await axiosInstance.patch(`/api/applications/${applicationId}/info`, data);
-  return res.data;
+  const res = await axiosInstance.patch(
+    `/api/applications/${applicationId}/info`,
+    toOcrUpdateRequest(data),
+  );
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -89,24 +175,14 @@ export async function getQuestions(applicationId, questionStep) {
   const res = await axiosInstance.get(`/api/applications/${applicationId}/questions`, {
     params: { step: questionStep },
   });
-  return res.data;
+  return {
+    questionStep: res.data.questionStep,
+    questions: res.data.questions ?? [],
+    isFinalStep: res.data.questionStep === 'STEP3',
+  };
 }
 
-/**
- * 한 step의 답변을 전부 제출한다. 다음 step 결정은 서버 몫이라
- * 클라이언트는 이 함수의 반환값(done / questionStep / questions)만 보고 따라간다.
- *
- * 응답 스키마 미확정 지점: POST /answers 응답에 다음 step 정보가 같이 오는지(A),
- * 아니면 성공 여부만 오고 별도로 GET /questions를 다시 불러야 하는지(B) 확인이 필요하다.
- * 일단 (A)로 구현했고, 실제로 (B)로 밝혀져도 이 함수 내부만 고치면
- * 화면/훅 쪽 코드는 안 바뀌도록 반환 형태를 통일해뒀다.
- *
- * @param {number|string} applicationId - 신청 ID
- * @param {string} currentStep - 이번에 제출하는 질문 단계
- * @param {number[]} selectedOptionIds - 이 step의 질문마다 하나씩 고른 optionId 배열
- * @param {boolean} finalSubmission - 이 step이 마지막이면 true
- * @returns {Promise<{done: boolean, questionStep: string|null, questions: object[]|null, isFinalStep: boolean}>}
- */
+/** 한 step의 답변을 제출하고 백엔드가 내려준 nextStep을 화면 흐름용 값으로 정규화한다. */
 export async function submitAnswers(applicationId, currentStep, selectedOptionIds, finalSubmission) {
   if (isMock()) {
     return Promise.resolve(mockSubmitAnswers(currentStep));
@@ -118,16 +194,34 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
     selectedOptionIds,
   });
 
-  // (A) 가정: 응답에 다음 questionStep/questions가 함께 온다고 보고 감싼다.
   const data = res.data;
-  if (finalSubmission || !data?.questionStep) {
+  if (data.questionnaireCompleted) {
     return { done: true, questionStep: null, questions: null, isFinalStep: true };
   }
+
+  if ((data.additionalQuestions ?? []).length > 0) {
+    const questionStep = data.nextStep ?? 'STEP3';
+    return {
+      done: false,
+      questionStep,
+      questions: data.additionalQuestions,
+      isFinalStep: questionStep === 'STEP3',
+    };
+  }
+
+  if (data.nextStep === 'STEP3') {
+    return { done: true, questionStep: null, questions: null, isFinalStep: true };
+  }
+
+  if (!data.nextStep) {
+    return { done: true, questionStep: null, questions: null, isFinalStep: true };
+  }
+
   return {
     done: false,
-    questionStep: data.questionStep,
-    questions: data.questions,
-    isFinalStep: data.isFinalStep ?? false,
+    questionStep: data.nextStep,
+    questions: null,
+    isFinalStep: data.nextStep === 'STEP3',
   };
 }
 
@@ -138,8 +232,8 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
  */
 export async function getDocuments(applicationId) {
   if (isMock()) {
-    return Promise.resolve(mockDocuments);
+    return Promise.resolve(normalizeFinalDocuments(mockDocuments));
   }
   const res = await axiosInstance.get(`/api/applications/${applicationId}/documents`);
-  return res.data;
+  return normalizeFinalDocuments(res.data);
 }

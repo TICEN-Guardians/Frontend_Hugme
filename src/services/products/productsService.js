@@ -3,17 +3,43 @@ import { mockChecklistByProduct, mockItemDocuments } from '../../mocks/products.
 
 const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
-/**
- * 상품의 전체 체크리스트를 조회한다.
- * @param {string} productCode - 상품 코드 (PRODUCT_CODES 참고)
- * @returns {Promise<object>} 체크리스트 데이터
- */
-export async function getChecklist(productCode) {
-  if (isMock()) {
-    return Promise.resolve(mockChecklistByProduct[productCode] ?? null);
-  }
-  const res = await axiosInstance.get(`/api/products/${productCode}/checklist`);
-  return res.data;
+const SECTION_TITLES = {
+  BASIC: '기본서류',
+  ADDITIONAL: '추가서류',
+  DISCOUNT: '보증료 할인서류',
+};
+
+function normalizeItem(item) {
+  return {
+    itemId: item.itemId,
+    label: item.itemName ?? item.label ?? item.groupName ?? '준비 항목',
+    sortOrder: item.sortOrder ?? item.groupSortOrder ?? 0,
+    groupId: item.groupId ?? null,
+    groupName: item.groupName ?? null,
+  };
+}
+
+function normalizeDocument(document) {
+  return {
+    documentId: document.documentId,
+    title: document.documentName ?? document.title,
+    description: document.description ?? null,
+    tag: document.documentGroupName ?? document.tag ?? '서류',
+    sampleImageUrl: document.sampleImageUrl ?? null,
+    acceptedVariants: document.acceptedVariants ?? null,
+  };
+}
+
+function normalizeSection(section) {
+  const items = (section?.items ?? []).map(normalizeItem);
+  return {
+    productCode: section?.productCode,
+    sectionCode: section?.sectionCode,
+    sectionTitle: section?.sectionName ?? section?.sectionTitle ?? SECTION_TITLES[section?.sectionCode] ?? '서류',
+    documentCount: items.length,
+    items,
+    documents: null,
+  };
 }
 
 /**
@@ -31,7 +57,7 @@ export async function getChecklistBySection(productCode, sectionCode) {
   const res = await axiosInstance.get(`/api/products/${productCode}/checklist`, {
     params: { sectionCode },
   });
-  return res.data;
+  return normalizeSection(res.data);
 }
 
 /**
@@ -47,5 +73,5 @@ export async function getItemDocuments(productCode, itemId) {
   const res = await axiosInstance.get(
     `/api/products/${productCode}/checklist/items/${itemId}/documents`,
   );
-  return res.data;
+  return (res.data?.documents ?? []).map(normalizeDocument);
 }

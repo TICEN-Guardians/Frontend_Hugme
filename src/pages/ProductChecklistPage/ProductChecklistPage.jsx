@@ -73,7 +73,7 @@ export default function ProductChecklistPage() {
     confirmOcrInfo,
     closeOcrConfirm,
     finishQuestions,
-  } = useContractUpload();
+  } = useContractUpload(productCode);
 
   const questionFlow = useQuestionFlow(applicationId);
 
@@ -144,7 +144,10 @@ export default function ProductChecklistPage() {
       )}
 
       {isDone ? (
-        <FinalDocumentList sections={sections} documents={finalDocuments} />
+        <FinalDocumentList
+          sections={finalDocuments.sections}
+          documents={finalDocuments.documents}
+        />
       ) : (
         status === 'success' && (
           <>
@@ -163,9 +166,7 @@ export default function ProductChecklistPage() {
               <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
             ) : (
               <div className={styles.grid}>
-                {documents.map((doc, index) => {
-                  const hasGroup = Array.isArray(doc.acceptedVariants) && doc.acceptedVariants.length > 0;
-                  return (
+                {documents.map((doc, index) => (
                     <motion.div
                       key={doc.documentId}
                       initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
@@ -181,11 +182,10 @@ export default function ProductChecklistPage() {
                         title={doc.title}
                         description={doc.description}
                         chip={doc.tag}
-                        onClick={hasGroup ? () => setSelectedDocumentId(doc.documentId) : undefined}
+                        onClick={() => setSelectedDocumentId(doc.documentId)}
                       />
                     </motion.div>
-                  );
-                })}
+                ))}
               </div>
             )}
           </>
@@ -200,14 +200,27 @@ export default function ProductChecklistPage() {
               <p className={styles.detailDescription}>{selectedDocument.description}</p>
             )}
             <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
-            <ul className={styles.variantList}>
-              {selectedDocument.acceptedVariants.map((variant) => (
-                <li key={variant} className={styles.variantItem}>
-                  <span className={styles.variantDot} />
-                  {variant}
-                </li>
-              ))}
-            </ul>
+            {Array.isArray(selectedDocument.acceptedVariants) && selectedDocument.acceptedVariants.length > 0 ? (
+              <ul className={styles.variantList}>
+                {selectedDocument.acceptedVariants.map((variant) => (
+                  <li key={variant} className={styles.variantItem}>
+                    <span className={styles.variantDot} />
+                    {variant}
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className={styles.detailDescription}>
+                이 서류는 별도 대체 서류 목록이 없습니다. 발급 가능한 원본 서류를 준비해주세요.
+              </p>
+            )}
+            {selectedDocument.sampleImageUrl && (
+              <img
+                className={styles.sampleImage}
+                src={selectedDocument.sampleImageUrl}
+                alt={`${selectedDocument.title} 예시`}
+              />
+            )}
           </div>
         )}
       </Modal>
