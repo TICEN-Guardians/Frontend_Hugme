@@ -195,22 +195,27 @@
 }
 
 .suggestions {
-  display: flex;
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: var(--space-3);
-  width: 62rem;
+  width: min(100%, 104rem);
   max-width: 100%;
 }
 
 .suggestionCard {
-  padding: var(--space-5) var(--space-6);
+  min-height: 6.2rem;
+  padding: var(--space-4) var(--space-5);
   border: 0.1rem solid var(--border-default);
   border-radius: var(--radius-lg);
   background: var(--on-accent);
   color: var(--text-primary);
-  font-size: var(--text-base);
+  font-size: var(--text-sm);
   font-weight: 700;
+  line-height: 1.45;
+  overflow: hidden;
   text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   cursor: pointer;
   transition:
     border-color 0.18s ease,
@@ -220,6 +225,22 @@
 .suggestionCard:hover {
   border-color: var(--accent);
   background: rgba(15, 117, 189, 0.04);
+}
+
+.suggestionCard:disabled,
+.followUpChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
+.suggestionNotice {
+  color: var(--text-disabled);
+  cursor: default;
+}
+
+.suggestionNotice:hover {
+  border-color: var(--border-default);
+  background: var(--on-accent);
 }
 
 .messages {
@@ -251,6 +272,66 @@
   margin: 0 auto;
 }
 
+.typingRow {
+  display: flex;
+  margin-top: var(--space-3);
+}
+
+.typingBubble {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  max-width: 76%;
+  padding: var(--space-2) var(--space-3);
+  border: 0.1rem solid var(--green-tint-100);
+  border-radius: var(--radius-md);
+  background: var(--green-tint-50);
+  color: var(--text-green-dark);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.typingText {
+  white-space: nowrap;
+}
+
+.typingDots {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.typingDots span {
+  width: 0.45rem;
+  height: 0.45rem;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  opacity: 0.35;
+  animation: typingPulse 1.05s ease-in-out infinite;
+}
+
+.typingDots span:nth-child(2) {
+  animation-delay: 0.14s;
+}
+
+.typingDots span:nth-child(3) {
+  animation-delay: 0.28s;
+}
+
+@keyframes typingPulse {
+  0%,
+  80%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.35;
+  }
+
+  40% {
+    transform: translateY(-0.25rem);
+    opacity: 0.9;
+  }
+}
+
 .followUps {
   box-sizing: border-box;
   margin-top: var(--space-5);
@@ -278,6 +359,11 @@
   font-size: var(--text-sm);
   font-weight: 600;
   cursor: pointer;
+}
+
+.redirectChip {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
 }
 
 .inputDock {
@@ -312,10 +398,15 @@
 
   .suggestions {
     width: 100%;
+    grid-template-columns: 1fr;
   }
 
   .messages {
     padding: var(--space-6) var(--space-4) var(--space-4);
+  }
+
+  .typingBubble {
+    max-width: 88%;
   }
 
   .inputDock {

@@ -5,7 +5,7 @@ import styles from './Layout.module.css';
 
 export default function Layout() {
   const { pathname } = useLocation();
-  const isChatAppPage = pathname === '/user-chat';
+  const isChatAppPage = pathname === '/user-chat' || pathname === '/doc-chat';
 
   return (
     <div className={`${styles.pageWrapper} ${isChatAppPage ? styles.chatPageWrapper : ''}`}>

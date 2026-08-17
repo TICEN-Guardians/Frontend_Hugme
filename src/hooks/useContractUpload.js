@@ -7,6 +7,8 @@ import {
   uploadLeaseContract,
 } from '../services/checklist/checklistService.js';
 
+export const LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY = 'hugme:lastDocumentChatApplicationId';
+
 /**
  * 계약서 업로드 → 분석 중 → OCR 결과 확인 → 질문 → 완료 흐름을 관리한다.
  * step: 'idle' | 'analyzing' | 'ocrConfirm' | 'questions' | 'done'
@@ -31,6 +33,7 @@ export function useContractUpload(productCode) {
           const application = await createApplication(productCode);
           currentApplicationId = application.applicationId;
           setApplicationId(currentApplicationId);
+          sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(currentApplicationId));
 
           if (application.applicationStatus === 'DONE' || application.status === 'DONE') {
             const docs = await getDocuments(currentApplicationId);
@@ -79,6 +82,7 @@ export function useContractUpload(productCode) {
     try {
       const docs = await getDocuments(applicationId);
       setFinalDocuments(docs);
+      sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(applicationId));
       setStep('done');
     } catch (err) {
       setUploadError(err);

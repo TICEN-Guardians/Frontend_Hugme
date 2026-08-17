@@ -5,12 +5,10 @@ import styles from './Header.module.css';
 const LOGO_SRC = '/images/Logo.png';
 
 const NAV_ITEMS = [
-
-
-  { to: '/user-chat', label: '조건상담챗봇' },
-  { to: '/doc-chat', label: '서류안내챗봇' },
-  { to: '/guarantee-checklist', label: '보증 체크리스트' },
   { to: '/risk/new', label: '매물위험도' },
+  { to: '/doc-chat', label: '서류안내챗봇' },
+  { to: '/user-chat', label: '조건상담챗봇' },
+  { to: '/guarantee-checklist', label: '보증 체크리스트' },
 ];
 
 export default function Header() {
