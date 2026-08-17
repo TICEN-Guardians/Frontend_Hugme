@@ -49,18 +49,37 @@
   text-decoration: none;
 }
 
-.navLinkActive {
-  color: var(--text-primary);
-}
-
-.navLinkActive::after {
+.navLink::after {
   content: '';
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   height: 0.2rem;
-  background: var(--brand-blue);
+  background: linear-gradient(
+    90deg,
+    #0f75bd 0%,
+    #0f75bd 50%,
+    #3e9a43 50%,
+    #3e9a43 100%
+  );
+  transform: scaleX(0);
+  transform-origin: left center;
+  transition: transform 0.75s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.navLink:hover::after,
+.navLink:focus-visible::after,
+.navLinkActive::after {
+  transform: scaleX(1);
+}
+
+.navLinkActive {
+  color: var(--text-primary);
+}
+
+.navLink:focus-visible {
+  outline: none;
 }
 
 .actions {

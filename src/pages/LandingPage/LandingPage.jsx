@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useAuth } from '../../context/auth/AuthContext.jsx';
 import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
 import HeroSection from './HeroSection/HeroSection.jsx';
 import styles from './LandingPage.module.css';
@@ -90,17 +91,62 @@ const SLIDES = [
 ];
 
 export default function LandingPage() {
+  const { isAuthenticated } = useAuth();
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
-  const activeSlide = SLIDES[activeIndex];
+  const slides = SLIDES.map((slide) => {
+    if (slide.id === 'risk') {
+      return {
+        ...slide,
+        heroNote: isAuthenticated ? '바로 진단을 시작해보세요' : '로그인 후 이용 가능',
+        cardCtaLabel: isAuthenticated ? '매물 진단 시작하기' : '로그인하고 진단하기',
+        to: isAuthenticated ? '/risk/new' : '/auth/login',
+      };
+    }
+
+    if (slide.id === 'doc-chat') {
+      return {
+        ...slide,
+        heroNote: isAuthenticated ? '궁금한 서류를 바로 질문해보세요' : '로그인 후 이용 가능',
+        cardCtaLabel: isAuthenticated ? '서류 챗봇 시작하기' : '로그인하고 질문하기',
+        to: isAuthenticated ? '/doc-chat' : '/auth/login',
+      };
+    }
+
+    if (slide.id === 'user-chat') {
+      return {
+        ...slide,
+        heroNote: isAuthenticated ? '내 조건으로 바로 상담해보세요' : '로그인 없이 바로 이용 가능',
+        featurePoints: isAuthenticated
+          ? ['가입 가능 여부 상담', '조건별 추가 질문', '바로 상담 가능']
+          : slide.featurePoints,
+      };
+    }
+
+    if (slide.id === 'checklist') {
+      return {
+        ...slide,
+        heroSubtitle: isAuthenticated
+          ? ['기본 준비 서류를 바로 확인하고,', '상세 체크리스트에서 필요한 서류를 살펴볼 수 있어요']
+          : slide.heroSubtitle,
+        description: isAuthenticated
+          ? ['기본 준비 서류를 확인하고,', '상세 체크리스트에서 필요한 항목을 바로 살펴볼 수 있어요']
+          : slide.description,
+        heroNote: isAuthenticated ? '내 계약에 필요한 서류를 확인해보세요' : '기본 체크리스트 바로 이용',
+      };
+    }
+
+    return slide;
+  });
+  const activeSlide = slides[activeIndex];
 
   const paginate = (nextDirection) => {
     setDirection(nextDirection);
     setActiveIndex((prev) => {
       if (nextDirection > 0) {
-        return prev === SLIDES.length - 1 ? 0 : prev + 1;
+        return prev === slides.length - 1 ? 0 : prev + 1;
       }
-      return prev === 0 ? SLIDES.length - 1 : prev - 1;
+      return prev === 0 ? slides.length - 1 : prev - 1;
     });
   };
 
@@ -114,7 +160,7 @@ export default function LandingPage() {
     <div className={styles.root}>
       <HeroSection slide={activeSlide} direction={direction} />
       <FeatureCarousel
-        slides={SLIDES}
+        slides={slides}
         activeIndex={activeIndex}
         direction={direction}
         onPrev={() => paginate(-1)}
