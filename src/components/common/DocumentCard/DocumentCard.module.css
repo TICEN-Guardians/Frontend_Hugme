@@ -8,6 +8,10 @@
   border: 0.1rem solid var(--border-default);
   border-left: 0.3rem solid var(--accent);
   border-radius: var(--radius-lg);
+  background: #fff;
+  transition:
+    border-color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
 .clickable {
@@ -17,6 +21,14 @@
   text-align: left;
   background: none;
   cursor: pointer;
+}
+
+.clickable:hover,
+.clickable:focus-visible {
+  border-color: var(--accent-tint-100);
+  border-left-color: var(--accent);
+  box-shadow: 0 0.8rem 2rem rgba(15, 23, 42, 0.06);
+  outline: none;
 }
 
 .head {
@@ -39,6 +51,13 @@
 
 .icon {
   display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-8);
+  height: var(--space-8);
+  border-radius: var(--radius-sm);
+  background: var(--accent-tint-50);
+  color: var(--accent);
   font-size: var(--text-lg);
 }
 

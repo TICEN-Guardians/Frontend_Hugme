@@ -11,7 +11,7 @@ import {
  * 계약서 업로드 → 분석 중 → OCR 결과 확인 → 질문 → 완료 흐름을 관리한다.
  * step: 'idle' | 'analyzing' | 'ocrConfirm' | 'questions' | 'done'
  */
-export function useContractUpload() {
+export function useContractUpload(productCode) {
   const [step, setStep] = useState('idle');
   const [applicationId, setApplicationId] = useState(null);
   const [ocrInfo, setOcrInfo] = useState(null);
@@ -28,9 +28,16 @@ export function useContractUpload() {
         // 이전 시도에서 만들어진 applicationId가 있으면 재사용하고 새로 만들지 않는다.
         let currentApplicationId = applicationId;
         if (!currentApplicationId) {
-          const application = await createApplication();
+          const application = await createApplication(productCode);
           currentApplicationId = application.applicationId;
           setApplicationId(currentApplicationId);
+
+          if (application.applicationStatus === 'DONE' || application.status === 'DONE') {
+            const docs = await getDocuments(currentApplicationId);
+            setFinalDocuments(docs);
+            setStep('done');
+            return;
+          }
         }
 
         await uploadLeaseContract(currentApplicationId, file);
@@ -42,7 +49,7 @@ export function useContractUpload() {
         setStep('idle');
       }
     },
-    [applicationId],
+    [applicationId, productCode],
   );
 
   const confirmOcrInfo = useCallback(
