@@ -1,9 +1,23 @@
+import { motion } from 'framer-motion';
 import ProductCard from '../ProductCard/ProductCard.jsx';
 import styles from './ProductGroup.module.css';
 
-export default function ProductGroup({ theme, icon, badgeLabel, title, description, products }) {
+const ENTRY_EASE = [0.22, 1, 0.36, 1];
+
+export default function ProductGroup({ theme, icon, badgeLabel, title, description, products, index }) {
   return (
-    <section className={styles.group} data-theme={theme}>
+    <motion.section
+      className={styles.group}
+      data-theme={theme}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -2 }}
+      transition={{
+        duration: 0.6,
+        delay: index === 0 ? 0.08 : 0.15,
+        ease: ENTRY_EASE,
+      }}
+    >
       <div className={styles.header}>
         <span className={styles.iconBadge}>{icon}</span>
         <span className={styles.badge}>{badgeLabel}</span>
@@ -17,6 +31,6 @@ export default function ProductGroup({ theme, icon, badgeLabel, title, descripti
           <ProductCard key={product.id} {...product} />
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }

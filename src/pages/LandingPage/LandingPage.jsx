@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { PRODUCT_CODES } from '../../constants/products.js';
 import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
 import HeroSection from './HeroSection/HeroSection.jsx';
 import styles from './LandingPage.module.css';
@@ -86,7 +85,7 @@ const SLIDES = [
     featurePoints: ['기본 준비 서류 확인', '서류별 상세 정보 제공', '계약서 기반 맞춤 서류 확인'],
     cardCtaLabel: '체크리스트 확인하기',
     image: '/images/landing/Carousel4.png',
-    to: `/products/${PRODUCT_CODES.GENERAL}/checklist`,
+    to: '/guarantee-checklist',
   },
 ];
 

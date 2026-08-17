@@ -1,6 +1,5 @@
-import { FaArrowRight } from 'react-icons/fa6';
+import { HiArrowRight } from 'react-icons/hi2';
 import { Link } from 'react-router-dom';
-import buttonStyles from '../../../components/common/Button/Button.module.css';
 import styles from './ProductCard.module.css';
 
 export default function ProductCard({ title, description, ctaLabel, to, disabled }) {
@@ -18,14 +17,14 @@ export default function ProductCard({ title, description, ctaLabel, to, disabled
       </p>
 
       {disabled ? (
-        <span className={`${styles.cta} ${styles.ctaDisabled}`}>{ctaLabel}</span>
+        <button type="button" className={`${styles.cta} ${styles.ctaDisabled}`} disabled>
+          <span>{ctaLabel}</span>
+          <HiArrowRight aria-hidden="true" />
+        </button>
       ) : (
-        <Link
-          to={to}
-          className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.md} ${styles.cta}`}
-        >
-          {ctaLabel}
-          <FaArrowRight aria-hidden="true" />
+        <Link to={to} className={styles.cta}>
+          <span>{ctaLabel}</span>
+          <HiArrowRight aria-hidden="true" />
         </Link>
       )}
     </div>

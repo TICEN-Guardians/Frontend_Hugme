@@ -1,5 +1,9 @@
 .root {
-  padding: var(--space-16) 0;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-8) 0 var(--space-12);
 }
 
 .pageTitle {
@@ -24,11 +28,24 @@
 }
 
 .countNumber {
-  color: var(--brand-blue);
+  color: #0f75bd;
 }
 
 .groups {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  gap: var(--space-6);
+  gap: var(--space-4);
+}
+
+@media (max-width: 90rem) {
+  .groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 76.7rem) {
+  .root {
+    padding: var(--space-8) 0 var(--space-10);
+  }
 }
