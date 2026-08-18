@@ -198,6 +198,7 @@ export default function ConditionChat() {
   const [entryError, setEntryError] = useState(null);
   const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
+  const [isAwaitingFirstToken, setIsAwaitingFirstToken] = useState(false);
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const followUpQuestions = suggestedQuestions;
@@ -284,18 +285,40 @@ export default function ConditionChat() {
     setSuggestedQuestions([]);
     setRedirect(null);
     setIsSending(true);
+    setIsAwaitingFirstToken(true);
+
+    const appendToken = (token) => {
+      setIsAwaitingFirstToken(false);
+      setMessages((prev) => {
+        const last = prev[prev.length - 1];
+
+        if (last?.role === 'assistant') {
+          const next = [...prev];
+          next[next.length - 1] = { ...last, content: last.content + token };
+          return next;
+        }
+
+        return [...prev, { role: 'assistant', content: token }];
+      });
+    };
 
     try {
-      const response = await sendGuideMessage(sessionId, trimmedQuestion);
+      const response = await sendGuideMessage(sessionId, trimmedQuestion, appendToken);
 
       setSessionId(response.sessionId ?? sessionId);
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'assistant',
-          content: response.answer ?? '답변을 불러왔지만 표시할 내용이 없습니다.',
-        },
-      ]);
+      // 스트리밍 도중 유실된 조각이 있을 수 있으니, 완료 시점에 서버가 보낸 최종 answer로 덮어써서 정합성을 맞춘다.
+      setMessages((prev) => {
+        const finalAnswer = response.answer ?? '답변을 불러왔지만 표시할 내용이 없습니다.';
+        const last = prev[prev.length - 1];
+
+        if (last?.role === 'assistant') {
+          const next = [...prev];
+          next[next.length - 1] = { ...last, content: finalAnswer };
+          return next;
+        }
+
+        return [...prev, { role: 'assistant', content: finalAnswer }];
+      });
       setSuggestedQuestions(
         Array.isArray(response.suggestedQuestions) ? response.suggestedQuestions : [],
       );
@@ -310,6 +333,7 @@ export default function ConditionChat() {
       ]);
     } finally {
       setIsSending(false);
+      setIsAwaitingFirstToken(false);
     }
   };
 
@@ -458,7 +482,7 @@ export default function ConditionChat() {
               >
                 <div className={styles.thread}>
                   <MessageList messages={messages} animateMessages />
-                  {isSending && (
+                  {isAwaitingFirstToken && (
                     <motion.div
                       className={styles.typingRow}
                       initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
