@@ -18,6 +18,7 @@ export default function RiskFormPage() {
   const prefersReducedMotion = useReducedMotion();
   const fileInputRef = useRef(null);
   const contractDateInputRef = useRef(null);
+  const pendingDiagnosisRef = useRef(null);
   const [address, setAddress] = useState('');
   const [normalizedAddress, setNormalizedAddress] = useState('');
   const [candidates, setCandidates] = useState([]);
@@ -113,12 +114,14 @@ export default function RiskFormPage() {
   });
 
   const completeDiagnosis = async (targetAnalysisId, resolvedArea) => {
+    setProgressMessage('건물과 소유자 정보를 확인하고 있습니다.');
     await resolveProperty({
       address: address.trim(),
       dongName: selectedCandidate.dongName,
       hoName: unitNumberRequired ? hoName.trim() : null,
     });
     await updateDiagnosisDetails(targetAnalysisId, diagnosisDetails(resolvedArea));
+    setProgressMessage('시세와 위험도를 계산하고 있습니다.');
     await analyzeDiagnosis(targetAnalysisId);
     navigate('/risk/' + targetAnalysisId);
   };
@@ -133,7 +136,7 @@ export default function RiskFormPage() {
     try {
       if (stage === 'registry') {
         setProgressMessage('등기부등본에서 전용면적과 권리관계를 확인하고 있습니다.');
-        const diagnosis = await createDiagnosis({
+        const payload = {
           address: address.trim(),
           dongName: selectedCandidate.dongName || null,
           hoName: unitNumberRequired ? hoName.trim() : null,
@@ -143,14 +146,21 @@ export default function RiskFormPage() {
           exclusiveArea: null,
           floor: Number(floor),
           landlordName: landlordName.trim(),
-        });
-        const registry = await uploadRegistry({ analysisId: diagnosis.analysisId, file });
-        setAnalysisId(diagnosis.analysisId);
+        };
+        const payloadKey = JSON.stringify(payload) + '|' + (file ? `${file.name}:${file.size}:${file.lastModified}` : '');
+        const reusableAnalysisId = pendingDiagnosisRef.current?.payloadKey === payloadKey
+          ? pendingDiagnosisRef.current.analysisId
+          : null;
+        const targetAnalysisId = reusableAnalysisId ?? (await createDiagnosis(payload)).analysisId;
+        pendingDiagnosisRef.current = { analysisId: targetAnalysisId, payloadKey };
+        const registry = await uploadRegistry({ analysisId: targetAnalysisId, file });
+        pendingDiagnosisRef.current = null;
+        setAnalysisId(targetAnalysisId);
         setOcrResult(registry);
         const ocrArea = contractAreaRequired ? null : Number(registry.exclusiveArea);
         if (Number.isFinite(ocrArea) && ocrArea > 0) {
           currentStep = '시세와 위험도를 계산';
-          await completeDiagnosis(diagnosis.analysisId, ocrArea);
+          await completeDiagnosis(targetAnalysisId, ocrArea);
           return;
         }
         setStage('details');

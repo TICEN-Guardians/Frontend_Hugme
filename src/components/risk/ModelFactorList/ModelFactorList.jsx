@@ -1,21 +1,22 @@
-import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './ModelFactorList.module.css';
 
 export default function ModelFactorList({ title, factors }) {
   return (
     <div className={styles.card}>
-      <p className={styles.title}>
-        {title} <FaCircleInfo aria-hidden="true" />
-      </p>
+      <p className={styles.title}>{title}</p>
       <div className={styles.list}>
-        {factors.map((factor, index) => (
+        {factors.map((factor) => (
           <div key={factor.label} className={styles.row}>
-            <span className={styles.index}>{index + 1}</span>
-            <span className={styles.label}>{factor.label}</span>
-            <div className={styles.track}>
-              <div className={styles.fill} style={{ width: `${factor.percent}%` }} />
+            <span className={styles.icon}>{factor.icon}</span>
+            <div className={styles.body}>
+              <div className={styles.rowHead}>
+                <span className={styles.label}>{factor.label}</span>
+                <span className={styles.value}>{factor.score} / {factor.max}점</span>
+              </div>
+              <div className={styles.track}>
+                <div className={styles.fill} style={{ width: `${(factor.score / factor.max) * 100}%` }} />
+              </div>
             </div>
-            <span className={styles.value}>{factor.percent}%</span>
           </div>
         ))}
       </div>

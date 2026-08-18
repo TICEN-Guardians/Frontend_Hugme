@@ -1,42 +1,40 @@
-import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './RiskScoreCard.module.css';
 
-export default function RiskScoreCard({ score, maxScore, subScores }) {
-  const percent = Math.round((score / maxScore) * 100);
+const RADIUS = 80;
+const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
+
+const TONE_CLASS = {
+  success: 'toneSuccess',
+  warning: 'toneWarning',
+  danger: 'toneDanger',
+};
+
+export default function RiskScoreCard({ score, maxScore, tone, gradeLabel }) {
+  const percent = Math.max(0, Math.min(100, Math.round((score / maxScore) * 100)));
+  const offset = CIRCUMFERENCE * (1 - percent / 100);
+  const toneClass = styles[TONE_CLASS[tone]] ?? '';
 
   return (
     <div className={styles.card}>
-      <p className={styles.label}>
-        종합 위험 점수 <FaCircleInfo aria-hidden="true" />
-      </p>
-      <p className={styles.scoreRow}>
-        <span className={styles.score}>{score}</span>
-        <span className={styles.maxScore}>/ {maxScore}</span>
-      </p>
-      <div className={styles.gauge}>
-        <span className={styles.gaugeMarker} style={{ left: `${percent}%` }} />
+      <p className={styles.label}>종합 위험 점수</p>
+      <div className={styles.gaugeWrap}>
+        <svg className={styles.gauge} viewBox="0 0 200 200">
+          <circle className={styles.track} cx="100" cy="100" r={RADIUS} />
+          <circle
+            className={`${styles.progress} ${toneClass}`}
+            cx="100"
+            cy="100"
+            r={RADIUS}
+            strokeDasharray={CIRCUMFERENCE}
+            strokeDashoffset={offset}
+          />
+        </svg>
+        <div className={styles.gaugeCenter}>
+          <span className={styles.score}>{score}</span>
+          <span className={styles.maxScore}>/ {maxScore}</span>
+        </div>
       </div>
-      <div className={styles.scale}>
-        <span>0</span>
-        <span>50</span>
-        <span>100</span>
-      </div>
-      <div className={styles.subScores}>
-        {subScores.map((item) => (
-          <div key={item.label} className={styles.subScoreRow}>
-            <span className={styles.subScoreLabel}>{item.label}</span>
-            <div className={styles.subScoreBarTrack}>
-              <div
-                className={styles.subScoreBarFill}
-                style={{ width: `${(item.score / item.max) * 100}%` }}
-              />
-            </div>
-            <span className={styles.subScoreValue}>
-              {item.score}/{item.max}
-            </span>
-          </div>
-        ))}
-      </div>
+      <span className={`${styles.badge} ${toneClass}`}>{gradeLabel}</span>
     </div>
   );
 }
