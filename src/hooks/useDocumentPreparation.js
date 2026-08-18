@@ -4,14 +4,14 @@ import {
   updateDocumentPreparation,
 } from '../services/docChat/docChatService.js';
 
-export function useDocumentPreparation(applicationId) {
+export function useDocumentPreparation(enabled = true) {
   const [preparation, setPreparation] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
 
   const loadPreparation = useCallback(async () => {
-    if (!applicationId) {
+    if (!enabled) {
       setPreparation(null);
       setError(null);
       return;
@@ -21,7 +21,7 @@ export function useDocumentPreparation(applicationId) {
     setError(null);
 
     try {
-      const result = await getDocumentPreparation(applicationId);
+      const result = await getDocumentPreparation();
       setPreparation(result);
     } catch (requestError) {
       setError(requestError);
@@ -29,7 +29,7 @@ export function useDocumentPreparation(applicationId) {
     } finally {
       setIsLoading(false);
     }
-  }, [applicationId]);
+  }, [enabled]);
 
   useEffect(() => {
     loadPreparation();
@@ -37,13 +37,11 @@ export function useDocumentPreparation(applicationId) {
 
   const changePrepared = useCallback(
     async (documentId, prepared) => {
-      if (!applicationId) return;
-
       setIsUpdating(true);
       setError(null);
 
       try {
-        const result = await updateDocumentPreparation(applicationId, documentId, prepared);
+        const result = await updateDocumentPreparation(documentId, prepared);
         setPreparation(result);
       } catch (requestError) {
         setError(requestError);
@@ -51,7 +49,7 @@ export function useDocumentPreparation(applicationId) {
         setIsUpdating(false);
       }
     },
-    [applicationId],
+    [],
   );
 
   return {
