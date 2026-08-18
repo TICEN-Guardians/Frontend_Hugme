@@ -13,6 +13,7 @@ export default function RiskSummaryCard({
   address,
   housingType,
   description,
+  analyzedAt,
 }) {
   return (
     <div className={styles.card}>
@@ -21,6 +22,7 @@ export default function RiskSummaryCard({
         <span className={`${styles.badge} ${styles[BADGE_TONE_CLASS[badgeTone]] ?? ''}`}>
           {badgeLabel}
         </span>
+        {analyzedAt && <span className={styles.analyzedAt}>분석일시 {analyzedAt}</span>}
       </div>
       <p className={styles.address}>
         📍 {address} · {housingType}
