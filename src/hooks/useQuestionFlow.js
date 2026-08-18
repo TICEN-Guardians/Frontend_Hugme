@@ -71,14 +71,16 @@ export function useQuestionFlow(applicationId) {
           setSelectedOptionIds(accumulatedOptionIds);
           return true;
         }
+
         if (!result.questionStep) {
           setError(new Error('다음 질문 단계가 응답에 없습니다.'));
           return false;
         }
 
         setSelectedOptionIds(accumulatedOptionIds);
+
         setQuestionStep(result.questionStep);
-        setQuestions(result.questions);
+        setQuestions(result.questions ?? []);
         setIsFinalStep(result.isFinalStep);
         setVisitedSteps((prev) => [...prev, result.questionStep]);
         return false;

@@ -11,6 +11,89 @@ import {
 
 const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
+function toYesNo(value) {
+  if (value === true) return 'YES';
+  if (value === false) return 'NO';
+  return value ?? '';
+}
+
+function toBoolean(value) {
+  if (value === 'YES') return true;
+  if (value === 'NO') return false;
+  return Boolean(value);
+}
+
+function normalizeOcrInfo(data) {
+  return {
+    ...data,
+    housingType: data.housingTypeCode ?? data.housingType ?? '',
+    contractType: data.contractType ?? '',
+    tenantType: data.tenantType ?? '',
+    landlordType: data.landlordType ?? '',
+    fixedDateStatus:
+      data.fixedDateStatus ?? (data.fixedDateConfirmed === true ? 'RECEIVED' : 'NOT_RECEIVED'),
+    officetelResidential: data.officetelResidential ?? toYesNo(data.officetelResidentialMarked),
+    landlordProxyContract: toYesNo(data.landlordProxyContract),
+  };
+}
+
+function toOcrUpdateRequest(formValues) {
+  return {
+    housingTypeCode: formValues.housingTypeCode ?? formValues.housingType,
+    contractAddress: formValues.contractAddress,
+    contractType: formValues.contractType,
+    tenantType: formValues.tenantType,
+    landlordType: formValues.landlordType,
+    fixedDateConfirmed:
+      formValues.fixedDateConfirmed ?? formValues.fixedDateStatus === 'RECEIVED',
+    officetelResidentialMarked:
+      formValues.officetelResidentialMarked ?? toBoolean(formValues.officetelResidential),
+    landlordProxyContract: toBoolean(formValues.landlordProxyContract),
+  };
+}
+
+function normalizeDocument(document, sectionCode) {
+  return {
+    documentId: document.documentId,
+    sectionCode,
+    title: document.documentName ?? document.title,
+    description: document.description ?? null,
+    tag: document.documentGroupName ?? document.tag ?? '서류',
+    sampleImageUrl: document.sampleImageUrl ?? null,
+    acceptedVariants: document.acceptedVariants ?? null,
+    status: document.status ?? { label: '제출 확정', tone: 'accent' },
+  };
+}
+
+function normalizeFinalDocuments(data) {
+  if (Array.isArray(data)) {
+    const sectionCodes = [...new Set(data.map((doc) => doc.sectionCode).filter(Boolean))];
+    return {
+      sections: sectionCodes.map((sectionCode) => ({
+        sectionCode,
+        sectionTitle:
+          sectionCode === 'BASIC'
+            ? '기본서류'
+            : sectionCode === 'ADDITIONAL'
+              ? '추가서류'
+              : '보증료 할인서류',
+      })),
+      documents: data,
+    };
+  }
+
+  const sections = data?.sections ?? [];
+  return {
+    sections: sections.map((section) => ({
+      sectionCode: section.sectionCode,
+      sectionTitle: section.sectionName ?? section.sectionTitle,
+    })),
+    documents: sections.flatMap((section) =>
+      (section.documents ?? []).map((document) => normalizeDocument(document, section.sectionCode)),
+    ),
+  };
+}
+
 /**
  * 새 보증 신청 건을 생성한다.
  * @param {string} productCode - 신청할 상품 코드
@@ -41,7 +124,7 @@ export async function uploadLeaseContract(applicationId, file) {
     formData,
     { headers: { 'Content-Type': 'multipart/form-data' } },
   );
-  return res.data;
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -54,7 +137,7 @@ export async function getInfo(applicationId) {
     return Promise.resolve(mockApplicationInfo);
   }
   const res = await axiosInstance.get(`/api/applications/${applicationId}/info`);
-  return res.data;
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -67,8 +150,11 @@ export async function updateInfo(applicationId, data) {
   if (isMock()) {
     return Promise.resolve({ ...mockApplicationInfo, ...data });
   }
-  const res = await axiosInstance.patch(`/api/applications/${applicationId}/info`, data);
-  return res.data;
+  const res = await axiosInstance.patch(
+    `/api/applications/${applicationId}/info`,
+    toOcrUpdateRequest(data),
+  );
+  return normalizeOcrInfo(res.data);
 }
 
 /**
@@ -91,8 +177,13 @@ export async function getQuestions(applicationId, questionStep) {
   const res = await axiosInstance.get(`/api/applications/${applicationId}/questions`, {
     params: { step: questionStep },
   });
-  return res.data;
+  return {
+    questionStep: res.data.questionStep,
+    questions: res.data.questions ?? [],
+    isFinalStep: res.data.questionStep === 'STEP3',
+  };
 }
+
 
 /**
  * 한 step의 답변을 제출하고 서버가 결정한 다음 단계 질문을 반환한다.
@@ -103,6 +194,7 @@ export async function getQuestions(applicationId, questionStep) {
  * @param {boolean} finalSubmission - 이 step이 마지막이면 true
  * @returns {Promise<{done: boolean, questionStep: string|null, questions: object[]|null, isFinalStep: boolean}>}
  */
+
 export async function submitAnswers(applicationId, currentStep, selectedOptionIds, finalSubmission) {
   let data;
 
@@ -134,6 +226,7 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
     data = res.data;
     console.log('[answers] response', data);
   }
+
 
   if (data?.questionnaireCompleted) {
     return { done: true, questionStep: null, questions: null, isFinalStep: true };
@@ -206,4 +299,5 @@ export async function getResultDocuments(applicationId) {
  );
 
  return res.data;
+
 }

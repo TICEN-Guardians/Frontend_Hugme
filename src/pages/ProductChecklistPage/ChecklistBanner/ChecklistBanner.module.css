@@ -7,19 +7,21 @@
   min-height: calc(var(--space-12) + var(--space-8) * 2);
   margin-bottom: var(--space-8);
   padding: var(--space-8) var(--space-6);
+  border: 0.1rem solid var(--accent-tint-100);
   border-radius: var(--radius-lg);
 }
 
 .loginBanner {
-  background: var(--border-subtle);
+  background: var(--accent-tint-50);
 }
 
 .uploadBanner {
-  border: 0.15rem dashed var(--border-default);
+  border: 0.15rem dashed var(--accent-tint-100);
+  background: var(--accent-tint-50);
 }
 
 .skeleton {
-  background: var(--border-subtle);
+  background: var(--accent-tint-50);
 }
 
 .content {
@@ -36,7 +38,8 @@
   width: var(--space-12);
   height: var(--space-12);
   border-radius: var(--radius-md);
-  background: var(--accent-tint-50);
+  background: #fff;
+  color: var(--accent);
   font-size: var(--text-xl);
 }
 

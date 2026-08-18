@@ -5,7 +5,6 @@ import {
   FiCheckSquare,
   FiFileText,
   FiHome,
-  FiLock,
   FiMessageSquare,
 } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
@@ -260,27 +259,8 @@ export default function HeroSection({ slide, direction }) {
           >
             {isImageHero ? (
               <>
-                {isConditionChatSlide ? (
-                  <>
-                    <FiCheckCircle className={styles.availableIcon} aria-hidden="true" />
-                    로그인 없이 바로 이용 가능
-                  </>
-                ) : isChecklistSlide ? (
-                  <>
-                    <FiCheckCircle className={styles.availableIcon} aria-hidden="true" />
-                    <span>기본 체크리스트 바로 이용</span>
-                    <span className={styles.noteDivider} aria-hidden="true">
-                      ·
-                    </span>
-                    <FiLock className={styles.lockIcon} aria-hidden="true" />
-                    <span>맞춤 서류 확인은 로그인 필요</span>
-                  </>
-                ) : (
-                  <>
-                    <FiLock aria-hidden="true" />
-                    로그인 후 이용 가능
-                  </>
-                )}
+                <FiCheckCircle className={styles.availableIcon} aria-hidden="true" />
+                {slide.heroNote}
               </>
             ) : (
               <>* {slide.heroNote}</>

@@ -1,34 +1,102 @@
 .root {
-  padding: var(--space-16) 0;
+  width: 100%;
+  box-sizing: border-box;
+  max-width: var(--container-max);
+  margin: 0 auto;
+  padding: var(--space-10) 0 var(--space-16);
 }
 
-.pageTitle {
-  margin: 0 0 var(--space-4);
-  color: var(--text-primary);
-  font-size: var(--text-2xl);
+.hero {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  margin-bottom: var(--space-8);
+  padding: var(--space-8);
+  border: 0.1rem solid #edf0f3;
+  border-radius: 1.8rem;
+  background:
+    linear-gradient(135deg, rgba(15, 117, 189, 0.08), rgba(62, 154, 67, 0.06)),
+    #fff;
+}
+
+.hero::after {
+  position: absolute;
+  right: -7.2rem;
+  bottom: -9.6rem;
+  width: 28rem;
+  height: 28rem;
+  border: 3.6rem solid rgba(15, 117, 189, 0.06);
+  border-radius: 999px;
+  content: '';
+}
+
+.heroBadge {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  min-height: 3.2rem;
+  margin-bottom: var(--space-4);
+  padding: 0 var(--space-3);
+  border: 0.1rem solid rgba(15, 117, 189, 0.18);
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.78);
+  color: var(--brand-blue);
+  font-size: var(--text-xs);
   font-weight: 800;
 }
 
+.pageTitle {
+  position: relative;
+  z-index: 1;
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
 .pageSubtitle {
-  margin: 0 0 var(--space-8);
+  position: relative;
+  z-index: 1;
+  margin: 0;
   color: var(--text-secondary);
-  font-size: var(--text-base);
+  font-size: var(--text-lg);
   line-height: 1.7;
 }
 
-.count {
-  margin: 0 0 var(--space-5);
-  color: var(--text-primary);
-  font-size: var(--text-base);
-  font-weight: 700;
-}
-
-.countNumber {
-  color: var(--brand-blue);
-}
-
 .groups {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   align-items: stretch;
-  gap: var(--space-6);
+  gap: var(--space-4);
+}
+
+@media (max-width: 90rem) {
+  .groups {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 76.7rem) {
+  .root {
+    padding: var(--space-8) 0 var(--space-12);
+  }
+
+  .hero {
+    padding: var(--space-6);
+    border-radius: 1.4rem;
+  }
+
+  .hero::after {
+    display: none;
+  }
+
+  .pageTitle {
+    font-size: var(--text-2xl);
+  }
+
+  .pageSubtitle {
+    font-size: var(--text-base);
+  }
 }

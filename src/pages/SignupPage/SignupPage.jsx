@@ -170,21 +170,15 @@ export default function SignupPage() {
             </label>
             {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
           </div>
-          <div className={styles.emailInputWrap}>
-            <input
-              id="signup-email"
-              type="email"
-              className={`${styles.input} ${styles.emailInput}`}
-              placeholder="이메일을 입력해 주세요"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              autoComplete="email"
-            />
-            {/* TODO: 이메일 인증 요청 API가 아직 없음. 버튼만 표시, 클릭 동작 없음 */}
-            <Button type="button" variant="secondary" size="sm" className={styles.verifyButton}>
-              인증
-            </Button>
-          </div>
+          <input
+            id="signup-email"
+            type="email"
+            className={styles.input}
+            placeholder="이메일을 입력해 주세요"
+            value={email}
+            onChange={(event) => setEmail(event.target.value)}
+            autoComplete="email"
+          />
         </motion.div>
 
         <motion.div className={styles.field} custom={prefersReducedMotion} variants={fieldVariants}>
@@ -288,7 +282,7 @@ export default function SignupPage() {
       <SuccessModal
         isOpen={isSuccessModalOpen}
         title="회원가입 완료"
-        description={`${email} 주소로 인증 메일을 보냈어요. 메일함에서 인증을 완료한 뒤 로그인해주세요.`}
+        description={`${email} 주소로 인증메일을 발송했습니다. 메일함에서 인증을 완료한 뒤 로그인해주세요.`}
         actionLabel="로그인하러 가기"
         onAction={handleSuccessConfirm}
         onClose={handleSuccessConfirm}

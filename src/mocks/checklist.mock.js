@@ -18,6 +18,7 @@ export const mockApplicationInfo = {
   fixedDateConfirmed: true,
   officetelResidentialMarked: true,
   landlordProxyContract: false,
+
 };
 
 export const mockUploadResponse = {

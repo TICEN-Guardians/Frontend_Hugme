@@ -15,6 +15,8 @@ export default function ChatInput({ onSend, disabled, placeholder }) {
   };
 
   const handleSend = () => {
+    if (disabled) return;
+
     const trimmed = value.trim();
     if (!trimmed) return;
     onSend(trimmed);

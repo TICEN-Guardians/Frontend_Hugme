@@ -1,42 +1,69 @@
 .root {
   display: flex;
-  /* min-height:100%는 부모 체인(pageWrapper의 min-height:100vh)이 flex라 "정의된 높이"로
-     인정되지 않아 브라우저마다 불안정하다 — 헤더/푸터 실측 토큰으로 직접 계산한다.
-     좌우 컬럼은 이 높이를 기준으로 align-items:stretch(기본값)가 똑같이 늘려준다.
-     마지막 --space-8만큼은 root 높이 자체를 줄여서, footer 바로 위에 빈 여백으로 남긴다
-     (root에 padding-bottom을 주면 전체 페이지가 100vh를 넘어가버려서 대신 이 방식을 쓴다). */
-  min-height: calc(100vh - var(--header-height) - var(--footer-height) - var(--space-8));
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  min-height: 0;
+  margin: 0;
+  overflow: hidden;
+  background: var(--on-accent);
 }
 
 .chatPane {
   display: flex;
   flex-direction: column;
-  flex: 0 0 60%;
+  flex: 1 1 auto;
+  box-sizing: border-box;
   min-width: 0;
+  min-height: 0;
   border-right: 0.1rem solid var(--border-subtle);
 }
 
 .messages {
+  display: flex;
+  flex-direction: column;
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
   padding: var(--space-5) var(--space-8);
+}
+
+.chatContent {
+  width: min(calc(100% - var(--space-12)), 104rem);
+  margin-inline: auto;
 }
 
 .lockBox {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: var(--space-16) auto 0;
+  margin: auto;
   padding: var(--space-8);
   border: 0.15rem dashed var(--border-default);
   border-radius: var(--radius-lg);
+  width: min(100%, 38rem);
   max-width: 38rem;
   text-align: center;
 }
 
+.status {
+  margin: var(--space-6) auto 0;
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
 .lockIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-10);
+  height: var(--space-10);
   margin-bottom: var(--space-3);
-  font-size: var(--text-2xl);
+  border-radius: var(--radius-pill);
+  background: rgba(15, 117, 189, 0.08);
+  color: #0f75bd;
+  font-size: var(--text-lg);
 }
 
 .lockTitle {
@@ -53,44 +80,40 @@
   font-size: var(--text-sm);
 }
 
-.subtypeRow {
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  padding: 0 var(--space-8) var(--space-4);
-}
-
-.subtypeButton {
-  padding: var(--space-2) var(--space-4);
-  border: 0.1rem solid var(--border-default);
-  border-radius: var(--radius-pill);
+.inputDock {
+  flex-shrink: 0;
+  padding: var(--space-4) var(--space-8) var(--space-5);
   background: var(--on-accent);
-  color: var(--text-strong);
-  font-size: var(--text-sm);
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.subtypeButton:hover {
-  border-color: var(--accent);
-  color: var(--accent-text);
 }
 
 .sidePane {
-  flex: 0 0 40%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 clamp(42rem, 26vw, 52rem);
   box-sizing: border-box;
+  width: clamp(42rem, 26vw, 52rem);
   min-width: 0;
-  overflow-y: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 .emptyPanel {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: var(--space-10);
+  margin: var(--space-6);
   padding: var(--space-10) var(--space-8);
   border: 0.1rem solid var(--border-subtle);
   border-radius: var(--radius-lg);
+  width: min(calc(100% - var(--space-12)), 38rem);
+  text-align: center;
+}
+
+.sideStatus {
+  margin: var(--space-10);
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
   text-align: center;
 }
 
@@ -102,7 +125,8 @@
   height: var(--space-16);
   margin-bottom: var(--space-5);
   border-radius: var(--radius-pill);
-  background: var(--border-subtle);
+  background: rgba(15, 117, 189, 0.08);
+  color: #0f75bd;
   font-size: var(--text-2xl);
 }
 
@@ -128,9 +152,44 @@
   padding: var(--space-3) var(--space-6);
   border: none;
   border-radius: var(--radius-md);
-  background: var(--accent);
+  background: #0f75bd;
   color: var(--on-accent);
   font-size: var(--text-sm);
   font-weight: 700;
   cursor: pointer;
+}
+
+.emptyCta:hover {
+  background: #0b67aa;
+}
+
+@media (max-width: 76.7rem) {
+  .root {
+    min-height: auto;
+    height: auto;
+    overflow: visible;
+    flex-direction: column;
+  }
+
+  .chatPane {
+    flex: none;
+    min-height: 56rem;
+    border-right: none;
+    border-bottom: 0.1rem solid var(--border-subtle);
+  }
+
+  .sidePane {
+    flex: none;
+    min-height: 64rem;
+  }
+
+  .messages,
+  .inputDock {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+
+  .chatContent {
+    width: 100%;
+  }
 }

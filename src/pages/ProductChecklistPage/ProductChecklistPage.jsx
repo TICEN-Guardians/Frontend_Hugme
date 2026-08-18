@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
+import { motion, useReducedMotion } from 'framer-motion';
 import { FaCircleCheck, FaFileLines } from 'react-icons/fa6';
-import { useParams } from 'react-router-dom';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
@@ -8,7 +9,7 @@ import Button from '../../components/common/Button/Button.jsx';
 import DocumentCard from '../../components/common/DocumentCard/DocumentCard.jsx';
 import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
-import { PRODUCT_THEME } from '../../constants/products.js';
+import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
 import { useProductChecklist } from '../../hooks/useProductChecklist.js';
 import { useQuestionFlow } from '../../hooks/useQuestionFlow.js';
@@ -17,9 +18,11 @@ import ChecklistBanner from './ChecklistBanner/ChecklistBanner.jsx';
 import FinalDocumentList from './FinalDocumentList/FinalDocumentList.jsx';
 import styles from './ProductChecklistPage.module.css';
 
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
+
 const PRODUCT_TITLES = {
   GENERAL: '전세보증금반환보증',
-  SPECIAL: '특례반환보증(임차인형)',
+  SPECIAL: '특례반환보증',
 };
 
 function groupModalDocuments(documents) {
@@ -51,8 +54,11 @@ function groupModalDocuments(documents) {
 }
 
 export default function ProductChecklistPage() {
-  const { productCode } = useParams();
-  const theme = PRODUCT_THEME[productCode];
+  const navigate = useNavigate();
+  const prefersReducedMotion = useReducedMotion();
+  const { productCode: productCodeParam, guaranteeType } = useParams();
+  const productCode = PRODUCT_ROUTE_TO_CODE[productCodeParam] ?? PRODUCT_ROUTE_TO_CODE[guaranteeType];
+  const theme = GUARANTEE_THEME[productCode]?.theme;
 
   // Modal은 document.body로 portal되기 때문에, 페이지 루트에만 data-theme을 걸면
   // 모달 안에서 --accent 계열 토큰이 상속되지 않는다. html에도 같이 걸어서 맞춘다.
@@ -166,8 +172,18 @@ export default function ProductChecklistPage() {
   };
 
   return (
-    <div className={styles.root} data-theme={theme}>
-      <p className={styles.eyebrow}>보증가입 준비물 확인</p>
+    <motion.div
+      className={styles.root}
+      data-theme={theme}
+      initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 18 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: prefersReducedMotion ? 0.3 : 1, ease: ENTRY_EASE }}
+    >
+      <p className={styles.eyebrow}>
+        <Link to="/guarantee-checklist">보증가입 체크리스트</Link>
+        <span aria-hidden="true">/</span>
+        <span>준비물 확인</span>
+      </p>
       <h1 className={styles.title}>{PRODUCT_TITLES[productCode]}</h1>
 
       {isDone ? (
@@ -178,6 +194,12 @@ export default function ProductChecklistPage() {
           {/* TODO: 다시 분석(재업로드) 플로우는 다음 차수에서 연결 */}
           <Button type="button" variant="secondary" onClick={() => {}}>
             다시 분석
+          </Button>
+          <Button
+            type="button"
+            onClick={() => navigate('/doc-chat', { state: { applicationId } })}
+          >
+            서류안내 챗봇
           </Button>
         </div>
       ) : (
@@ -193,7 +215,9 @@ export default function ProductChecklistPage() {
       )}
 
       {isDone ? (
+
         <FinalDocumentList result={finalDocuments} />
+
       ) : (
         status === 'success' && (
           <>
@@ -210,6 +234,7 @@ export default function ProductChecklistPage() {
                 />
               )}
             </div>
+
 
             <div className={styles.itemArea}>
               {isSectionLoading ? (
@@ -230,6 +255,7 @@ export default function ProductChecklistPage() {
                 </div>
               )}
             </div>
+
           </>
         )
       )}
@@ -239,6 +265,7 @@ export default function ProductChecklistPage() {
           <div className={styles.detail}>
             <h2 className={styles.detailTitle}>{selectedItem.itemName}</h2>
             <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
+
             {isDocumentsLoading ? (
               <p className={styles.status}>불러오는 중...</p>
             ) : documents.length === 0 ? (
@@ -286,6 +313,7 @@ export default function ProductChecklistPage() {
                   );
                 })}
               </div>
+
             )}
           </div>
         )}
@@ -310,6 +338,6 @@ export default function ProductChecklistPage() {
         isSubmitting={questionFlow.isSubmitting}
         onSubmitStep={handleSubmitStep}
       />
-    </div>
+    </motion.div>
   );
 }

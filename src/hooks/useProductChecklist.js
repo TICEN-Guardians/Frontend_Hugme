@@ -4,6 +4,7 @@ import {
   getItemDocuments,
 } from '../services/products/productsService.js';
 
+
 const DEFAULT_SECTION_CODE = 'BASIC';
 
 const CHECKLIST_SECTIONS = [
@@ -45,6 +46,7 @@ export function useProductChecklist(productCode) {
   const [activeGroupId, setActiveGroupId] = useState(null);
   const [items, setItems] = useState([]);
   const [activeItemId, setActiveItemId] = useState(null);
+
   const [documents, setDocuments] = useState([]);
 
   const [status, setStatus] = useState('loading');
@@ -58,6 +60,7 @@ export function useProductChecklist(productCode) {
       setActiveItemId(itemId);
       setIsDocumentsLoading(true);
       setDocumentsError(null);
+
       setDocuments([]);
 
       try {
@@ -69,6 +72,7 @@ export function useProductChecklist(productCode) {
       } finally {
         setIsDocumentsLoading(false);
       }
+
     },
     [productCode],
   );
@@ -78,6 +82,7 @@ export function useProductChecklist(productCode) {
       const sectionItems = sortItems(section?.items ?? []);
       const nextGroups = groupItems(sectionItems);
       const nextItems = nextGroups.length > 0 ? nextGroups[0].items : sectionItems;
+
 
       setActiveSectionCode(section?.sectionCode ?? DEFAULT_SECTION_CODE);
       setGroups(nextGroups);
@@ -94,10 +99,12 @@ export function useProductChecklist(productCode) {
     setStatus('loading');
     setError(null);
 
+
     getChecklistBySection(productCode, DEFAULT_SECTION_CODE)
       .then((section) => {
         if (ignore) return;
         applySection(section);
+
         setStatus('success');
       })
       .catch((err) => {

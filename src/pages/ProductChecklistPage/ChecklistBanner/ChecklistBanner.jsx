@@ -54,8 +54,8 @@ export default function ChecklistBanner({ onFileSelected }) {
               <FaFileLines aria-hidden="true" />
             </span>
             <div>
-              <p className={styles.title}>임대차계약서를 업로드하세요</p>
-              <p className={styles.description}>계약서를 분석하면 내가 낼 서류만 골라 보여드려요.</p>
+              <p className={styles.title}>임대차계약서를 등록하고 맞춤 서류를 확인하세요</p>
+              <p className={styles.description}>계약서를 분석하면 내 계약에 필요한 추가 서류를 확인할 수 있어요.</p>
             </div>
           </div>
           <input
@@ -77,9 +77,9 @@ export default function ChecklistBanner({ onFileSelected }) {
   return (
     <div className={`${styles.banner} ${styles.loginBanner}`}>
       <div>
-        <p className={styles.title}>로그인하면 내 계약서로 맞춤 분석해드려요</p>
+        <p className={styles.title}>로그인하면 내 계약서로 맞춤 확인할 수 있어요</p>
         <p className={styles.description}>
-          임대차계약서를 올리면 내가 실제로 낼 서류만 골라 보여드려요.
+          임대차계약서를 바탕으로 내 계약에 필요한 서류를 확인할 수 있어요.
         </p>
       </div>
       <Link

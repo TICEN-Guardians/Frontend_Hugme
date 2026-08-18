@@ -3,6 +3,7 @@ import { mockChecklistByProduct, mockItemDocuments } from '../../mocks/products.
 
 const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
+
 function normalizeDocuments(documents) {
   return [...documents]
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -16,6 +17,7 @@ function normalizeDocuments(documents) {
       documentGroupName: document.documentGroupName,
       documentGroupSortOrder: document.documentGroupSortOrder,
     }));
+
 }
 
 /**
@@ -51,6 +53,7 @@ export async function getItemDocuments(productCode, itemId) {
     );
     data = res.data;
   }
+
 
   return normalizeDocuments(data.documents ?? []);
 }

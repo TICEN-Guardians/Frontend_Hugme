@@ -1,71 +1,86 @@
-import { FaCircle, FaCircleCheck } from 'react-icons/fa6';
-import { PRODUCT_CODES, PRODUCT_THEME } from '../../constants/products.js';
+import { motion, useReducedMotion } from 'framer-motion';
+import {
+  HiArrowPathRoundedSquare,
+  HiShieldCheck,
+} from 'react-icons/hi2';
+import { PRODUCT_CODES, PRODUCT_DETAIL_PATH, PRODUCT_THEME } from '../../constants/products.js';
 import ProductGroup from './ProductGroup/ProductGroup.jsx';
 import styles from './ProductsPage.module.css';
+
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
 
 const GROUPS = [
   {
     id: 'no-loan',
     theme: PRODUCT_THEME.GENERAL,
-    icon: <FaCircleCheck />,
-    badgeLabel: '대출 없이 계약한 경우',
+    icon: <HiShieldCheck aria-hidden="true" />,
+    badgeLabel: '일반 전세계약',
     title: '전세보증금반환보증',
-    description: '2종류 중 상황에 맞는 보증을 선택하세요',
-    products: [
+    summary: '계약 종료 후 전세보증금을 돌려받지 못하는 경우를 보호하는 보증',
+    facts: [
       {
-        id: PRODUCT_CODES.GENERAL,
-        title: '전세보증금반환보증',
-        description: ['일반 전세계약 대상', '보증한도 최대 90%', '가입기간 전세계약과 동일'],
-        ctaLabel: '준비물 확인',
-        to: `/products/${PRODUCT_CODES.GENERAL}/checklist`,
-        disabled: false,
+        label: '보증금',
+        value: '수도권 7억원 이하 · 그 외 지역 5억원 이하',
       },
       {
-        id: PRODUCT_CODES.SPECIAL,
-        title: '특례반환보증',
-        description: ['청년·신혼부부 대상', '보증료 할인 적용'],
-        ctaLabel: '준비물 확인',
-        to: `/products/${PRODUCT_CODES.SPECIAL}/checklist`,
-        disabled: false,
+        label: '신청기한',
+        value: '전세계약기간의 1/2이 지나기 전',
       },
     ],
+    ctaLabel: '일반 반환보증 준비물 확인',
+    to: PRODUCT_DETAIL_PATH[PRODUCT_CODES.GENERAL],
   },
   {
-    id: 'with-loan',
+    id: 'special-return',
     theme: PRODUCT_THEME.SPECIAL,
-    icon: <FaCircle />,
-    badgeLabel: '전세자금대출 받은 경우',
-    title: '전세금안심대출보증',
-    description: '보증금 반환과 대출 상환을 한 번에 맡깁니다',
-    products: [
+    icon: <HiArrowPathRoundedSquare aria-hidden="true" />,
+    badgeLabel: '역전세 특례대출 연계',
+    title: '특례반환보증',
+    summary: '특례대출을 이용한 임대인의 후속 임차인을 보호하는 반환보증',
+    facts: [
       {
-        // 전세금안심대출보증: PRODUCT_CODES에 코드값 없음 — 준비중, 카드만 비활성
-        id: 'LOAN_SAFE_PENDING',
-        title: '전세금안심대출보증',
-        description: ['전세자금대출 이용자 대상', '보증금과 대출금을 함께 보호', '대출기관과 연계 심사'],
-        ctaLabel: '준비중',
-        to: null,
-        disabled: true,
+        label: '가입대상',
+        value: '특례대출 연계 주택의 후속 임차인',
+      },
+      {
+        label: '확인사항',
+        value: '전세보증금 반환목적 특례대출 연계 여부 확인',
       },
     ],
+    ctaLabel: '특례 반환보증 준비물 확인',
+    to: PRODUCT_DETAIL_PATH[PRODUCT_CODES.SPECIAL],
   },
 ];
 
 export default function ProductsPage() {
+  const prefersReducedMotion = useReducedMotion();
+
   return (
     <div className={styles.root}>
-      <h1 className={styles.pageTitle}>보증가입 체크리스트</h1>
-      <p className={styles.pageSubtitle}>
-        가입 전 준비물과 확인 사항을 미리 체크하세요
-        <br />
-        대출 여부에 따라 준비물이 달라져요
-      </p>
-      <p className={styles.count}>
-        가입 가능한 보증상품 <strong className={styles.countNumber}>2건</strong>
-      </p>
+      <motion.header
+        className={styles.hero}
+        initial={{
+          opacity: 0,
+          y: prefersReducedMotion ? 0 : 34,
+          scale: prefersReducedMotion ? 1 : 0.988,
+        }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: prefersReducedMotion ? 0.35 : 1.05, delay: 0.08, ease: ENTRY_EASE }}
+      >
+        <span className={styles.heroBadge}>HUG 보증상품 안내</span>
+        <h1 className={styles.pageTitle}>보증가입 체크리스트</h1>
+        <p className={styles.pageSubtitle}>
+          가입할 보증을 선택하고 필요한 준비서류를 확인하세요.
+        </p>
+      </motion.header>
       <div className={styles.groups}>
-        {GROUPS.map((group) => (
-          <ProductGroup key={group.id} {...group} />
+        {GROUPS.map((group, index) => (
+          <ProductGroup
+            key={group.id}
+            index={index}
+            prefersReducedMotion={prefersReducedMotion}
+            {...group}
+          />
         ))}
       </div>
     </div>
