@@ -11,6 +11,14 @@ export async function signup(email, password, name) {
   return response.data;
 }
 
+export async function checkEmail(email) {
+  const response = await axiosInstance.post('/api/auth/mail/check', {
+    mail: email,
+  });
+
+  return response.data;
+}
+
 export async function login(email, password) {
   const response = await axiosInstance.post('/api/auth/login', {
     email,

@@ -6,9 +6,7 @@ import buttonStyles from '../../../components/common/Button/Button.module.css';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import styles from './ChecklistBanner.module.css';
 
-// 계약서는 PDF 스캔본이나 사진으로 올라온다고 가정. 명세에 없어서 임의 판단.
-const ACCEPTED_TYPES = ['application/pdf', 'image/jpeg', 'image/png'];
-const ACCEPT_ATTR = 'application/pdf,image/jpeg,image/png';
+const ACCEPT_ATTR = 'image/*';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB, 명세에 없어서 임의 값
 
 export default function ChecklistBanner({ onFileSelected }) {
@@ -28,8 +26,8 @@ export default function ChecklistBanner({ onFileSelected }) {
     event.target.value = '';
     if (!file) return;
 
-    if (!ACCEPTED_TYPES.includes(file.type)) {
-      setFileError('PDF 또는 이미지 파일(JPG, PNG)만 업로드할 수 있어요.');
+    if (!file.type.startsWith('image/')) {
+      setFileError('이미지 파일만 업로드할 수 있어요.');
       return;
     }
     if (file.size > MAX_FILE_SIZE) {
@@ -54,8 +52,10 @@ export default function ChecklistBanner({ onFileSelected }) {
               <FaFileLines aria-hidden="true" />
             </span>
             <div>
-              <p className={styles.title}>임대차계약서를 등록하고 맞춤 서류를 확인하세요</p>
-              <p className={styles.description}>계약서를 분석하면 내 계약에 필요한 추가 서류를 확인할 수 있어요.</p>
+              <p className={styles.title}>내 계약에 맞춰 보기</p>
+              <p className={styles.description}>
+                임대차계약서를 분석하면 내 상황에 맞는 준비서류를 확인할 수 있어요.
+              </p>
             </div>
           </div>
           <input
@@ -65,7 +65,7 @@ export default function ChecklistBanner({ onFileSelected }) {
             onChange={handleFileChange}
             className={styles.hiddenInput}
           />
-          <Button type="button" onClick={handleUploadClick} style={{ flexShrink: 0 }}>
+          <Button type="button" onClick={handleUploadClick} className={styles.uploadButton}>
             계약서 업로드
           </Button>
         </div>
@@ -76,11 +76,16 @@ export default function ChecklistBanner({ onFileSelected }) {
 
   return (
     <div className={`${styles.banner} ${styles.loginBanner}`}>
-      <div>
-        <p className={styles.title}>로그인하면 내 계약서로 맞춤 확인할 수 있어요</p>
+      <div className={styles.content}>
+        <span className={styles.icon}>
+          <FaFileLines aria-hidden="true" />
+        </span>
+        <div>
+        <p className={styles.title}>로그인하면 맞춤 확인 가능</p>
         <p className={styles.description}>
-          임대차계약서를 바탕으로 내 계약에 필요한 서류를 확인할 수 있어요.
+          임대차계약서를 바탕으로 필요한 서류를 확인할 수 있어요.
         </p>
+        </div>
       </div>
       <Link
         to="/auth/login"

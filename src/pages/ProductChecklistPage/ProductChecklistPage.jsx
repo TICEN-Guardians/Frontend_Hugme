@@ -1,13 +1,11 @@
 import { useEffect, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { FaCircleCheck, FaFileLines } from 'react-icons/fa6';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { FaChevronRight, FaCircleCheck, FaCircleInfo, FaFileLines } from 'react-icons/fa6';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
 import Button from '../../components/common/Button/Button.jsx';
-import DocumentCard from '../../components/common/DocumentCard/DocumentCard.jsx';
-import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
@@ -24,6 +22,88 @@ const PRODUCT_TITLES = {
   GENERAL: '전세보증금반환보증',
   SPECIAL: '특례반환보증',
 };
+
+const PANEL_EASE = [0.22, 1, 0.36, 1];
+const SELECTOR_STAGGER = 0.035;
+
+const selectorListVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      duration: 0.5,
+      ease: PANEL_EASE,
+      staggerChildren: SELECTOR_STAGGER,
+    },
+  },
+};
+
+const selectorItemVariants = {
+  hidden: { opacity: 0, y: 8 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.5,
+      ease: PANEL_EASE,
+    },
+  },
+};
+
+const HOUSING_TYPE_LABEL = {
+  APARTMENT: '아파트',
+  OFFICETEL: '오피스텔',
+  VILLA: '빌라·다세대·연립주택',
+  HOUSE: '단독·다가구주택',
+};
+
+const CONTRACT_TYPE_LABEL = {
+  NEW: '신규계약',
+  RENEWAL: '갱신계약',
+};
+
+const PARTY_TYPE_LABEL = {
+  PERSON: '개인',
+  INDIVIDUAL: '개인',
+  CORPORATION: '법인',
+};
+
+function displayValue(value, labels) {
+  if (value === null || value === undefined || value === '') return null;
+  return labels?.[value] ?? value;
+}
+
+function fixedDateLabel(info) {
+  if (info?.fixedDateConfirmed === true || info?.fixedDateStatus === 'RECEIVED') {
+    return '확인됨';
+  }
+  if (info?.fixedDateConfirmed === false || info?.fixedDateStatus === 'NOT_RECEIVED') {
+    return '미확인';
+  }
+  return null;
+}
+
+function buildOcrSummaryItems(ocrInfo) {
+  if (!ocrInfo) return [];
+
+  return [
+    { label: '계약 주소', value: displayValue(ocrInfo.contractAddress) },
+    {
+      label: '주택 유형',
+      value: displayValue(ocrInfo.housingTypeCode ?? ocrInfo.housingType, HOUSING_TYPE_LABEL),
+    },
+    { label: '계약 유형', value: displayValue(ocrInfo.contractType, CONTRACT_TYPE_LABEL) },
+    { label: '임차인 유형', value: displayValue(ocrInfo.tenantType, PARTY_TYPE_LABEL) },
+    { label: '임대인 유형', value: displayValue(ocrInfo.landlordType, PARTY_TYPE_LABEL) },
+    { label: '확정일자', value: fixedDateLabel(ocrInfo), tone: 'success' },
+    ocrInfo.officetelResidential
+      ? { label: '오피스텔 주거용 여부', value: displayValue(ocrInfo.officetelResidential) }
+      : null,
+    ocrInfo.landlordProxyContract
+      ? { label: '임대인 대리계약 여부', value: displayValue(ocrInfo.landlordProxyContract) }
+      : null,
+  ].filter((item) => item?.value);
+}
 
 function groupModalDocuments(documents) {
   const entries = [];
@@ -51,6 +131,228 @@ function groupModalDocuments(documents) {
   });
 
   return entries;
+}
+
+function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset, onChat }) {
+  const summaryItems = buildOcrSummaryItems(ocrInfo);
+
+  if (!isDone) {
+    return (
+      <motion.section
+        className={styles.analysisPanel}
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: PANEL_EASE }}
+      >
+        <ChecklistBanner onFileSelected={onUpload} />
+        {uploadError && (
+          <p className={styles.uploadError}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
+        )}
+      </motion.section>
+    );
+  }
+
+  return (
+    <motion.section
+      className={styles.analysisPanel}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: PANEL_EASE }}
+    >
+      <div className={styles.analysisHeader}>
+        <div>
+          <p className={styles.doneBannerTitle}>
+            <FaCircleCheck aria-hidden="true" /> 계약서 분석 완료
+          </p>
+          <h2 className={styles.analysisTitle}>내 계약 분석 결과</h2>
+        </div>
+        <div className={styles.analysisActions}>
+          <Button type="button" variant="secondary" onClick={onReset}>
+            다시 분석
+          </Button>
+          <Button type="button" onClick={onChat}>
+            서류안내 챗봇
+          </Button>
+        </div>
+      </div>
+
+      {summaryItems.length > 0 && (
+        <div className={styles.summaryGrid}>
+          {summaryItems.map((item) => (
+            <div key={item.label} className={styles.summaryItem}>
+              <span className={styles.summaryLabel}>{item.label}</span>
+              <strong className={styles.summaryValue}>
+                {item.tone === 'success' && <FaCircleCheck aria-hidden="true" />}
+                {item.value}
+              </strong>
+            </div>
+          ))}
+        </div>
+      )}
+    </motion.section>
+  );
+}
+
+function DocumentSelector({
+  items,
+  selectedItemId,
+  onSelect,
+  groupTabs,
+  activeGroupId,
+  onGroupChange,
+}) {
+  return (
+    <div className={styles.selectorPanel}>
+      {groupTabs.length > 0 && (
+        <div className={styles.groupFilterRow} aria-label="추가서류 분류">
+          {groupTabs.map((group) => (
+            <button
+              key={group.key}
+              type="button"
+              className={styles.groupFilterButton}
+              data-selected={group.key === activeGroupId}
+              onClick={() => onGroupChange(group.key)}
+            >
+              {group.label}
+            </button>
+          ))}
+        </div>
+      )}
+      <motion.div
+        className={styles.documentList}
+        variants={selectorListVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        {items.map((item) => {
+          const isSelected = item.itemId === selectedItemId;
+          return (
+            <motion.button
+              key={item.itemId}
+              type="button"
+              className={styles.selectorButton}
+              data-selected={isSelected}
+              aria-pressed={isSelected}
+              onClick={() => onSelect(item.itemId)}
+              variants={selectorItemVariants}
+              whileHover={{ x: 2 }}
+              whileTap={{ scale: 0.995 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
+            >
+              <FaFileLines className={styles.selectorIcon} aria-hidden="true" />
+              <span className={styles.selectorTitle}>{item.itemName}</span>
+              <FaChevronRight className={styles.selectorChevron} aria-hidden="true" />
+            </motion.button>
+          );
+        })}
+      </motion.div>
+    </div>
+  );
+}
+
+function DocumentDetail({
+  selectedItem,
+  entries,
+  isLoading,
+  expandedGroupIds,
+  onToggleGroup,
+}) {
+  return (
+    <section className={styles.detailPanel} aria-live="polite">
+      <AnimatePresence mode="wait">
+        {selectedItem ? (
+          <motion.div
+            key={selectedItem.itemId}
+            className={styles.detailContent}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.5, ease: PANEL_EASE }}
+          >
+            <p className={styles.previewEyebrow}>선택한 서류</p>
+            <h2 className={styles.detailTitle}>{selectedItem.itemName}</h2>
+
+            {isLoading ? (
+              <p className={styles.status}>불러오는 중...</p>
+            ) : entries.length > 0 ? (
+              <div className={styles.detailSection}>
+                <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
+                <div className={styles.variantGrid}>
+                  {entries.map((entry) => {
+                    if (entry.type === 'document') {
+                      const { document } = entry;
+                      return (
+                        <div key={entry.key} className={styles.variantItem}>
+                          <span className={styles.variantDot} />
+                          <div>
+                            <strong>{document.title ?? document.documentName}</strong>
+                            {document.description && <p>{document.description}</p>}
+                            {Array.isArray(document.acceptedVariants) &&
+                              document.acceptedVariants.length > 0 && (
+                                <div className={styles.acceptedVariantList}>
+                                  {document.acceptedVariants.map((variant) => (
+                                    <span key={variant} className={styles.acceptedVariant}>
+                                      <span className={styles.variantDot} />
+                                      {variant}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            {document.sampleImageUrl && (
+                              <img
+                                className={styles.sampleImage}
+                                src={document.sampleImageUrl}
+                                alt={`${document.title ?? document.documentName} 예시`}
+                              />
+                            )}
+                          </div>
+                        </div>
+                      );
+                    }
+
+                    return (
+                      <div key={entry.key} className={styles.documentGroup}>
+                        <div className={styles.groupSummary}>
+                          <span>{entry.groupName}</span>
+                          <small>{entry.documents.length}개</small>
+                        </div>
+                        <div className={styles.inlineDocumentList}>
+                          {entry.documents.map((document) => (
+                            <div key={document.documentId} className={styles.inlineDocument}>
+                              <span className={styles.variantDot} />
+                              <div>
+                                <strong>{document.title ?? document.documentName}</strong>
+                                {document.description && <p>{document.description}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ) : (
+              <p className={styles.empty}>표시할 준비 서류가 없습니다.</p>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div
+            key="empty"
+            className={styles.previewEmpty}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.5, ease: PANEL_EASE }}
+          >
+            <FaCircleInfo className={styles.previewIcon} aria-hidden="true" />
+            <h2>서류를 선택해 주세요</h2>
+            <p>왼쪽 목록에서 서류를 선택하면 상세정보를 확인할 수 있어요.</p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </section>
+  );
 }
 
 export default function ProductChecklistPage() {
@@ -104,6 +406,7 @@ export default function ProductChecklistPage() {
     startUpload,
     confirmOcrInfo,
     closeOcrConfirm,
+    reopenOcrConfirm,
     finishQuestions,
   } = useContractUpload(productCode);
 
@@ -134,6 +437,16 @@ export default function ProductChecklistPage() {
     }
   };
 
+  const handleQuestionBack = () => {
+    if (questionFlow.canGoBack) {
+      questionFlow.goBack();
+      return;
+    }
+
+    questionFlow.reset();
+    reopenOcrConfirm();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -158,6 +471,18 @@ export default function ProductChecklistPage() {
     await changeItem(itemId);
   };
 
+  const handleSectionChange = async (sectionCode) => {
+    setSelectedItemId(null);
+    setExpandedDocumentGroupIds([]);
+    await changeSection(sectionCode);
+  };
+
+  const handleGroupChange = (groupId) => {
+    setSelectedItemId(null);
+    setExpandedDocumentGroupIds([]);
+    changeGroup(groupId);
+  };
+
   const toggleDocumentGroup = (groupId) => {
     setExpandedDocumentGroupIds((current) =>
       current.includes(groupId)
@@ -166,10 +491,12 @@ export default function ProductChecklistPage() {
     );
   };
 
-  const closeItemModal = () => {
-    setSelectedItemId(null);
-    setExpandedDocumentGroupIds([]);
-  };
+  useEffect(() => {
+    if (status !== 'success' || isSectionLoading || items.length === 0) return;
+    if (selectedItemId != null && items.some((item) => item.itemId === selectedItemId)) return;
+
+    handleItemClick(items[0].itemId);
+  }, [status, isSectionLoading, items, selectedItemId]);
 
   return (
     <motion.div
@@ -179,35 +506,14 @@ export default function ProductChecklistPage() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: prefersReducedMotion ? 0.3 : 1, ease: ENTRY_EASE }}
     >
-      <p className={styles.eyebrow}>
-        <Link to="/guarantee-checklist">보증가입 체크리스트</Link>
-        <span aria-hidden="true">/</span>
-        <span>준비물 확인</span>
-      </p>
-      <h1 className={styles.title}>{PRODUCT_TITLES[productCode]}</h1>
-
-      {isDone ? (
-        <div className={styles.doneBanner}>
-          <p className={styles.doneBannerTitle}>
-            <FaCircleCheck aria-hidden="true" /> 임대차계약서 분석 완료
-          </p>
-          {/* TODO: 다시 분석(재업로드) 플로우는 다음 차수에서 연결 */}
-          <Button type="button" variant="secondary" onClick={() => {}}>
-            다시 분석
-          </Button>
-          <Button
-            type="button"
-            onClick={() => navigate('/doc-chat')}
-          >
-            서류안내 챗봇
-          </Button>
-        </div>
-      ) : (
-        <ChecklistBanner onFileSelected={startUpload} />
-      )}
-      {uploadError && (
-        <p className={styles.status}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
-      )}
+      <div className={styles.headingBlock}>
+        <p className={styles.eyebrow}>
+          <Link to="/guarantee-checklist">보증가입 체크리스트</Link>
+          <span aria-hidden="true">/</span>
+          <span>준비물 확인</span>
+        </p>
+        <h1 className={styles.title}>{PRODUCT_TITLES[productCode]}</h1>
+      </div>
 
       {status === 'loading' && <p className={styles.status}>불러오는 중...</p>}
       {status === 'error' && (
@@ -215,109 +521,66 @@ export default function ProductChecklistPage() {
       )}
 
       {isDone ? (
-
-        <FinalDocumentList result={finalDocuments} />
+        <>
+          <ContractAnalysisPanel
+            isDone
+            ocrInfo={ocrInfo}
+            onReset={() => {}}
+            onChat={() => navigate('/doc-chat', { state: { applicationId } })}
+          />
+          <FinalDocumentList result={finalDocuments} />
+        </>
 
       ) : (
         status === 'success' && (
           <>
-            <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={changeSection} />
+            <ContractAnalysisPanel
+              isDone={false}
+              onUpload={startUpload}
+              uploadError={uploadError}
+            />
+            <motion.section
+              className={styles.board}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease: PANEL_EASE }}
+            >
+              <div className={styles.boardHeader}>
+                <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={handleSectionChange} />
 
-            {/* 추가서류처럼 groupName이 있는 섹션에서만 그룹 탭을 표시한다. */}
-            <div className={styles.pillSlot}>
-              {groupTabs.length > 0 && (
-                <TabBar
-                  tabs={groupTabs}
-                  activeKey={activeGroupId}
-                  onChange={changeGroup}
-                  variant="pill"
-                />
-              )}
-            </div>
+              </div>
 
 
-            <div className={styles.itemArea}>
-              {isSectionLoading ? (
-                <p className={styles.status}>불러오는 중...</p>
-              ) : items.length === 0 ? (
-                <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
-              ) : (
-                <div className={styles.grid}>
-                  {items.map((item) => (
-                    <DocumentCard
-                      key={item.itemId}
-                      icon={<FaFileLines />}
-                      title={item.itemName}
-                      singleLine
-                      onClick={() => handleItemClick(item.itemId)}
+              <div className={styles.itemArea}>
+                {isSectionLoading ? (
+                  <p className={styles.status}>불러오는 중...</p>
+                ) : items.length === 0 ? (
+                  <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
+                ) : (
+                  <div className={styles.checklistLayout}>
+                    <DocumentSelector
+                      items={items}
+                      selectedItemId={selectedItemId}
+                      onSelect={handleItemClick}
+                      groupTabs={groupTabs}
+                      activeGroupId={activeGroupId}
+                      onGroupChange={handleGroupChange}
                     />
-                  ))}
-                </div>
-              )}
-            </div>
+                    <DocumentDetail
+                      selectedItem={selectedItem}
+                      entries={modalDocumentEntries}
+                      isLoading={isDocumentsLoading}
+                      expandedGroupIds={expandedDocumentGroupIds}
+                      onToggleGroup={toggleDocumentGroup}
+                    />
+                  </div>
+                )}
+              </div>
 
+            </motion.section>
           </>
         )
       )}
-
-      <Modal isOpen={selectedItemId != null} onClose={closeItemModal}>
-        {selectedItem && (
-          <div className={styles.detail}>
-            <h2 className={styles.detailTitle}>{selectedItem.itemName}</h2>
-            <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
-
-            {isDocumentsLoading ? (
-              <p className={styles.status}>불러오는 중...</p>
-            ) : documents.length === 0 ? (
-              <p className={styles.empty}>표시할 준비 서류가 없습니다.</p>
-            ) : (
-              <div className={styles.modalDocumentList}>
-                {modalDocumentEntries.map((entry) => {
-                  if (entry.type === 'document') {
-                    const { document } = entry;
-                    return (
-                      <div key={entry.key} className={styles.variantItem}>
-                        <span className={styles.variantDot} />
-                        <div>
-                          <strong>{document.title}</strong>
-                          {document.description && <p>{document.description}</p>}
-                        </div>
-                      </div>
-                    );
-                  }
-
-                  const isExpanded = expandedDocumentGroupIds.includes(entry.groupId);
-                  return (
-                    <div key={entry.key} className={styles.documentGroup}>
-                      <DocumentCard
-                        icon={<FaFileLines />}
-                        title={entry.groupName}
-                        description={`${entry.documents.length}개의 준비 서류`}
-                        expanded={isExpanded}
-                        onClick={() => toggleDocumentGroup(entry.groupId)}
-                      />
-                      {isExpanded && (
-                        <div className={styles.inlineDocumentList}>
-                          {entry.documents.map((document) => (
-                            <div key={document.documentId} className={styles.inlineDocument}>
-                              <span className={styles.variantDot} />
-                              <div>
-                                <strong>{document.title}</strong>
-                                {document.description && <p>{document.description}</p>}
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-            )}
-          </div>
-        )}
-      </Modal>
 
       <AnalyzingModal isOpen={step === 'analyzing'} />
 
@@ -330,12 +593,19 @@ export default function ProductChecklistPage() {
       />
 
       <QuestionModal
-        isOpen={step === 'questions' && questionFlow.questionStep != null}
+        isOpen={step === 'questions'}
         questionStep={questionFlow.questionStep}
         questions={questionFlow.questions}
         isFinalStep={questionFlow.isFinalStep}
         visitedSteps={questionFlow.visitedSteps}
+        initialAnswerIds={questionFlow.currentAnswerIds}
+        isLoading={
+          questionFlow.isLoading ||
+          questionFlow.isSubmitting ||
+          questionFlow.questionStep == null
+        }
         isSubmitting={questionFlow.isSubmitting}
+        onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
       />
     </motion.div>

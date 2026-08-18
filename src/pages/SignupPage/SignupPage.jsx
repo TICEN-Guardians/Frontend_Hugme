@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
 import Modal from '../../components/common/Modal/Modal.jsx';
 import SuccessModal from '../../components/common/Modal/SuccessModal.jsx';
@@ -63,15 +63,19 @@ const TERMS_CONTENT = {
   ],
 };
 
-function validate({ name, email, password, passwordConfirm, agreeTerms }) {
+function validate({ name, email, password, passwordConfirm, agreeTerms, checkedEmail }) {
   const errors = {};
+  const normalizedEmail = email.trim();
+
   if (!name.trim()) {
     errors.name = '이름을 입력해주세요.';
   }
-  if (!email.trim()) {
+  if (!normalizedEmail) {
     errors.email = '이메일을 입력해주세요.';
-  } else if (!EMAIL_PATTERN.test(email)) {
+  } else if (!EMAIL_PATTERN.test(normalizedEmail)) {
     errors.email = '올바른 이메일 형식이 아닙니다.';
+  } else if (checkedEmail !== normalizedEmail) {
+    errors.email = '이메일 중복확인을 완료해주세요.';
   }
   if (!password) {
     errors.password = '비밀번호를 입력해주세요.';
@@ -90,8 +94,7 @@ function validate({ name, email, password, passwordConfirm, agreeTerms }) {
 }
 
 export default function SignupPage() {
-  const { signup } = useAuth();
-  const navigate = useNavigate();
+  const { signup, checkEmail } = useAuth();
   const prefersReducedMotion = useReducedMotion();
 
   const [name, setName] = useState('');
@@ -103,30 +106,96 @@ export default function SignupPage() {
   const [showPasswordConfirm, setShowPasswordConfirm] = useState(false);
   const [errors, setErrors] = useState({});
   const [formError, setFormError] = useState('');
+  const [checkedEmail, setCheckedEmail] = useState('');
+  const [isEmailChecking, setIsEmailChecking] = useState(false);
+  const [emailCheckStatus, setEmailCheckStatus] = useState('idle');
+  const [emailCheckMessage, setEmailCheckMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
   const [isTermsModalOpen, setIsTermsModalOpen] = useState(false);
 
+  const handleEmailChange = (event) => {
+    setEmail(event.target.value);
+    setCheckedEmail('');
+    setEmailCheckStatus('idle');
+    setEmailCheckMessage('');
+  };
+
+  const handleEmailCheck = async () => {
+    const normalizedEmail = email.trim();
+
+    if (!normalizedEmail) {
+      setErrors((prev) => ({
+        ...prev,
+        email: '이메일을 입력해주세요.',
+      }));
+      return;
+    }
+
+    if (!EMAIL_PATTERN.test(normalizedEmail)) {
+      setErrors((prev) => ({
+        ...prev,
+        email: '올바른 이메일 형식이 아닙니다.',
+      }));
+      return;
+    }
+
+    setErrors((prev) => ({
+      ...prev,
+      email: '',
+    }));
+    setEmailCheckStatus('idle');
+    setEmailCheckMessage('');
+    setIsEmailChecking(true);
+
+    try {
+      const isDuplicated = await checkEmail(normalizedEmail);
+
+      if (isDuplicated) {
+        setCheckedEmail('');
+        setEmailCheckStatus('error');
+        setEmailCheckMessage('이미 사용 중인 이메일입니다.');
+        return;
+      }
+
+      setCheckedEmail(normalizedEmail);
+      setEmailCheckStatus('success');
+      setEmailCheckMessage('사용 가능한 이메일입니다.');
+    } catch (error) {
+      setCheckedEmail('');
+      setEmailCheckStatus('error');
+      setEmailCheckMessage(
+        error?.response?.data?.message ?? '이메일 중복확인에 실패했습니다. 다시 시도해주세요.',
+      );
+    } finally {
+      setIsEmailChecking(false);
+    }
+  };
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-    const nextErrors = validate({ name, email, password, passwordConfirm, agreeTerms });
+    const normalizedEmail = email.trim();
+    const nextErrors = validate({
+      name,
+      email,
+      password,
+      passwordConfirm,
+      agreeTerms,
+      checkedEmail,
+    });
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length > 0) return;
 
     setFormError('');
     setIsSubmitting(true);
     try {
-      await signup(email, password, name);
+      await signup(normalizedEmail, password, name);
       setIsSuccessModalOpen(true);
     } catch (error) {
       setFormError(error?.response?.data?.message ?? '회원가입에 실패했습니다. 다시 시도해주세요.');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleSuccessConfirm = () => {
-    navigate('/auth/login', { replace: true });
   };
 
   return (
@@ -168,17 +237,34 @@ export default function SignupPage() {
             <label className={styles.label} htmlFor="signup-email">
               이메일
             </label>
-            {errors.email && <p className={styles.fieldError}>{errors.email}</p>}
+            {(errors.email || emailCheckMessage) && (
+              <p
+                className={styles.emailFeedback}
+                data-status={errors.email ? 'error' : emailCheckStatus}
+              >
+                {errors.email || emailCheckMessage}
+              </p>
+            )}
           </div>
-          <input
-            id="signup-email"
-            type="email"
-            className={styles.input}
-            placeholder="이메일을 입력해 주세요"
-            value={email}
-            onChange={(event) => setEmail(event.target.value)}
-            autoComplete="email"
-          />
+          <div className={styles.emailInputRow}>
+            <input
+              id="signup-email"
+              type="email"
+              className={styles.input}
+              placeholder="이메일을 입력해 주세요"
+              value={email}
+              onChange={handleEmailChange}
+              autoComplete="email"
+            />
+            <button
+              type="button"
+              className={styles.emailCheckButton}
+              onClick={handleEmailCheck}
+              disabled={isEmailChecking || isSubmitting}
+            >
+              {isEmailChecking ? '확인 중...' : '중복확인'}
+            </button>
+          </div>
         </motion.div>
 
         <motion.div className={styles.field} custom={prefersReducedMotion} variants={fieldVariants}>
@@ -281,11 +367,11 @@ export default function SignupPage() {
 
       <SuccessModal
         isOpen={isSuccessModalOpen}
-        title="회원가입 완료"
-        description={`${email} 주소로 인증메일을 발송했습니다. 메일함에서 인증을 완료한 뒤 로그인해주세요.`}
-        actionLabel="로그인하러 가기"
-        onAction={handleSuccessConfirm}
-        onClose={handleSuccessConfirm}
+        title="인증 메일 발송 완료"
+        description={`${checkedEmail || email.trim()} 주소로 인증 메일을 발송했습니다. 메일함에서 인증 버튼을 눌러 회원가입을 완료해주세요.`}
+        actionLabel="확인"
+        onAction={() => setIsSuccessModalOpen(false)}
+        onClose={() => setIsSuccessModalOpen(false)}
       />
       <Modal isOpen={isTermsModalOpen} onClose={() => setIsTermsModalOpen(false)}>
         <div className={styles.termsModal}>

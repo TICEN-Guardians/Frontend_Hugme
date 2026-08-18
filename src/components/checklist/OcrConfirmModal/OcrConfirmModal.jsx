@@ -91,8 +91,8 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
   };
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose}>
-      <form onSubmit={handleSubmit}>
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.modalPanel}>
+      <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.headerRow}>
           <span className={styles.badge}>
             <FaCircleCheck aria-hidden="true" /> 분석 완료
