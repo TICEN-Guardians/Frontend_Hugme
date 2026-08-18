@@ -4,6 +4,7 @@ import {
   mockApplicationInfo,
   mockDocuments,
   mockQuestionsByStep,
+  mockResultDocuments,
   mockSubmitAnswers,
   mockUploadResponse,
 } from '../../mocks/checklist.mock.js';
@@ -12,13 +13,14 @@ const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
 /**
  * 새 보증 신청 건을 생성한다.
+ * @param {string} productCode - 신청할 상품 코드
  * @returns {Promise<object>} 생성된 신청 정보
  */
-export async function createApplication() {
+export async function createApplication(productCode) {
   if (isMock()) {
-    return Promise.resolve(mockApplication);
+    return Promise.resolve({ ...mockApplication, productCode });
   }
-  const res = await axiosInstance.post('/api/applications');
+  const res = await axiosInstance.post('/api/applications', { productCode });
   return res.data;
 }
 
@@ -93,13 +95,7 @@ export async function getQuestions(applicationId, questionStep) {
 }
 
 /**
- * 한 step의 답변을 전부 제출한다. 다음 step 결정은 서버 몫이라
- * 클라이언트는 이 함수의 반환값(done / questionStep / questions)만 보고 따라간다.
- *
- * 응답 스키마 미확정 지점: POST /answers 응답에 다음 step 정보가 같이 오는지(A),
- * 아니면 성공 여부만 오고 별도로 GET /questions를 다시 불러야 하는지(B) 확인이 필요하다.
- * 일단 (A)로 구현했고, 실제로 (B)로 밝혀져도 이 함수 내부만 고치면
- * 화면/훅 쪽 코드는 안 바뀌도록 반환 형태를 통일해뒀다.
+ * 한 step의 답변을 제출하고 서버가 결정한 다음 단계 질문을 반환한다.
  *
  * @param {number|string} applicationId - 신청 ID
  * @param {string} currentStep - 이번에 제출하는 질문 단계
@@ -108,26 +104,49 @@ export async function getQuestions(applicationId, questionStep) {
  * @returns {Promise<{done: boolean, questionStep: string|null, questions: object[]|null, isFinalStep: boolean}>}
  */
 export async function submitAnswers(applicationId, currentStep, selectedOptionIds, finalSubmission) {
+  let data;
+
   if (isMock()) {
-    return Promise.resolve(mockSubmitAnswers(currentStep));
+    data = mockSubmitAnswers(currentStep);
+    console.log('[answers] mock request', {
+      applicationId,
+      currentStep,
+      finalSubmission: Boolean(finalSubmission),
+      selectedOptionIds,
+    });
+    console.log('[answers] mock response', data);
+  } else {
+    const requestBody = {
+      currentStep,
+      finalSubmission: Boolean(finalSubmission),
+      selectedOptionIds,
+    };
+
+    console.log('[answers] request', {
+      applicationId,
+      body: requestBody,
+    });
+
+    const res = await axiosInstance.post(
+      `/api/applications/${applicationId}/answers`,
+      requestBody,
+    );
+    data = res.data;
+    console.log('[answers] response', data);
   }
 
-  const res = await axiosInstance.post(`/api/applications/${applicationId}/answers`, {
-    currentStep,
-    finalSubmission,
-    selectedOptionIds,
-  });
-
-  // (A) 가정: 응답에 다음 questionStep/questions가 함께 온다고 보고 감싼다.
-  const data = res.data;
-  if (finalSubmission || !data?.questionStep) {
+  if (data?.questionnaireCompleted) {
     return { done: true, questionStep: null, questions: null, isFinalStep: true };
   }
+
+  const nextStep = data?.nextStep ?? null;
+  const nextQuestions = data?.additionalQuestions;
+
   return {
     done: false,
-    questionStep: data.questionStep,
-    questions: data.questions,
-    isFinalStep: data.isFinalStep ?? false,
+    questionStep: nextStep,
+    questions: Array.isArray(nextQuestions) ? nextQuestions : [],
+    isFinalStep: nextStep != null && nextStep !== 'STEP1' && nextStep !== 'STEP2',
   };
 }
 
@@ -137,9 +156,54 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
  * @returns {Promise<object[]>} 서류 목록
  */
 export async function getDocuments(applicationId) {
+  let data;
+
   if (isMock()) {
-    return Promise.resolve(mockDocuments);
+    data = mockDocuments;
+  } else {
+    const res = await axiosInstance.get(`/api/applications/${applicationId}/documents`);
+    data = res.data;
   }
-  const res = await axiosInstance.get(`/api/applications/${applicationId}/documents`);
-  return res.data;
+
+  const documents = Array.isArray(data) ? data : data?.documents ?? [];
+
+  return documents.map((document) => ({
+    ...document,
+    title: document.title ?? document.documentName,
+    tag: document.tag ?? document.documentGroupName ?? null,
+    acceptedVariants: document.acceptedVariants ?? null,
+  }));
+}
+/**
+ * 질문 결과로 확정된 최종 서류 목록을 조회한다.
+ *
+ * @param {number|string} applicationId - 신청 ID
+ * @returns {Promise<{
+*   applicationId: number|string,
+*   sections: Array<{
+*     sectionCode: string,
+*     sectionName: string,
+*     items: Array<{
+*       itemId: number|string,
+*       itemName: string,
+*       sortOrder: number,
+*       defaultIncluded: boolean,
+*       groupId: number|string|null,
+*       groupName: string|null,
+*       groupSortOrder: number|null,
+*       documents: Array<object>
+*     }>
+*   }>
+* }>}
+*/
+export async function getResultDocuments(applicationId) {
+ if (isMock()) {
+   return Promise.resolve(mockResultDocuments);
+ }
+
+ const res = await axiosInstance.get(
+   `/api/applications/${applicationId}/result-documents`,
+ );
+
+ return res.data;
 }

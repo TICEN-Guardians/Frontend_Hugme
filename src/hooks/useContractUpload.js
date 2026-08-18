@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import {
   createApplication,
-  getDocuments,
   getInfo,
+  getResultDocuments,
   updateInfo,
   uploadLeaseContract,
 } from '../services/checklist/checklistService.js';
@@ -11,7 +11,7 @@ import {
  * 계약서 업로드 → 분석 중 → OCR 결과 확인 → 질문 → 완료 흐름을 관리한다.
  * step: 'idle' | 'analyzing' | 'ocrConfirm' | 'questions' | 'done'
  */
-export function useContractUpload() {
+export function useContractUpload(productCode) {
   const [step, setStep] = useState('idle');
   const [applicationId, setApplicationId] = useState(null);
   const [ocrInfo, setOcrInfo] = useState(null);
@@ -28,7 +28,7 @@ export function useContractUpload() {
         // 이전 시도에서 만들어진 applicationId가 있으면 재사용하고 새로 만들지 않는다.
         let currentApplicationId = applicationId;
         if (!currentApplicationId) {
-          const application = await createApplication();
+          const application = await createApplication(productCode);
           currentApplicationId = application.applicationId;
           setApplicationId(currentApplicationId);
         }
@@ -42,7 +42,7 @@ export function useContractUpload() {
         setStep('idle');
       }
     },
-    [applicationId],
+    [applicationId, productCode],
   );
 
   const confirmOcrInfo = useCallback(
@@ -69,9 +69,11 @@ export function useContractUpload() {
   /** 질문 흐름이 끝난 뒤 최종 서류 목록을 받아와 'done'으로 전환한다. */
   const finishQuestions = useCallback(async () => {
     if (!applicationId) return;
+  
     try {
-      const docs = await getDocuments(applicationId);
-      setFinalDocuments(docs);
+      const result = await getResultDocuments(applicationId);
+  
+      setFinalDocuments(result);
       setStep('done');
     } catch (err) {
       setUploadError(err);

@@ -22,6 +22,34 @@ const PRODUCT_TITLES = {
   SPECIAL: '특례반환보증(임차인형)',
 };
 
+function groupModalDocuments(documents) {
+  const entries = [];
+  const groupsById = new Map();
+
+  documents.forEach((document) => {
+    if (document.documentGroupId == null || !document.documentGroupName) {
+      entries.push({ type: 'document', key: `document-${document.documentId}`, document });
+      return;
+    }
+
+    if (!groupsById.has(document.documentGroupId)) {
+      const group = {
+        type: 'group',
+        key: `group-${document.documentGroupId}`,
+        groupId: document.documentGroupId,
+        groupName: document.documentGroupName,
+        sortOrder: document.documentGroupSortOrder,
+        documents: [],
+      };
+      groupsById.set(document.documentGroupId, group);
+      entries.push(group);
+    }
+    groupsById.get(document.documentGroupId).documents.push(document);
+  });
+
+  return entries;
+}
+
 export default function ProductChecklistPage() {
   const { productCode } = useParams();
   const theme = PRODUCT_THEME[productCode];
@@ -45,17 +73,20 @@ export default function ProductChecklistPage() {
   const {
     sections,
     activeSectionCode,
-    pills,
-    activePillId,
+    groups,
+    activeGroupId,
+    items,
     documents,
     status,
     isSectionLoading,
     isDocumentsLoading,
     changeSection,
-    changePill,
+    changeGroup,
+    changeItem,
   } = useProductChecklist(productCode);
 
-  const [selectedDocumentId, setSelectedDocumentId] = useState(null);
+  const [selectedItemId, setSelectedItemId] = useState(null);
+  const [expandedDocumentGroupIds, setExpandedDocumentGroupIds] = useState([]);
 
   const {
     step,
@@ -68,16 +99,27 @@ export default function ProductChecklistPage() {
     confirmOcrInfo,
     closeOcrConfirm,
     finishQuestions,
-  } = useContractUpload();
+  } = useContractUpload(productCode);
 
   const questionFlow = useQuestionFlow(applicationId);
 
   // OCR 확정이 끝나 'questions' 단계로 넘어오면, 최초 1회 STEP1 질문을 불러온다.
   useEffect(() => {
-    if (step === 'questions' && questionFlow.questionStep == null && !questionFlow.isLoading) {
+    if (
+      step === 'questions' &&
+      questionFlow.questionStep == null &&
+      questionFlow.visitedSteps.length === 0 &&
+      !questionFlow.isLoading
+    ) {
       questionFlow.start();
     }
-  }, [step, questionFlow.questionStep, questionFlow.isLoading, questionFlow.start]);
+  }, [
+    step,
+    questionFlow.questionStep,
+    questionFlow.visitedSteps.length,
+    questionFlow.isLoading,
+    questionFlow.start,
+  ]);
 
   const handleSubmitStep = async (selectedOptionIds) => {
     const done = await questionFlow.submitStep(selectedOptionIds);
@@ -96,10 +138,32 @@ export default function ProductChecklistPage() {
     count: section.documentCount,
   }));
 
-  const pillTabs = (pills ?? []).map((pill) => ({ key: pill.itemId, label: pill.label }));
+  const groupTabs = groups.map((group) => ({
+    key: group.groupId,
+    label: group.groupName,
+  }));
   const isDone = step === 'done' && finalDocuments;
+  const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
+  const modalDocumentEntries = groupModalDocuments(documents);
 
-  const selectedDocument = documents.find((doc) => doc.documentId === selectedDocumentId) ?? null;
+  const handleItemClick = async (itemId) => {
+    setExpandedDocumentGroupIds([]);
+    setSelectedItemId(itemId);
+    await changeItem(itemId);
+  };
+
+  const toggleDocumentGroup = (groupId) => {
+    setExpandedDocumentGroupIds((current) =>
+      current.includes(groupId)
+        ? current.filter((currentGroupId) => currentGroupId !== groupId)
+        : [...current, groupId],
+    );
+  };
+
+  const closeItemModal = () => {
+    setSelectedItemId(null);
+    setExpandedDocumentGroupIds([]);
+  };
 
   return (
     <div className={styles.root} data-theme={theme}>
@@ -129,60 +193,100 @@ export default function ProductChecklistPage() {
       )}
 
       {isDone ? (
-        <FinalDocumentList sections={sections} documents={finalDocuments} />
+        <FinalDocumentList result={finalDocuments} />
       ) : (
         status === 'success' && (
           <>
             <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={changeSection} />
 
-            {/* pill 자리는 items가 null이어도 높이를 유지해서 아래 그리드가 안 튄다 */}
+            {/* 추가서류처럼 groupName이 있는 섹션에서만 그룹 탭을 표시한다. */}
             <div className={styles.pillSlot}>
-              {pills !== null && pills.length > 0 && (
-                <TabBar tabs={pillTabs} activeKey={activePillId} onChange={changePill} />
+              {groupTabs.length > 0 && (
+                <TabBar
+                  tabs={groupTabs}
+                  activeKey={activeGroupId}
+                  onChange={changeGroup}
+                  variant="pill"
+                />
               )}
             </div>
 
-            {isSectionLoading || isDocumentsLoading ? (
-              <p className={styles.status}>불러오는 중...</p>
-            ) : documents.length === 0 ? (
-              <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
-            ) : (
-              <div className={styles.grid}>
-                {documents.map((doc) => {
-                  const hasGroup = Array.isArray(doc.acceptedVariants) && doc.acceptedVariants.length > 0;
-                  return (
+            <div className={styles.itemArea}>
+              {isSectionLoading ? (
+                <p className={styles.status}>불러오는 중...</p>
+              ) : items.length === 0 ? (
+                <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
+              ) : (
+                <div className={styles.grid}>
+                  {items.map((item) => (
                     <DocumentCard
-                      key={doc.documentId}
+                      key={item.itemId}
                       icon={<FaFileLines />}
-                      title={doc.title}
-                      description={doc.description}
-                      chip={doc.tag}
-                      onClick={hasGroup ? () => setSelectedDocumentId(doc.documentId) : undefined}
+                      title={item.itemName}
+                      singleLine
+                      onClick={() => handleItemClick(item.itemId)}
                     />
-                  );
-                })}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </>
         )
       )}
 
-      <Modal isOpen={selectedDocumentId != null} onClose={() => setSelectedDocumentId(null)}>
-        {selectedDocument && (
+      <Modal isOpen={selectedItemId != null} onClose={closeItemModal}>
+        {selectedItem && (
           <div className={styles.detail}>
-            <h2 className={styles.detailTitle}>{selectedDocument.title}</h2>
-            {selectedDocument.description && (
-              <p className={styles.detailDescription}>{selectedDocument.description}</p>
-            )}
+            <h2 className={styles.detailTitle}>{selectedItem.itemName}</h2>
             <h3 className={styles.detailSubtitle}>실제 준비 서류</h3>
-            <ul className={styles.variantList}>
-              {selectedDocument.acceptedVariants.map((variant) => (
-                <li key={variant} className={styles.variantItem}>
-                  <span className={styles.variantDot} />
-                  {variant}
-                </li>
-              ))}
-            </ul>
+            {isDocumentsLoading ? (
+              <p className={styles.status}>불러오는 중...</p>
+            ) : documents.length === 0 ? (
+              <p className={styles.empty}>표시할 준비 서류가 없습니다.</p>
+            ) : (
+              <div className={styles.modalDocumentList}>
+                {modalDocumentEntries.map((entry) => {
+                  if (entry.type === 'document') {
+                    const { document } = entry;
+                    return (
+                      <div key={entry.key} className={styles.variantItem}>
+                        <span className={styles.variantDot} />
+                        <div>
+                          <strong>{document.title}</strong>
+                          {document.description && <p>{document.description}</p>}
+                        </div>
+                      </div>
+                    );
+                  }
+
+                  const isExpanded = expandedDocumentGroupIds.includes(entry.groupId);
+                  return (
+                    <div key={entry.key} className={styles.documentGroup}>
+                      <DocumentCard
+                        icon={<FaFileLines />}
+                        title={entry.groupName}
+                        description={`${entry.documents.length}개의 준비 서류`}
+                        expanded={isExpanded}
+                        onClick={() => toggleDocumentGroup(entry.groupId)}
+                      />
+                      {isExpanded && (
+                        <div className={styles.inlineDocumentList}>
+                          {entry.documents.map((document) => (
+                            <div key={document.documentId} className={styles.inlineDocument}>
+                              <span className={styles.variantDot} />
+                              <div>
+                                <strong>{document.title}</strong>
+                                {document.description && <p>{document.description}</p>}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </Modal>

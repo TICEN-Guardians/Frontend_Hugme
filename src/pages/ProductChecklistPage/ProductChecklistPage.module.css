@@ -54,16 +54,33 @@
   font-weight: 700;
 }
 
+.itemArea {
+  /* 6rem 카드 3행 + 행 사이 간격 2개: 3행까지는 스크롤 없이 표시 */
+  height: calc(18rem + var(--space-5) + var(--space-5));
+}
+
 .grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  align-items: start;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-auto-rows: 6rem;
+  align-items: stretch;
+  align-content: start;
   gap: var(--space-5);
+  height: 100%;
+  padding-right: var(--space-2);
+  overflow-y: auto;
+}
+
+.grid > * {
+  height: 100%;
 }
 
 .detail {
   display: flex;
   flex-direction: column;
+  height: min(50rem, calc(90vh - var(--space-12)));
+  padding-right: var(--space-2);
+  overflow-y: auto;
 }
 
 .detailTitle {
@@ -114,4 +131,44 @@
   height: var(--space-2);
   border-radius: var(--radius-pill);
   background: var(--accent);
+}
+
+.modalDocumentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+
+.documentGroup {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.inlineDocumentList {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-left: var(--space-4);
+  padding-left: var(--space-3);
+  border-left: 0.2rem solid var(--accent-tint-100);
+}
+
+.inlineDocument {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--accent-tint-50);
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+}
+
+.variantItem p,
+.inlineDocument p {
+  margin: var(--space-1) 0 0;
+  color: var(--text-secondary);
+  line-height: 1.5;
 }

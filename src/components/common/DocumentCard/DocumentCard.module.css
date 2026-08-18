@@ -48,6 +48,16 @@
   color: var(--text-strong);
 }
 
+.singleLine .head {
+  min-width: 0;
+}
+
+.singleLine .title {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
 .description {
   margin: 0;
   font-size: var(--text-sm);

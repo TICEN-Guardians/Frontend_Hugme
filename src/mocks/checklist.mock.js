@@ -10,14 +10,14 @@ export const mockApplication = {
 export const mockApplicationInfo = {
   applicationId: 101,
   contractAddress: '서울시 강서구 화곡로 123, 402호',
-  housingType: 'OFFICETEL',
+  housingTypeCode: 'OFFICETEL',
+  housingTypeName: '오피스텔',
   contractType: 'NEW',
-  tenantType: 'INDIVIDUAL',
-  landlordType: 'INDIVIDUAL',
-  fixedDateStatus: 'RECEIVED',
-  fixedDate: '2026-07-15',
-  officetelResidential: 'YES',
-  landlordProxyContract: 'NO',
+  tenantType: 'PERSON',
+  landlordType: 'PERSON',
+  fixedDateConfirmed: true,
+  officetelResidentialMarked: true,
+  landlordProxyContract: false,
 };
 
 export const mockUploadResponse = {
@@ -61,10 +61,9 @@ export const mockQuestionsByStep = {
       },
     ],
   },
-  // STEP2는 의도적으로 없음 — STEP1 제출 시 STEP2를 건너뛰고 STEP3로 가는 mock 분기 확인용.
-  STEP3: {
-    questionStep: 'STEP3',
-    isFinalStep: true,
+  STEP2: {
+    questionStep: 'STEP2',
+    isFinalStep: false,
     questions: [
       {
         questionId: 7,
@@ -84,17 +83,41 @@ export const mockQuestionsByStep = {
       },
     ],
   },
+  STEP3: {
+    questionStep: 'STEP3',
+    isFinalStep: true,
+    questions: [
+      {
+        questionId: 9,
+        questionText: '추가 확인 서류를 제출할 수 있나요?',
+        options: [
+          { optionId: 17, optionText: '예' },
+          { optionId: 18, optionText: '아니오' },
+        ],
+      },
+    ],
+  },
 };
 
 /**
- * POST /answers mock. currentStep만 보고 다음 step을 정한다(선택한 옵션 내용은 안 봄 — mock 단순화).
- * STEP1 → STEP3로 건너뛰는 분기를 보여주기 위한 것.
+ * 실제 POST /answers 응답 형태를 따르는 mock.
+ * STEP2까지 누적 제출하면 추가 질문 STEP3를 반환한다.
  */
 export function mockSubmitAnswers(currentStep) {
-  if (currentStep === 'STEP1') {
-    return { done: false, ...mockQuestionsByStep.STEP3 };
+  if (currentStep === 'STEP2') {
+    return {
+      completedStep: 'STEP2',
+      nextStep: 'STEP3',
+      questionnaireCompleted: false,
+      additionalQuestions: mockQuestionsByStep.STEP3.questions,
+    };
   }
-  return { done: true, questionStep: null, questions: null, isFinalStep: true };
+  return {
+    completedStep: currentStep,
+    nextStep: null,
+    questionnaireCompleted: true,
+    additionalQuestions: [],
+  };
 }
 
 // GET /api/applications/{id}/documents — 질문 완료 후 확정된 최종 서류 목록.
@@ -181,3 +204,67 @@ export const mockDocuments = [
     acceptedVariants: ['한부모가족 증명서 (행정복지센터 발급)'],
   },
 ];
+export const mockResultDocuments = {
+  applicationId: 101,
+  sections: [
+    {
+      sectionCode: 'BASIC',
+      sectionName: '기본서류',
+      items: [
+        {
+          itemId: 1,
+          itemName:
+            '금융기관 전세자금대출 및 담보제공 확인서',
+          sortOrder: 1,
+          defaultIncluded: true,
+          groupId: null,
+          groupName: null,
+          groupSortOrder: null,
+          documents: [
+            {
+              documentId: 1,
+              documentName:
+                '금융기관 전세자금대출 및 담보제공 확인서',
+              description:
+                '임차인의 전세자금대출 이용 여부와 담보제공 여부 확인',
+              sampleImageUrl: null,
+              sortOrder: 1,
+              documentGroupId: null,
+              documentGroupName: null,
+              documentGroupSortOrder: null,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      sectionCode: 'ADDITIONAL',
+      sectionName: '추가서류',
+      items: [
+        {
+          itemId: 12,
+          itemName:
+            '대한민국 국적 임대인이 해외 거주하는 경우',
+          sortOrder: 5,
+          defaultIncluded: false,
+          groupId: 2,
+          groupName: '상황별',
+          groupSortOrder: 2,
+          documents: [
+            {
+              documentId: 32,
+              documentName: '위임장',
+              description:
+                '해외 거주 임대인이 국내 대리인에게 권한을 위임했는지 확인',
+              sampleImageUrl: null,
+              sortOrder: 1,
+              documentGroupId: null,
+              documentGroupName: null,
+              documentGroupSortOrder: null,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+};

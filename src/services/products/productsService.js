@@ -3,17 +3,19 @@ import { mockChecklistByProduct, mockItemDocuments } from '../../mocks/products.
 
 const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
 
-/**
- * 상품의 전체 체크리스트를 조회한다.
- * @param {string} productCode - 상품 코드 (PRODUCT_CODES 참고)
- * @returns {Promise<object>} 체크리스트 데이터
- */
-export async function getChecklist(productCode) {
-  if (isMock()) {
-    return Promise.resolve(mockChecklistByProduct[productCode] ?? null);
-  }
-  const res = await axiosInstance.get(`/api/products/${productCode}/checklist`);
-  return res.data;
+function normalizeDocuments(documents) {
+  return [...documents]
+    .sort((a, b) => a.sortOrder - b.sortOrder)
+    .map((document) => ({
+      documentId: document.documentId,
+      title: document.documentName,
+      description: document.description,
+      sampleImageUrl: document.sampleImageUrl,
+      sortOrder: document.sortOrder,
+      documentGroupId: document.documentGroupId,
+      documentGroupName: document.documentGroupName,
+      documentGroupSortOrder: document.documentGroupSortOrder,
+    }));
 }
 
 /**
@@ -24,9 +26,7 @@ export async function getChecklist(productCode) {
  */
 export async function getChecklistBySection(productCode, sectionCode) {
   if (isMock()) {
-    const checklist = mockChecklistByProduct[productCode];
-    const section = checklist?.sections.find((item) => item.sectionCode === sectionCode) ?? null;
-    return Promise.resolve(section);
+    return Promise.resolve(mockChecklistByProduct[productCode]?.[sectionCode] ?? null);
   }
   const res = await axiosInstance.get(`/api/products/${productCode}/checklist`, {
     params: { sectionCode },
@@ -35,17 +35,22 @@ export async function getChecklistBySection(productCode, sectionCode) {
 }
 
 /**
- * pill(item) 하나에 속한 서류 목록을 조회한다. section.items가 배열일 때만 사용한다.
+ * 체크리스트 item 하나에 속한 실제 서류 목록을 조회한다.
  * @param {string} productCode - 상품 코드
- * @param {string} itemId - pill(item) ID
- * @returns {Promise<object[]>} 서류 목록 (각 서류는 acceptedVariants 포함)
+ * @param {number|string} itemId - 체크리스트 item ID
+ * @returns {Promise<object[]>} 화면에서 사용하는 서류 목록
  */
 export async function getItemDocuments(productCode, itemId) {
+  let data;
+
   if (isMock()) {
-    return Promise.resolve(mockItemDocuments[itemId] ?? []);
+    data = mockItemDocuments[itemId] ?? { documents: [] };
+  } else {
+    const res = await axiosInstance.get(
+      `/api/products/${productCode}/checklist/items/${itemId}/documents`,
+    );
+    data = res.data;
   }
-  const res = await axiosInstance.get(
-    `/api/products/${productCode}/checklist/items/${itemId}/documents`,
-  );
-  return res.data;
+
+  return normalizeDocuments(data.documents ?? []);
 }
