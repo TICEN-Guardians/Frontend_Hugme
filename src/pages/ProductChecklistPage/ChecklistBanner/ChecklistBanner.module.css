@@ -2,11 +2,11 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-6);
+  gap: var(--space-5);
   box-sizing: border-box;
-  min-height: calc(var(--space-12) + var(--space-8) * 2);
-  margin-bottom: var(--space-8);
-  padding: var(--space-8) var(--space-6);
+  width: 100%;
+  min-height: 9.6rem;
+  padding: var(--space-5) var(--space-6);
   border: 0.1rem solid var(--accent-tint-100);
   border-radius: var(--radius-lg);
 }
@@ -27,38 +27,50 @@
 .content {
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--space-3);
+  min-width: 0;
 }
 
 .icon {
-  display: flex;
-  flex-shrink: 0;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: var(--space-12);
-  height: var(--space-12);
+  width: 4.4rem;
+  height: 4.4rem;
   border-radius: var(--radius-md);
   background: #fff;
   color: var(--accent);
   font-size: var(--text-xl);
 }
 
+.kicker {
+  margin: 0 0 var(--space-1);
+  color: var(--accent);
+  font-size: var(--text-xs);
+  font-weight: 800;
+}
+
 .title {
   margin: 0 0 var(--space-1);
   color: var(--text-primary);
-  font-size: var(--text-base);
-  font-weight: 700;
+  font-size: var(--text-lg);
+  font-weight: 800;
 }
 
 .description {
   margin: 0;
   color: var(--text-secondary);
   font-size: var(--text-sm);
+  line-height: 1.6;
 }
 
 .cta {
   flex-shrink: 0;
   text-decoration: none;
+}
+
+.uploadButton {
+  flex-shrink: 0;
 }
 
 .hiddenInput {
@@ -69,4 +81,16 @@
   margin: var(--space-2) 0 0;
   color: var(--text-red-dark);
   font-size: var(--text-sm);
+}
+
+@media (max-width: 76.7rem) {
+  .banner {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .cta,
+  .uploadButton {
+    width: 100%;
+  }
 }

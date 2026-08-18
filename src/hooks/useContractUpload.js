@@ -76,6 +76,10 @@ export function useContractUpload(productCode) {
     setStep('idle');
   }, []);
 
+  const reopenOcrConfirm = useCallback(() => {
+    setStep('ocrConfirm');
+  }, []);
+
   /** 질문 흐름이 끝난 뒤 최종 서류 목록을 받아와 'done'으로 전환한다. */
   const finishQuestions = useCallback(async () => {
     if (!applicationId) return;
@@ -101,6 +105,7 @@ export function useContractUpload(productCode) {
     startUpload,
     confirmOcrInfo,
     closeOcrConfirm,
+    reopenOcrConfirm,
     finishQuestions,
   };
 }

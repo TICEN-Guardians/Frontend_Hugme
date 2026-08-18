@@ -94,6 +94,30 @@ function normalizeFinalDocuments(data) {
   };
 }
 
+function normalizeQuestionResponse(data, fallbackStep = null) {
+  const questionStep = data?.questionStep ?? data?.step ?? data?.nextStep ?? fallbackStep;
+  const questions = data?.questions ?? data?.additionalQuestions ?? data?.nextQuestions ?? [];
+
+  return {
+    questionStep,
+    questions: Array.isArray(questions) ? questions : [],
+    isFinalStep:
+      data?.isFinalStep ??
+      data?.finalStep ??
+      (questionStep != null && questionStep !== 'STEP1' && questionStep !== 'STEP2'),
+  };
+}
+
+function isQuestionnaireDone(data) {
+  return Boolean(
+    data?.questionnaireCompleted ??
+      data?.done ??
+      data?.completed ??
+      data?.isCompleted ??
+      (data?.applicationStatus === 'DONE' || data?.status === 'DONE'),
+  );
+}
+
 /**
  * 새 보증 신청 건을 생성한다.
  * @param {string} productCode - 신청할 상품 코드
@@ -190,11 +214,7 @@ export async function getQuestions(applicationId, questionStep) {
   const res = await axiosInstance.get(`/api/applications/${applicationId}/questions`, {
     params: { step: questionStep },
   });
-  return {
-    questionStep: res.data.questionStep,
-    questions: res.data.questions ?? [],
-    isFinalStep: res.data.questionStep === 'STEP3',
-  };
+  return normalizeQuestionResponse(res.data, questionStep);
 }
 
 
@@ -240,19 +260,19 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
     console.log('[answers] response', data);
   }
 
+  const nextQuestionResponse = normalizeQuestionResponse(data);
+  const hasNextQuestions =
+    nextQuestionResponse.questionStep != null && nextQuestionResponse.questions.length > 0;
 
-  if (data?.questionnaireCompleted) {
+  if (isQuestionnaireDone(data) && !hasNextQuestions) {
     return { done: true, questionStep: null, questions: null, isFinalStep: true };
   }
 
-  const nextStep = data?.nextStep ?? null;
-  const nextQuestions = data?.additionalQuestions;
-
   return {
     done: false,
-    questionStep: nextStep,
-    questions: Array.isArray(nextQuestions) ? nextQuestions : [],
-    isFinalStep: nextStep != null && nextStep !== 'STEP1' && nextStep !== 'STEP2',
+    questionStep: nextQuestionResponse.questionStep,
+    questions: nextQuestionResponse.questions,
+    isFinalStep: nextQuestionResponse.isFinalStep,
   };
 }
 
