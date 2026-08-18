@@ -41,3 +41,36 @@
   background: var(--accent-tint-50);
   color: var(--accent-text);
 }
+
+.pill {
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  border-bottom: none;
+}
+
+.pill .tab {
+  min-height: 4.4rem;
+  margin-bottom: 0;
+  padding: var(--space-2) var(--space-5);
+  border: 0.1rem solid var(--border-default);
+  border-radius: var(--radius-pill);
+  background: var(--on-accent);
+  color: var(--text-secondary);
+  font-weight: 500;
+  transition:
+    border-color 0.15s ease,
+    background-color 0.15s ease,
+    color 0.15s ease;
+}
+
+.pill .tab:hover {
+  border-color: var(--accent);
+  color: var(--accent-text);
+}
+
+.pill .active {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 700;
+}

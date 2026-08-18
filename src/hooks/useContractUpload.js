@@ -1,8 +1,8 @@
 import { useCallback, useState } from 'react';
 import {
   createApplication,
-  getDocuments,
   getInfo,
+  getResultDocuments,
   updateInfo,
   uploadLeaseContract,
 } from '../services/checklist/checklistService.js';
@@ -79,10 +79,12 @@ export function useContractUpload(productCode) {
   /** 질문 흐름이 끝난 뒤 최종 서류 목록을 받아와 'done'으로 전환한다. */
   const finishQuestions = useCallback(async () => {
     if (!applicationId) return;
+  
     try {
-      const docs = await getDocuments(applicationId);
-      setFinalDocuments(docs);
-      sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(applicationId));
+      const result = await getResultDocuments(applicationId);
+  
+      setFinalDocuments(result);
+
       setStep('done');
     } catch (err) {
       setUploadError(err);
