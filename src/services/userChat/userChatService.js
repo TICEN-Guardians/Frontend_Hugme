@@ -15,3 +15,8 @@ export async function sendGuideMessage(sessionId, message) {
 
   return response.data;
 }
+
+export async function getGuideChatHistory() {
+  const response = await axiosInstance.get(`${GUIDE_CHAT_BASE_URL}/history`);
+  return response.data;
+}

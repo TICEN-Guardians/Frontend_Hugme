@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { FiMessageSquare, FiPlus } from 'react-icons/fi';
 import { FaComments } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
+import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import {
   getEntryQuestions,
+  getGuideChatHistory,
   sendGuideMessage,
 } from '../../../services/userChat/userChatService.js';
 import styles from './ConditionChat.module.css';
@@ -175,18 +176,11 @@ const followUpVariants = {
   },
 };
 
-const createConversation = () => ({
-  id: `conversation-${Date.now()}-${Math.random().toString(36).slice(2)}`,
-  sessionId: null,
-  messages: [],
-  suggestedQuestions: [],
-  redirect: null,
-});
-
-const getConversationTitle = (conversation) => {
-  const firstUserMessage = conversation.messages.find((message) => message.role === 'user');
-  return firstUserMessage?.content ?? '새 상담';
-};
+const historyToMessages = (history) =>
+  history.flatMap((entry) => [
+    { role: 'user', content: entry.question },
+    { role: 'assistant', content: entry.answer },
+  ]);
 
 const resolveRedirectPath = (redirect) => {
   if (!redirect) return null;
@@ -194,17 +188,19 @@ const resolveRedirectPath = (redirect) => {
 };
 
 export default function ConditionChat() {
-  const [conversations, setConversations] = useState(() => [createConversation()]);
-  const [activeConversationId, setActiveConversationId] = useState(() => conversations[0].id);
+  const { isAuthenticated, isAuthLoading } = useAuth();
+  const [sessionId, setSessionId] = useState(null);
+  const [messages, setMessages] = useState([]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
+  const [redirect, setRedirect] = useState(null);
   const [entryQuestions, setEntryQuestions] = useState([]);
   const [isEntryLoading, setIsEntryLoading] = useState(true);
   const [entryError, setEntryError] = useState(null);
+  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
   const [isSending, setIsSending] = useState(false);
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
-  const activeConversation = conversations.find((conversation) => conversation.id === activeConversationId) ?? conversations[0];
-  const messages = activeConversation.messages;
-  const followUpQuestions = activeConversation.suggestedQuestions ?? [];
+  const followUpQuestions = suggestedQuestions;
 
   const entrySuggestionQuestions = useMemo(
     () =>
@@ -244,88 +240,81 @@ export default function ConditionChat() {
     };
   }, []);
 
+  useEffect(() => {
+    if (isAuthLoading) return undefined;
+
+    if (!isAuthenticated) {
+      setMessages([]);
+      setIsHistoryLoading(false);
+      return undefined;
+    }
+
+    let ignore = false;
+
+    async function loadHistory() {
+      setIsHistoryLoading(true);
+
+      try {
+        const history = await getGuideChatHistory();
+
+        if (ignore) return;
+        setMessages(Array.isArray(history) ? historyToMessages(history) : []);
+      } catch {
+        if (ignore) return;
+        setMessages([]);
+      } finally {
+        if (!ignore) {
+          setIsHistoryLoading(false);
+        }
+      }
+    }
+
+    loadHistory();
+
+    return () => {
+      ignore = true;
+    };
+  }, [isAuthenticated, isAuthLoading]);
+
   const sendQuestion = async (question) => {
     const trimmedQuestion = question.trim();
     if (!trimmedQuestion || isSending) return;
 
-    const conversationId = activeConversationId;
-    const currentSessionId = activeConversation.sessionId;
-
-    setConversations((prev) =>
-      prev.map((conversation) =>
-        conversation.id === conversationId
-          ? {
-              ...conversation,
-              messages: [
-                ...conversation.messages,
-                {
-                  role: 'user',
-                  content: trimmedQuestion,
-                },
-              ],
-              suggestedQuestions: [],
-              redirect: null,
-            }
-          : conversation,
-      ),
-    );
-
+    setMessages((prev) => [...prev, { role: 'user', content: trimmedQuestion }]);
+    setSuggestedQuestions([]);
+    setRedirect(null);
     setIsSending(true);
 
     try {
-      const response = await sendGuideMessage(currentSessionId, trimmedQuestion);
+      const response = await sendGuideMessage(sessionId, trimmedQuestion);
 
-      setConversations((prev) =>
-        prev.map((conversation) =>
-          conversation.id === conversationId
-            ? {
-                ...conversation,
-                sessionId: response.sessionId ?? currentSessionId,
-                messages: [
-                  ...conversation.messages,
-                  {
-                    role: 'assistant',
-                    content: response.answer ?? '답변을 불러왔지만 표시할 내용이 없습니다.',
-                  },
-                ],
-                suggestedQuestions: Array.isArray(response.suggestedQuestions)
-                  ? response.suggestedQuestions
-                  : [],
-                redirect: response.redirect ?? null,
-              }
-            : conversation,
-        ),
+      setSessionId(response.sessionId ?? sessionId);
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: response.answer ?? '답변을 불러왔지만 표시할 내용이 없습니다.',
+        },
+      ]);
+      setSuggestedQuestions(
+        Array.isArray(response.suggestedQuestions) ? response.suggestedQuestions : [],
       );
+      setRedirect(response.redirect ?? null);
     } catch (error) {
-      setConversations((prev) =>
-        prev.map((conversation) =>
-          conversation.id === conversationId
-            ? {
-                ...conversation,
-                messages: [
-                  ...conversation.messages,
-                  {
-                    role: 'assistant',
-                    content: '상담 답변을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
-                  },
-                ],
-              }
-            : conversation,
-        ),
-      );
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: 'assistant',
+          content: '상담 답변을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.',
+        },
+      ]);
     } finally {
       setIsSending(false);
     }
   };
 
-  const startNewConversation = () => {
-    const conversation = createConversation();
-    setConversations((prev) => [conversation, ...prev]);
-    setActiveConversationId(conversation.id);
-  };
-
   const handleRedirect = () => {
-    const path = resolveRedirectPath(activeConversation.redirect);
+    const path = resolveRedirectPath(redirect);
     if (!path) return;
     navigate(path);
   };
@@ -352,58 +341,15 @@ export default function ConditionChat() {
           >
             조건상담
           </motion.h1>
-          <motion.button
-            type="button"
-            className={styles.newChatButton}
-            onClick={startNewConversation}
-            custom={prefersReducedMotion}
-            variants={sidebarItemVariants}
-            whileHover={prefersReducedMotion ? undefined : { y: -1 }}
-            whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-          >
-            <FiPlus aria-hidden="true" />
-            새 상담
-          </motion.button>
-        </motion.div>
-
-        <motion.div
-          className={styles.historyBlock}
-          custom={prefersReducedMotion}
-          variants={sidebarContainerVariants}
-          initial="hidden"
-          animate="visible"
-        >
           <motion.p
             className={styles.historyTitle}
             custom={prefersReducedMotion}
             variants={sidebarItemVariants}
           >
-            최근 대화
+            {isAuthenticated
+              ? '로그인 계정의 상담 이력이 이어서 표시됩니다.'
+              : '로그인하면 상담 이력이 저장돼요.'}
           </motion.p>
-          <motion.div className={styles.historyList}>
-            {conversations.map((conversation) => {
-              const isActive = conversation.id === activeConversationId;
-
-              return (
-                <motion.button
-                  key={conversation.id}
-                  type="button"
-                  className={`${styles.historyItem} ${isActive ? styles.historyItemActive : ''}`}
-                  onClick={() => setActiveConversationId(conversation.id)}
-                  custom={prefersReducedMotion}
-                  variants={sidebarItemVariants}
-                  initial="hidden"
-                  animate="visible"
-                  whileHover={prefersReducedMotion ? undefined : { x: 2 }}
-                  transition={{ duration: 0.25, ease: 'easeOut' }}
-                >
-                  <FiMessageSquare aria-hidden="true" />
-                  <span>{getConversationTitle(conversation)}</span>
-                </motion.button>
-              );
-            })}
-          </motion.div>
         </motion.div>
       </motion.aside>
 
@@ -415,9 +361,19 @@ export default function ConditionChat() {
       >
         <div className={styles.chatMain}>
           <AnimatePresence mode="wait" custom={prefersReducedMotion}>
-            {messages.length === 0 ? (
+            {isHistoryLoading ? (
               <motion.div
-                key={`empty-${activeConversationId}`}
+                key="history-loading"
+                className={styles.empty}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+              >
+                <motion.p className={styles.emptyDescription}>상담 이력을 불러오는 중입니다.</motion.p>
+              </motion.div>
+            ) : messages.length === 0 ? (
+              <motion.div
+                key="empty"
                 className={styles.empty}
                 custom={prefersReducedMotion}
                 initial="hidden"
@@ -492,7 +448,7 @@ export default function ConditionChat() {
               </motion.div>
             ) : (
               <motion.div
-                key={`conversation-${activeConversationId}`}
+                key="conversation"
                 className={styles.messages}
                 custom={prefersReducedMotion}
                 initial="hidden"
@@ -520,7 +476,7 @@ export default function ConditionChat() {
                       </div>
                     </motion.div>
                   )}
-                  {(followUpQuestions.length > 0 || activeConversation.redirect) && (
+                  {(followUpQuestions.length > 0 || redirect) && (
                     <motion.div
                       className={styles.followUps}
                       custom={prefersReducedMotion}
@@ -563,7 +519,7 @@ export default function ConditionChat() {
                             {question}
                           </motion.button>
                         ))}
-                        {activeConversation.redirect && (
+                        {redirect && (
                           <motion.button
                             type="button"
                             className={`${styles.followUpChip} ${styles.redirectChip}`}
@@ -574,7 +530,7 @@ export default function ConditionChat() {
                             whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
                             transition={{ duration: 0.22, ease: 'easeOut' }}
                           >
-                            {activeConversation.redirect.label ?? '관련 기능'}으로 이동
+                            {redirect.label ?? '관련 기능'}으로 이동
                           </motion.button>
                         )}
                       </div>
@@ -595,7 +551,7 @@ export default function ConditionChat() {
           <div className={styles.inputInner}>
             <ChatInput
               onSend={sendQuestion}
-              disabled={isSending}
+              disabled={isSending || isHistoryLoading}
               placeholder={
                 messages.length === 0
                   ? '궁금한 가입조건을 선택하거나 직접 입력하세요'
