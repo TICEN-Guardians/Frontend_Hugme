@@ -3,6 +3,7 @@ import { motion, useReducedMotion } from 'framer-motion';
 import { FaArrowUp, FaCircleCheck, FaCircleInfo } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
+import Modal from '../../components/common/Modal/Modal.jsx';
 import styles from './RiskFormPage.module.css';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB, Design 기준
@@ -16,6 +17,7 @@ export default function RiskFormPage() {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
   const fileInputRef = useRef(null);
+  const contractDateInputRef = useRef(null);
 
   const [address, setAddress] = useState('');
   const [addressDetail, setAddressDetail] = useState('');
@@ -28,6 +30,7 @@ export default function RiskFormPage() {
   const [errors, setErrors] = useState({});
   const [fileError, setFileError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
 
   // 실제 주소 조회 API가 없어서, 주소를 입력하면 데모용으로 고정된 주택유형을 보여준다.
   const detectedHousingType = address.trim() ? '단독·다가구' : null;
@@ -51,6 +54,18 @@ export default function RiskFormPage() {
     }
     setFileError('');
     setFile(picked);
+  };
+
+  const openContractDatePicker = () => {
+    const input = contractDateInputRef.current;
+    if (!input) return;
+
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+      return;
+    }
+
+    input.focus();
   };
 
   const validate = () => {
@@ -217,12 +232,26 @@ export default function RiskFormPage() {
               <label className={styles.label} htmlFor="risk-contract-date">
                 계약 예정일 <span className={styles.required}>•</span>
               </label>
-              <div className={styles.unitInputWrapper}>
+              <div
+                className={styles.unitInputWrapper}
+                role="button"
+                tabIndex={0}
+                onClick={openContractDatePicker}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    openContractDatePicker();
+                  }
+                }}
+              >
                 <input
+                  ref={contractDateInputRef}
                   id="risk-contract-date"
                   type="date"
                   className={styles.unitInput}
                   value={contractDate}
+                  onClick={openContractDatePicker}
+                  onFocus={openContractDatePicker}
                   onChange={(event) => setContractDate(event.target.value)}
                 />
               </div>
@@ -300,7 +329,17 @@ export default function RiskFormPage() {
               />
               <span>
                 입력 정보가 실제 계약 조건과 일치함을 확인하고 서비스 이용에 동의합니다.{' '}
-                <span className={styles.agreeLink}>자세히 보기</span>
+                <button
+                  type="button"
+                  className={styles.agreeLink}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    event.stopPropagation();
+                    setIsConsentModalOpen(true);
+                  }}
+                >
+                  자세히 보기
+                </button>
               </span>
             </label>
             {errors.agreed && <p className={styles.fieldError}>{errors.agreed}</p>}
@@ -321,6 +360,35 @@ export default function RiskFormPage() {
           </Button>
         </motion.div>
       </form>
+
+      <Modal isOpen={isConsentModalOpen} onClose={() => setIsConsentModalOpen(false)}>
+        <div className={styles.consentModal}>
+          <h2 className={styles.consentModalTitle}>매물 위험도 진단 이용 동의</h2>
+          <div className={styles.consentModalBody}>
+            <section className={styles.consentSection}>
+              <h3>입력 정보 확인</h3>
+              <p>
+                주소, 계약 면적, 전세보증금, 계약 예정일, 등기부등본 파일은 위험도 진단에
+                사용됩니다. 실제 계약 조건과 다른 정보가 입력되면 진단 결과가 달라질 수 있습니다.
+              </p>
+            </section>
+            <section className={styles.consentSection}>
+              <h3>파일 이용 범위</h3>
+              <p>
+                업로드한 등기부등본은 매물의 권리관계와 위험 요소를 확인하기 위한 목적으로만
+                사용됩니다.
+              </p>
+            </section>
+            <section className={styles.consentSection}>
+              <h3>진단 결과 안내</h3>
+              <p>
+                HUGME의 위험도 진단은 계약 전 참고용 정보이며, 최종 계약 판단과 법적 책임은
+                이용자 본인에게 있습니다.
+              </p>
+            </section>
+          </div>
+        </div>
+      </Modal>
     </div>
   );
 }
