@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaChevronRight, FaCircleCheck, FaCircleInfo, FaFileLines } from 'react-icons/fa6';
 import { Link, useNavigate, useParams } from 'react-router-dom';
@@ -6,6 +6,7 @@ import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingM
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
 import Button from '../../components/common/Button/Button.jsx';
+import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
@@ -25,6 +26,8 @@ const PRODUCT_TITLES = {
 
 const PANEL_EASE = [0.22, 1, 0.36, 1];
 const SELECTOR_STAGGER = 0.035;
+const CONTRACT_ACCEPT_ATTR = 'image/*';
+const CONTRACT_MAX_FILE_SIZE = 20 * 1024 * 1024;
 
 const selectorListVariants = {
   hidden: { opacity: 0 },
@@ -133,8 +136,58 @@ function groupModalDocuments(documents) {
   return entries;
 }
 
+function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.reanalysisModal}>
+      <div className={styles.reanalysisContent}>
+        <p className={styles.reanalysisEyebrow}>다시 분석</p>
+        <h2 className={styles.reanalysisTitle}>계약서를 다시 분석할까요?</h2>
+        <p className={styles.reanalysisDescription}>
+          다시 분석하면 이전 OCR 분석 결과와 확정된 준비서류가 새 계약서 기준으로 바뀝니다.
+          서류안내 챗봇에 연결된 서류 목록도 다시 생성됩니다.
+        </p>
+        <div className={styles.reanalysisActions}>
+          <Button type="button" variant="secondary" onClick={onClose}>
+            취소
+          </Button>
+          <Button type="button" onClick={onConfirm}>
+            다시 분석하기
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset, onChat }) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
+  const fileInputRef = useRef(null);
+  const [fileError, setFileError] = useState('');
+  const [isReanalysisConfirmOpen, setIsReanalysisConfirmOpen] = useState(false);
+
+  const handleFileChange = (event) => {
+    const file = event.target.files?.[0] ?? null;
+    event.target.value = '';
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      setFileError('이미지 파일만 업로드할 수 있어요.');
+      return;
+    }
+    if (file.size > CONTRACT_MAX_FILE_SIZE) {
+      setFileError('파일 용량은 20MB를 넘을 수 없어요.');
+      return;
+    }
+
+    setFileError('');
+    onUpload(file);
+  };
+
+  const handleConfirmReanalysis = () => {
+    setIsReanalysisConfirmOpen(false);
+    onReset?.();
+    fileInputRef.current?.click();
+  };
 
   if (!isDone) {
     return (
@@ -167,7 +220,14 @@ function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset
           <h2 className={styles.analysisTitle}>내 계약 분석 결과</h2>
         </div>
         <div className={styles.analysisActions}>
-          <Button type="button" variant="secondary" onClick={onReset}>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={CONTRACT_ACCEPT_ATTR}
+            onChange={handleFileChange}
+            className={styles.hiddenInput}
+          />
+          <Button type="button" variant="secondary" onClick={() => setIsReanalysisConfirmOpen(true)}>
             다시 분석
           </Button>
           <Button type="button" onClick={onChat}>
@@ -189,6 +249,16 @@ function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset
           ))}
         </div>
       )}
+      {(fileError || uploadError) && (
+        <p className={styles.uploadError}>
+          {fileError || '계약서 업로드에 실패했습니다. 다시 시도해주세요.'}
+        </p>
+      )}
+      <ReanalysisConfirmModal
+        isOpen={isReanalysisConfirmOpen}
+        onClose={() => setIsReanalysisConfirmOpen(false)}
+        onConfirm={handleConfirmReanalysis}
+      />
     </motion.section>
   );
 }
@@ -402,8 +472,10 @@ export default function ProductChecklistPage() {
     ocrInfo,
     uploadError,
     isConfirming,
+    isRestoring,
     finalDocuments,
     startUpload,
+    restartUpload,
     confirmOcrInfo,
     closeOcrConfirm,
     reopenOcrConfirm,
@@ -461,7 +533,7 @@ export default function ProductChecklistPage() {
     key: group.groupId,
     label: group.groupName,
   }));
-  const isDone = step === 'done' && finalDocuments;
+  const hasAnalysisResult = Boolean(ocrInfo);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -515,24 +587,66 @@ export default function ProductChecklistPage() {
         <h1 className={styles.title}>{PRODUCT_TITLES[productCode]}</h1>
       </div>
 
-      {status === 'loading' && <p className={styles.status}>불러오는 중...</p>}
+      {(status === 'loading' || isRestoring) && <p className={styles.status}>불러오는 중...</p>}
       {status === 'error' && (
         <p className={styles.status}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
       )}
 
-      {isDone ? (
+      {hasAnalysisResult ? (
         <>
           <ContractAnalysisPanel
             isDone
             ocrInfo={ocrInfo}
-            onReset={() => {}}
+            onUpload={restartUpload}
+            uploadError={uploadError}
             onChat={() => navigate('/doc-chat', { state: { applicationId } })}
           />
-          <FinalDocumentList result={finalDocuments} />
+          {finalDocuments ? (
+            <FinalDocumentList result={finalDocuments} />
+          ) : (
+            status === 'success' && (
+              <motion.section
+                className={styles.board}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: PANEL_EASE }}
+              >
+                <div className={styles.boardHeader}>
+                  <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={handleSectionChange} />
+                </div>
+
+                <div className={styles.itemArea}>
+                  {isSectionLoading ? (
+                    <p className={styles.status}>불러오는 중...</p>
+                  ) : items.length === 0 ? (
+                    <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
+                  ) : (
+                    <div className={styles.checklistLayout}>
+                      <DocumentSelector
+                        items={items}
+                        selectedItemId={selectedItemId}
+                        onSelect={handleItemClick}
+                        groupTabs={groupTabs}
+                        activeGroupId={activeGroupId}
+                        onGroupChange={handleGroupChange}
+                      />
+                      <DocumentDetail
+                        selectedItem={selectedItem}
+                        entries={modalDocumentEntries}
+                        isLoading={isDocumentsLoading}
+                        expandedGroupIds={expandedDocumentGroupIds}
+                        onToggleGroup={toggleDocumentGroup}
+                      />
+                    </div>
+                  )}
+                </div>
+              </motion.section>
+            )
+          )}
         </>
 
       ) : (
-        status === 'success' && (
+        status === 'success' && !isRestoring && (
           <>
             <ContractAnalysisPanel
               isDone={false}
