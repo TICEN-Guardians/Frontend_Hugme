@@ -3,7 +3,16 @@ import Chip from '../Chip/Chip.jsx';
 import StatusBadge from '../StatusBadge/StatusBadge.jsx';
 import styles from './DocumentCard.module.css';
 
-export default function DocumentCard({ icon, title, description, chip, status, expanded, onClick }) {
+export default function DocumentCard({
+  icon,
+  title,
+  description,
+  chip,
+  status,
+  expanded,
+  onClick,
+  singleLine = false,
+}) {
   const content = (
     <>
       <div className={styles.head}>
@@ -32,7 +41,7 @@ export default function DocumentCard({ icon, title, description, chip, status, e
     return (
       <button
         type="button"
-        className={`${styles.card} ${styles.clickable}`}
+        className={`${styles.card} ${styles.clickable} ${singleLine ? styles.singleLine : ''}`}
         onClick={onClick}
         aria-expanded={expanded}
       >
@@ -41,5 +50,5 @@ export default function DocumentCard({ icon, title, description, chip, status, e
     );
   }
 
-  return <div className={styles.card}>{content}</div>;
+  return <div className={`${styles.card} ${singleLine ? styles.singleLine : ''}`}>{content}</div>;
 }

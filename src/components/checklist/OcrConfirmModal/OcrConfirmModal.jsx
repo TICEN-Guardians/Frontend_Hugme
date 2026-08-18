@@ -7,8 +7,8 @@ import styles from './OcrConfirmModal.module.css';
 const HOUSING_TYPE_OPTIONS = [
   { value: 'APARTMENT', label: '아파트' },
   { value: 'OFFICETEL', label: '오피스텔 (주거용)' },
-  { value: 'MULTI_FAMILY', label: '다세대주택' },
-  { value: 'SINGLE_FAMILY', label: '단독주택' },
+  { value: 'VILLA', label: '빌라·다세대·연립주택' },
+  { value: 'HOUSE', label: '단독·다가구주택' },
 ];
 
 const CONTRACT_TYPE_OPTIONS = [
@@ -22,25 +22,47 @@ const PARTY_TYPE_OPTIONS = [
 ];
 
 const FIXED_DATE_STATUS_OPTIONS = [
-  { value: 'RECEIVED', label: '받음' },
-  { value: 'NOT_RECEIVED', label: '못 받음' },
+  { value: true, label: '받음' },
+  { value: false, label: '못 받음' },
 ];
 
 const YES_NO_OPTIONS = [
-  { value: 'YES', label: '있음' },
-  { value: 'NO', label: '없음' },
+  { value: true, label: '있음' },
+  { value: false, label: '없음' },
 ];
 
 const PROXY_CONTRACT_OPTIONS = [
-  { value: 'NO', label: '아님 (본인 계약)' },
-  { value: 'YES', label: '맞음 (대리인 계약)' },
+  { value: false, label: '아님 (본인 계약)' },
+  { value: true, label: '맞음 (대리인 계약)' },
 ];
 
+function toBoolean(value) {
+  return value === true || value === 'true' || value === 'YES';
+}
+
+function normalizeInfo(info) {
+  if (!info) return null;
+
+  return {
+    ...info,
+    housingTypeCode: info.housingTypeCode ?? info.housingType ?? 'APARTMENT',
+    tenantType: info.tenantType === 'INDIVIDUAL' ? 'PERSON' : info.tenantType,
+    landlordType: info.landlordType === 'INDIVIDUAL' ? 'PERSON' : info.landlordType,
+    fixedDateConfirmed: toBoolean(
+      info.fixedDateConfirmed ?? (info.fixedDateStatus === 'RECEIVED'),
+    ),
+    officetelResidentialMarked: toBoolean(
+      info.officetelResidentialMarked ?? info.officetelResidential,
+    ),
+    landlordProxyContract: toBoolean(info.landlordProxyContract),
+  };
+}
+
 export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfirm, isSubmitting }) {
-  const [form, setForm] = useState(initialInfo);
+  const [form, setForm] = useState(() => normalizeInfo(initialInfo));
 
   useEffect(() => {
-    setForm(initialInfo);
+    setForm(normalizeInfo(initialInfo));
   }, [initialInfo]);
 
   if (!form) return null;
@@ -50,9 +72,22 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleBooleanChange = (field) => (event) => {
+    setForm((prev) => ({ ...prev, [field]: event.target.value === 'true' }));
+  };
+
   const handleSubmit = (event) => {
     event.preventDefault();
-    onConfirm(form);
+    onConfirm({
+      housingTypeCode: form.housingTypeCode,
+      contractAddress: form.contractAddress,
+      contractType: form.contractType,
+      tenantType: form.tenantType,
+      landlordType: form.landlordType,
+      fixedDateConfirmed: form.fixedDateConfirmed,
+      officetelResidentialMarked: form.officetelResidentialMarked,
+      landlordProxyContract: form.landlordProxyContract,
+    });
   };
 
   return (
@@ -85,14 +120,14 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="ocr-housingType">
+            <label className={styles.label} htmlFor="ocr-housingTypeCode">
               주택유형
             </label>
             <select
-              id="ocr-housingType"
+              id="ocr-housingTypeCode"
               className={styles.select}
-              value={form.housingType ?? ''}
-              onChange={handleChange('housingType')}
+              value={form.housingTypeCode}
+              onChange={handleChange('housingTypeCode')}
             >
               {HOUSING_TYPE_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -161,8 +196,8 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
             <div className={styles.inlineRow}>
               <select
                 className={styles.select}
-                value={form.fixedDateStatus ?? ''}
-                onChange={handleChange('fixedDateStatus')}
+                value={String(form.fixedDateConfirmed)}
+                onChange={handleBooleanChange('fixedDateConfirmed')}
                 aria-label="확정일자 확인 여부"
               >
                 {FIXED_DATE_STATUS_OPTIONS.map((option) => (
@@ -171,25 +206,18 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
                   </option>
                 ))}
               </select>
-              <input
-                type="date"
-                className={styles.input}
-                value={form.fixedDate ?? ''}
-                onChange={handleChange('fixedDate')}
-                aria-label="확정일자"
-              />
             </div>
           </div>
 
           <div className={styles.field}>
-            <label className={styles.label} htmlFor="ocr-officetelResidential">
+            <label className={styles.label} htmlFor="ocr-officetelResidentialMarked">
               오피스텔 주거용 표기
             </label>
             <select
-              id="ocr-officetelResidential"
+              id="ocr-officetelResidentialMarked"
               className={styles.select}
-              value={form.officetelResidential ?? ''}
-              onChange={handleChange('officetelResidential')}
+              value={String(form.officetelResidentialMarked)}
+              onChange={handleBooleanChange('officetelResidentialMarked')}
             >
               {YES_NO_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -206,8 +234,8 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
             <select
               id="ocr-landlordProxyContract"
               className={styles.select}
-              value={form.landlordProxyContract ?? ''}
-              onChange={handleChange('landlordProxyContract')}
+              value={String(form.landlordProxyContract)}
+              onChange={handleBooleanChange('landlordProxyContract')}
             >
               {PROXY_CONTRACT_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>

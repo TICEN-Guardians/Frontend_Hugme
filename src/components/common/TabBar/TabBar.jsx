@@ -1,8 +1,8 @@
 import styles from './TabBar.module.css';
 
-export default function TabBar({ tabs, activeKey, onChange }) {
+export default function TabBar({ tabs, activeKey, onChange, variant = 'line' }) {
   return (
-    <div className={styles.tabBar} role="tablist">
+    <div className={`${styles.tabBar} ${variant === 'pill' ? styles.pill : ''}`} role="tablist">
       {tabs.map((tab) => {
         const isActive = tab.key === activeKey;
         return (
