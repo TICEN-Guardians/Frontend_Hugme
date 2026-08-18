@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaArrowRight, FaFileLines, FaLock } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
-import {
-  LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
-} from '../../../hooks/useContractUpload.js';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
 import { sendDocumentMessage } from '../../../services/docChat/docChatService.js';
+import { getChecklistCompletion } from '../../../services/checklist/checklistService.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
 
@@ -65,11 +63,9 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
 
 export default function DocumentChat() {
   const navigate = useNavigate();
-  const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
-  const [applicationId] = useState(
-    () => location.state?.applicationId ?? sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY),
-  );
+  const [checklistCompleted, setChecklistCompleted] = useState(null);
+  const [checklistCheckError, setChecklistCheckError] = useState(null);
   const [activeSectionCode, setActiveSectionCode] = useState('BASIC');
   const [expandedDocumentId, setExpandedDocumentId] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -77,13 +73,32 @@ export default function DocumentChat() {
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    let ignore = false;
+
+    getChecklistCompletion()
+      .then((completed) => {
+        if (!ignore) setChecklistCompleted(completed);
+      })
+      .catch((requestError) => {
+        if (!ignore) {
+          setChecklistCheckError(requestError);
+          setChecklistCompleted(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const {
     preparation,
     isLoading,
     isUpdating,
     error,
     changePrepared,
-  } = useDocumentPreparation(applicationId);
+  } = useDocumentPreparation(checklistCompleted === true);
 
   const sections = useMemo(
     () =>
@@ -106,7 +121,8 @@ export default function DocumentChat() {
   );
 
   const hasPreparation = Boolean(preparation && preparation.totalDocumentCount > 0);
-  const isLocked = !applicationId || !hasPreparation;
+  const isChecklistLoading = checklistCompleted === null;
+  const isLocked = checklistCompleted !== true || !hasPreparation;
 
   useEffect(() => {
     if (!sections.length) return;
@@ -189,12 +205,12 @@ export default function DocumentChat() {
           {isLoading && (
             <p className={`${styles.status} ${styles.chatContent}`}>맞춤 준비서류를 불러오는 중입니다.</p>
           )}
-          {!isLoading && error && applicationId && (
+          {!isLoading && (error || checklistCheckError) && checklistCompleted === true && (
             <p className={`${styles.status} ${styles.chatContent}`}>
               맞춤 준비서류를 불러오지 못했습니다. 체크리스트 완료 후 다시 시도해주세요.
             </p>
           )}
-          {!isLoading && isLocked && (
+          {!isLoading && !isChecklistLoading && isLocked && (
             <motion.div
               className={styles.lockBox}
               initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
@@ -240,7 +256,7 @@ export default function DocumentChat() {
       </div>
 
       <div className={styles.sidePane}>
-        {isLoading ? (
+        {isChecklistLoading || isLoading ? (
           <p className={styles.sideStatus}>맞춤 준비서류를 불러오는 중입니다.</p>
         ) : isLocked ? (
           <motion.div

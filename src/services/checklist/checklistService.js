@@ -107,6 +107,19 @@ export async function createApplication(productCode) {
   return res.data;
 }
 
+/** 현재 로그인 사용자의 체크리스트 완료 여부를 조회한다. */
+export async function getChecklistCompletion() {
+  const res = await axiosInstance.get('/api/applications/check');
+  const data = res.data;
+
+  if (typeof data === 'boolean') return data;
+
+  const completed = data?.completed ?? data?.isCompleted ?? data?.checklistCompleted;
+  if (completed != null) return Boolean(completed);
+
+  return data?.applicationStatus === 'DONE' || data?.status === 'DONE';
+}
+
 /**
  * 임대차계약서 파일을 업로드한다.
  * @param {number|string} applicationId - 신청 ID

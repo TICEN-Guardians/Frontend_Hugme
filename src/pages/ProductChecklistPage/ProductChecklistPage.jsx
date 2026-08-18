@@ -197,7 +197,7 @@ export default function ProductChecklistPage() {
           </Button>
           <Button
             type="button"
-            onClick={() => navigate('/doc-chat', { state: { applicationId } })}
+            onClick={() => navigate('/doc-chat')}
           >
             서류안내 챗봇
           </Button>
