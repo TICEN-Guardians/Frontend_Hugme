@@ -23,12 +23,17 @@ export const uploadRegistry = async ({ analysisId, file }) => {
   const formData = new FormData();
   formData.append('file', file);
 
-  await axiosInstance.post(
+  const { data } = await axiosInstance.post(
       `/api/diagnoses/${analysisId}/registry`,
       formData,
   );
+  return data;
 };
 
+
+export const updateDiagnosisDetails = async (analysisId, payload) => {
+  await axiosInstance.put('/api/diagnoses/' + analysisId + '/details', payload);
+};
 export const analyzeDiagnosis = async (analysisId) => {
   const { data } = await axiosInstance.post(`/api/diagnoses/${analysisId}/analyze`);
   return data;
