@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { FaArrowRight, FaFileLines, FaLock } from 'react-icons/fa6';
+import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
@@ -123,6 +123,11 @@ export default function DocumentChat() {
   const hasPreparation = Boolean(preparation && preparation.totalDocumentCount > 0);
   const isChecklistLoading = checklistCompleted === null;
   const isLocked = checklistCompleted !== true || !hasPreparation;
+  const selectedDocument =
+    documents.find((document) => document.documentId === selectedDocumentId) ?? null;
+  const selectedVariant = selectedDocument?.selectableVariants?.find(
+    (variant) => variant.variantId === selectedDocument.selectedVariantId,
+  );
 
   useEffect(() => {
     if (!sections.length) return;
@@ -140,7 +145,13 @@ export default function DocumentChat() {
     setExpandedDocumentId((prev) => (prev === documentId ? null : documentId));
   };
 
+  const handleSelectDocument = (documentId) => {
+    setSelectedDocumentId(documentId);
+    setExpandedDocumentId((prev) => (prev === documentId ? prev : null));
+  };
+
   const handleSelectVariant = (documentId, variantId) => {
+    setSelectedDocumentId(documentId);
     setVariantSelections((prev) => ({
       ...prev,
       [documentId]: variantId,
@@ -200,6 +211,47 @@ export default function DocumentChat() {
               }
             >
               <MessageList messages={messages} animateMessages />
+              {isSending && (
+                <motion.div
+                  className={styles.typingRow}
+                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: prefersReducedMotion ? 0.2 : 0.42, ease: [0.16, 1, 0.3, 1] }}
+                  aria-live="polite"
+                >
+                  <div className={styles.typingBubble}>
+                    <span className={styles.typingText}>답변을 생각하는 중</span>
+                    <span className={styles.typingDots} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+          {!isLoading && !isChecklistLoading && !isLocked && messages.length === 0 && (
+            <motion.div
+              className={`${styles.guideBox} ${styles.chatContent}`}
+              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : DOCUMENT_CHAT_TRANSITION}
+            >
+              <div className={styles.guideIcon}>
+                <FaRegMessage aria-hidden="true" />
+              </div>
+              <div className={styles.guideText}>
+                <p className={styles.guideTitle}>상담할 서류를 고른 뒤 질문을 입력해 주세요</p>
+                <p className={styles.guideDescription}>
+                  오른쪽 서류 목록에서 궁금한 서류를 선택하고, 입력창에 직접 질문하면 해당 서류 기준으로 안내해 드립니다.
+                </p>
+                <div className={styles.guideExamples} aria-label="질문 예시">
+                  <span>이 서류는 어떻게 준비해야 하나요?</span>
+                  <span>어디서 발급받을 수 있나요?</span>
+                  <span>제출할 때 주의할 점이 있나요?</span>
+                </div>
+              </div>
             </motion.div>
           )}
           {isLoading && (
@@ -244,11 +296,27 @@ export default function DocumentChat() {
                   }
             }
           >
+            {!isChecklistLoading && !isLocked && selectedDocument && (
+              <motion.div
+                key={`${selectedDocument.documentId}-${selectedVariant?.variantId ?? 'document'}`}
+                className={styles.selectionBar}
+                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8, scale: prefersReducedMotion ? 1 : 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: prefersReducedMotion ? 0.2 : 0.38, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className={styles.selectionContent}>
+                  <span className={styles.selectionLabel}>상담 중</span>
+                  <span className={styles.selectionTitle}>
+                    {selectedVariant?.title ?? selectedDocument.documentName}
+                  </span>
+                </div>
+              </motion.div>
+            )}
             <ChatInput
               onSend={handleSend}
               disabled={isLocked || isSending}
               placeholder={
-                isLocked ? '체크리스트 완료 후 상담이 활성화됩니다' : '서류를 선택하거나 궁금한 점을 입력하세요'
+                isLocked ? '체크리스트 완료 후 상담이 활성화됩니다' : '서류를 선택한 뒤 궁금한 점을 입력하세요'
               }
             />
           </motion.div>
@@ -290,7 +358,7 @@ export default function DocumentChat() {
             onTogglePrepared={handleTogglePrepared}
             onToggleExpanded={handleToggleExpanded}
             onSelectVariant={handleSelectVariant}
-            onSelectDocument={setSelectedDocumentId}
+            onSelectDocument={handleSelectDocument}
             isUpdating={isUpdating}
           />
         )}
