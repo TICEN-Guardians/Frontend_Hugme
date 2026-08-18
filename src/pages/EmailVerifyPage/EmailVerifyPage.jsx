@@ -33,7 +33,7 @@ export default function EmailVerifyPage() {
     verifyMail(token)
       .then(() => {
         setStatus(STATUS.SUCCESS);
-        setMessage('이메일 인증이 완료되었습니다. 이제 로그인할 수 있어요.');
+        setMessage('이메일 인증 및 회원가입이 완료되었습니다. 로그인해주세요.');
       })
       .catch((error) => {
         setStatus(STATUS.ERROR);
@@ -54,7 +54,7 @@ export default function EmailVerifyPage() {
           {isLoading ? '...' : isSuccess ? '✓' : '!'}
         </div>
         <h2 className={styles.title}>
-          {isLoading ? '이메일 인증 확인 중' : isSuccess ? '인증 완료' : '인증 실패'}
+          {isLoading ? '이메일 인증 확인 중' : isSuccess ? '회원가입 완료' : '인증 실패'}
         </h2>
         <p className={styles.description}>
           {isLoading ? '잠시만 기다려주세요. 인증 링크를 확인하고 있어요.' : message}
