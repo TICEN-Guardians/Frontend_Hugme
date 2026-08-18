@@ -36,3 +36,23 @@
   font-size: var(--text-xs);
   text-align: center;
 }
+
+.stateCard {
+  box-sizing: border-box;
+  padding: var(--space-12);
+  border-radius: var(--radius-xl);
+  background: var(--on-accent);
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+@media (max-width: 900px) {
+  .topRow,
+  .twoColRow {
+    grid-template-columns: 1fr;
+  }
+
+  .statGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
