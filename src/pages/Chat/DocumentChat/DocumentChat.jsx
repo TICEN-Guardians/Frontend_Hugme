@@ -125,7 +125,7 @@ export default function DocumentChat() {
   };
 
   const handleSelectDocument = (documentId) => {
-    setSelectedDocumentId(documentId);
+    setSelectedDocumentId((prev) => (prev === documentId ? null : documentId));
     setExpandedDocumentId((prev) => (prev === documentId ? prev : null));
   };
 
