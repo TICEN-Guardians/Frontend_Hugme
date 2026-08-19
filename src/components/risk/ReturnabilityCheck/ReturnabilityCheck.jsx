@@ -1,10 +1,11 @@
-import { FaCircleCheck, FaCircleExclamation, FaTriangleExclamation } from 'react-icons/fa6';
+import { FaCircleCheck, FaCircleExclamation, FaCircleInfo, FaTriangleExclamation } from 'react-icons/fa6';
 import styles from './ReturnabilityCheck.module.css';
 
 const STATUS_ICON = {
   Success: FaCircleCheck,
   Warning: FaTriangleExclamation,
   Danger: FaCircleExclamation,
+  Info: FaCircleInfo,
 };
 
 function StatusIcon({ tone }) {
@@ -18,7 +19,7 @@ export default function ReturnabilityCheck({ title, items }) {
       <p className={styles.title}>{title}</p>
       <div className={styles.list}>
         {items.map((item) => (
-          <div key={item.label} className={styles.row}>
+          <div key={item.key ?? item.label} className={styles.row}>
             <span className={styles.label}>{item.label}</span>
             <span className={`${styles.badge} ${styles[`badge${item.tone}`]}`}>
               <StatusIcon tone={item.tone} />

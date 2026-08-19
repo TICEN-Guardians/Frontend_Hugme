@@ -102,25 +102,30 @@ export default function RiskFormPage() {
     return next;
   };
 
-  const diagnosisDetails = (resolvedArea) => ({
+  const diagnosisDetails = (resolvedArea, useContractArea) => ({
     dongName: selectedCandidate.dongName || null,
     hoName: unitNumberRequired ? hoName.trim() : null,
     deposit: Number(deposit.replaceAll(',', '')),
     contractDate,
-    contractArea: contractAreaRequired ? Number(resolvedArea) : null,
-    exclusiveArea: contractAreaRequired ? null : Number(resolvedArea),
+    contractArea: useContractArea ? Number(resolvedArea) : null,
+    exclusiveArea: useContractArea ? null : Number(resolvedArea),
     floor: Number(floor),
     landlordName: landlordName.trim(),
   });
 
   const completeDiagnosis = async (targetAnalysisId, resolvedArea) => {
     setProgressMessage('건물과 소유자 정보를 확인하고 있습니다.');
-    await resolveProperty({
+    const resolved = await resolveProperty({
       address: address.trim(),
       dongName: selectedCandidate.dongName,
       hoName: unitNumberRequired ? hoName.trim() : null,
     });
-    await updateDiagnosisDetails(targetAnalysisId, diagnosisDetails(resolvedArea));
+    // 면적을 계약면적/전용면적 중 어디에 넣을지는 서버가 확정한 주택유형 기준을 따른다.
+    const useContractArea = resolved?.contractAreaRequired ?? contractAreaRequired;
+    await updateDiagnosisDetails(
+      targetAnalysisId,
+      diagnosisDetails(resolvedArea, useContractArea),
+    );
     setProgressMessage('시세와 위험도를 계산하고 있습니다.');
     await analyzeDiagnosis(targetAnalysisId);
     navigate('/risk/' + targetAnalysisId);

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import {
   FaBuilding,
   FaChartLine,
+  FaCircleInfo,
   FaClipboardCheck,
   FaFileLines,
   FaHouse,
@@ -18,6 +19,7 @@ import ModelFactorList from '../../components/risk/ModelFactorList/ModelFactorLi
 import PriceComparisonChart from '../../components/risk/PriceComparisonChart/PriceComparisonChart.jsx';
 import PriceScenarioTable from '../../components/risk/PriceScenarioTable/PriceScenarioTable.jsx';
 import RecommendedActions from '../../components/risk/RecommendedActions/RecommendedActions.jsx';
+import RegistrySafety from '../../components/risk/RegistrySafety/RegistrySafety.jsx';
 import ReturnabilityCheck from '../../components/risk/ReturnabilityCheck/ReturnabilityCheck.jsx';
 import RiskEvidenceCards from '../../components/risk/RiskEvidenceCards/RiskEvidenceCards.jsx';
 import RiskScoreCard from '../../components/risk/RiskScoreCard/RiskScoreCard.jsx';
@@ -31,10 +33,23 @@ const GRADE = {
   HIGH: { label: '높음', tone: 'danger' }, CRITICAL: { label: '매우 높음', tone: 'danger' },
 };
 const HOUSING = { APARTMENT: '아파트', VILLA: '연립·다세대', OFFICETEL: '오피스텔', DETACHED_MULTI: '단독·다가구' };
-const WEIGHTS = { underwater: 47, rollover: 35, property: 10, market: 8 };
-const MAX_SCORE = Object.values(WEIGHTS).reduce((sum, value) => sum + value, 0);
-const SEVERITY_TONE = { CRITICAL: 'Danger', HIGH: 'Warning' };
-const SEVERITY_STATUS = { CRITICAL: '위험', HIGH: '주의' };
+const SEVERITY_TONE = { CRITICAL: 'Danger', HIGH: 'Warning', INFO: 'Info' };
+const SEVERITY_STATUS = { CRITICAL: '위험', HIGH: '주의', INFO: '확인 필요' };
+const VERDICT = {
+  SAFE: { label: '안전', tone: 'safe' },
+  CAUTION: { label: '주의', tone: 'caution' },
+  RISK: { label: '위험', tone: 'risk' },
+};
+// 등기부 권리관계 표시 순서. TriState(TRUE/FALSE/UNKNOWN)를 그대로 받아 화면 문구만 만든다.
+const REGISTRY_FLAGS = [
+  { key: 'seizure', label: '압류' },
+  { key: 'provisionalSeizure', label: '가압류' },
+  { key: 'provisionalDisposition', label: '가처분' },
+  { key: 'auctionCommenced', label: '경매개시' },
+  { key: 'trustRegistration', label: '신탁등기' },
+  { key: 'jeonseRight', label: '선순위 전세권' },
+  { key: 'leaseholdRegistration', label: '임차권등기' },
+];
 const money = (value) => value == null ? '확인 필요' : `${Number(value).toLocaleString('ko-KR')}원`;
 const ratio = (value) => value == null ? '확인 필요' : `${Number(value).toFixed(2)}%`;
 const dateTime = (value) => value == null ? '' : new Date(value).toLocaleString('ko-KR', {
@@ -64,11 +79,12 @@ export default function RiskReportPage() {
     <div className={styles.root}>
       <div className={`${styles.content} container`}>
         <RiskSummaryCard title={view.title} badgeLabel={view.badgeLabel} badgeTone={view.badgeTone}
-          address={view.address} housingType={view.housingType} description={view.summary}
-          analyzedAt={view.analyzedAt} />
+          address={view.address} housingType={view.housingType} analyzedAt={view.analyzedAt} />
 
-        <div className={styles.scoreRow}>
-          <RiskScoreCard score={view.totalScore} maxScore={MAX_SCORE} tone={view.badgeTone} gradeLabel={view.badgeLabel} />
+        <div className={styles.overviewRow}>
+          <RiskScoreCard score={view.totalScore} maxScore={view.maxScore} tone={view.badgeTone}
+            gradeLabel={view.badgeLabel} note={view.scoreNote} />
+          <SummaryPanel title="AI 분석 요약" text={view.summary} notes={view.basisNotes} />
           <ModelFactorList title="위험점수 기여도" factors={view.contribution} />
         </div>
 
@@ -79,23 +95,43 @@ export default function RiskReportPage() {
         <SectionHeading index={2} title="시세·계약 비교 및 하락 시나리오" />
         <div className={styles.twoColRow}>
           <PriceComparisonChart title="AI 시세·계약 비교" {...view.priceComparison} />
-          <PriceScenarioTable title="가격 하락 시나리오" rows={view.scenarios} />
+          <PriceScenarioTable title="가격 하락 시나리오" rows={view.scenarios} note={view.scenarioNote} />
         </div>
 
-        <SectionHeading index={3} title="담보 안전성 분석" />
-        <CollateralBar title="근저당·담보 구성" {...view.collateral} />
-
-        <SectionHeading index={4} title="필수 확인사항 및 위험 근거" />
+        <SectionHeading index={3} title="등기부·담보 안전성 분석" />
         <div className={styles.twoColRow}>
-          <ReturnabilityCheck title="필수 확인사항" items={view.refundChecks} />
-          <RiskEvidenceCards title="주요 위험 근거" reasons={view.riskReasons} />
+          <CollateralBar title="근저당·담보 구성" {...view.collateral} />
+          <RegistrySafety title="등기부 권리관계" items={view.registryChecks}
+            emptyMessage="등기부 상세 정보를 불러오지 못했습니다." />
         </div>
 
-        <SectionHeading index={5} title="권장 조치" />
+        <SectionHeading index={4} title="핵심 분석 인사이트" />
+        <div className={styles.twoColRow}>
+          <RiskEvidenceCards title="주요 분석 근거" reasons={view.riskReasons} />
+          <ReturnabilityCheck title="필수 확인사항" items={view.refundChecks} />
+        </div>
+
+        <SectionHeading index={5} title="계약 전 권장 조치" />
         <RecommendedActions title="계약 전 확인하면 좋은 것들" actions={view.recommendedActions} />
 
         <p className={styles.disclaimer}>본 리포트는 AI와 규칙 기반 분석을 이용한 참고자료이며, 계약 전 최신 등기부와 전문가 검토가 필요합니다.</p>
       </div>
+    </div>
+  );
+}
+
+function SummaryPanel({ title, text, notes }) {
+  return (
+    <div className={styles.summaryPanel}>
+      <p className={styles.summaryTitle}>
+        {title} <FaCircleInfo aria-hidden="true" />
+      </p>
+      <p className={styles.summaryText}>{text}</p>
+      {notes.map((note) => (
+        <p key={note} className={styles.summaryNote}>
+          <FaCircleInfo aria-hidden="true" /> {note}
+        </p>
+      ))}
     </div>
   );
 }
@@ -133,10 +169,17 @@ function toViewModel(data) {
   const maxPrice = Math.max(sale, deposit, lease, 1);
   const total = Math.max(sale, 1);
   const notices = reportDetail.notices ?? [];
-  const missingChecks = data.missingChecks ?? [];
+  const riskNotices = notices.filter((item) => item.severity !== 'INFO');
   const keyFindings = explanation.keyFindings ?? [];
   const recommendedActions = explanation.recommendedActions ?? [];
   const priceScenarios = reportDetail.priceScenarios ?? [];
+  const weights = risk.weights ?? {};
+  const basisNotes = [
+    risk.gradeOverridden
+      && '등기부에서 확인된 위험사항 때문에 점수와 별개로 등급이 상향됐습니다.',
+    risk.provisionalCollateralBasis
+      && '근저당 채권최고액을 확정하지 못해 담보부담률 대신 전세가율을 기준으로 산정했습니다.',
+  ].filter(Boolean);
 
   return {
     title: reportDetail.title,
@@ -147,12 +190,15 @@ function toViewModel(data) {
     summary: explanation.summary,
     analyzedAt: dateTime(data.analyzedAt),
     totalScore: risk.score,
+    maxScore: weights.total ?? 100,
+    scoreNote: risk.gradeOverridden ? '위험사항으로 등급 상향' : null,
+    basisNotes,
     contribution: [
-      { icon: <FaScaleBalanced />, label: '깡통전세 위험', score: breakdown.underwater ?? 0, max: WEIGHTS.underwater },
-      { icon: <FaRotate />, label: '역전세 위험', score: breakdown.rollover ?? 0, max: WEIGHTS.rollover },
-      { icon: <FaBuilding />, label: '주택 특성', score: breakdown.property ?? 0, max: WEIGHTS.property },
-      { icon: <FaChartLine />, label: '시장 상황', score: breakdown.market ?? 0, max: WEIGHTS.market },
-    ],
+      { icon: <FaScaleBalanced />, label: '깡통전세 위험', score: breakdown.underwater ?? 0, max: weights.underwater },
+      { icon: <FaRotate />, label: '역전세 위험', score: breakdown.rollover ?? 0, max: weights.rollover },
+      { icon: <FaBuilding />, label: '주택 특성', score: breakdown.property ?? 0, max: weights.property },
+      { icon: <FaChartLine />, label: '시장 상황', score: breakdown.market ?? 0, max: weights.market },
+    ].filter((item) => item.max),
     keyStats: [
       { icon: <FaHouse />, label: 'AI 예상 매매가', value: money(sale) },
       { icon: <FaHouseChimney />, label: 'AI 예상 전세가', value: money(lease) },
@@ -172,9 +218,13 @@ function toViewModel(data) {
     },
     scenarios: priceScenarios.map((item) => ({
       label: item.label,
-      price: money(sale * (1 - (item.priceDropRate ?? 0) / 100)),
+      price: money(item.estimatedSalePrice),
       rate: ratio(item.collateralBurdenRate),
+      verdictLabel: VERDICT[item.verdict]?.label ?? '확인 필요',
+      verdictTone: VERDICT[item.verdict]?.tone ?? 'caution',
     })),
+    scenarioNote: scenarioNote(priceScenarios),
+    registryChecks: registryChecks(data.registry),
     collateral: {
       burdenRateLabel: `담보부담률 ${ratio(indicators.collateralBurdenRate)}`,
       segments: [
@@ -190,22 +240,55 @@ function toViewModel(data) {
       { label: '보증금 부족액', value: money(indicators.depositShortfall), valueTone: indicators.depositShortfall > 0 ? 'danger' : undefined },
       { label: '시세 신뢰도', value: data.valuationReliability },
     ],
-    refundChecks: [
-      ...notices.map((item) => ({
+    refundChecks: notices.length
+      ? notices.map((item) => ({
+        key: item.code,
         label: item.title,
         status: SEVERITY_STATUS[item.severity] ?? '주의',
         tone: SEVERITY_TONE[item.severity] ?? 'Warning',
-      })),
-      ...missingChecks.map((code) => ({ label: code, status: '확인 필요', tone: 'Warning' })),
-      ...(!notices.length && !missingChecks.length ? [{ label: '필수 위험항목 확인', status: '완료', tone: 'Success' }] : []),
-    ],
-    riskReasons: notices.length
-      ? notices.map((item) => ({ icon: <FaFileLines />, label: item.title, description: item.description }))
-      : keyFindings.slice(0, 3).map((text, index) => ({ icon: <FaClipboardCheck />, label: `분석 결과 ${index + 1}`, description: text })),
+      }))
+      : [{ key: 'ALL_CLEAR', label: '필수 위험항목 확인', status: '완료', tone: 'Success' }],
+    riskReasons: riskNotices.length
+      ? riskNotices.map((item) => ({ icon: <FaFileLines />, label: item.title, description: item.description }))
+      : keyFindings.slice(0, 3).map((item) => ({ icon: <FaClipboardCheck />, label: item.title, description: item.description })),
     recommendedActions: recommendedActions.map((text, index) => ({
       icon: index === 0 ? <FaFileLines /> : <FaShieldHalved />, title: `권장 조치 ${index + 1}`, description: text,
     })),
   };
+}
+
+function registryChecks(registry) {
+  if (!registry) return [];
+
+  const mortgages = registry.mortgages ?? [];
+  const mortgageRow = {
+    key: 'mortgage',
+    label: '근저당권',
+    detail: mortgages.length
+      ? mortgages.map((item) => `${item.holder ?? '권리자 미상'} (${money(item.amount)})`).join(', ')
+      : '없음',
+    state: mortgages.length ? 'caution' : 'safe',
+  };
+
+  const flagRows = REGISTRY_FLAGS.map(({ key, label }) => {
+    const value = registry[key];
+    return {
+      key,
+      label,
+      detail: value === 'TRUE' ? '확인됨' : value === 'FALSE' ? '없음' : '확인 못함',
+      state: value === 'TRUE' ? 'risk' : value === 'FALSE' ? 'safe' : 'unknown',
+    };
+  });
+
+  return [mortgageRow, ...flagRows];
+}
+
+function scenarioNote(scenarios) {
+  const worst = scenarios[scenarios.length - 1];
+  if (!worst) return '';
+
+  const verdict = VERDICT[worst.verdict]?.label ?? '확인 필요';
+  return `${worst.label} 시 담보부담률은 ${ratio(worst.collateralBurdenRate)}로 ${verdict} 수준입니다.`;
 }
 
 function findMetric(data, sectionKey, metricKey) {

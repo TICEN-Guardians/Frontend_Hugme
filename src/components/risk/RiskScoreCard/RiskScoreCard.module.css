@@ -101,3 +101,9 @@
   background: var(--red-tint-50);
   color: var(--text-red-dark);
 }
+
+.note {
+  margin: var(--space-3) 0 0;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
