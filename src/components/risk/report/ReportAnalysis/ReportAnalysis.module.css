@@ -1,0 +1,657 @@
+.analysis {
+  min-width: 0;
+}
+
+.conclusion {
+  padding: 2.8rem 3.2rem;
+  border-left: 0.4rem solid var(--brand-blue);
+  border-radius: 0 1.6rem 1.6rem 0;
+  background: var(--blue-tint-50);
+}
+
+.conclusionLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0 0 1.4rem;
+  color: var(--text-blue-dark);
+  font-size: 1.6rem;
+  font-weight: 750;
+}
+
+.conclusionLabel svg,
+.sectionIcon {
+  color: var(--brand-blue);
+  font-size: 1.8rem;
+}
+
+.conclusionHeadline {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 2.7rem;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+.conclusionDescription {
+  margin: 1.2rem 0 0;
+  color: var(--text-secondary);
+  font-size: 1.6rem;
+  font-weight: 500;
+  line-height: 1.65;
+}
+
+.metricChips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem;
+  margin-top: 2rem;
+}
+
+.metricChip {
+  padding: 0.7rem 1rem;
+  border-radius: 0.8rem;
+  background: rgba(255, 255, 255, 0.75);
+  color: var(--text-blue-dark);
+  font-size: 1.3rem;
+  font-weight: 650;
+}
+
+.reportSection {
+  margin-top: 4.8rem;
+  padding-top: 3.4rem;
+  border-top: 0.1rem solid #e5e7eb;
+}
+
+.sectionTitleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  margin-bottom: 2.4rem;
+}
+
+.sectionIndex {
+  color: var(--brand-blue);
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.sectionTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 2.2rem;
+  font-weight: 800;
+}
+
+.priceStats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 2.2rem 0;
+  border-top: 0.1rem solid #eef1f4;
+  border-bottom: 0.1rem solid #eef1f4;
+}
+
+.priceStat {
+  display: grid;
+  gap: 0.8rem;
+  min-width: 0;
+  padding: 0 2.2rem;
+}
+
+.priceStat:first-child {
+  padding-left: 0;
+}
+
+.priceStat:not(:first-child) {
+  border-left: 0.1rem solid #e5e7eb;
+}
+
+.priceStat span {
+  color: #6b7280;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.priceStat strong {
+  color: var(--text-primary);
+  font-size: 2.6rem;
+  font-weight: 780;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dangerText {
+  color: var(--red) !important;
+}
+
+.priceAnalysisGrid,
+.collateralRegistryGrid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(32rem, 0.85fr);
+  gap: 3.4rem;
+  margin-top: 2.8rem;
+}
+
+.collateralRegistryGrid {
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 3.6rem;
+  margin-top: 0;
+}
+
+.scenarioArea,
+.registryArea {
+  border-left: 0.1rem solid #edf0f2;
+  padding-left: 3.4rem;
+}
+
+.registryArea {
+  padding-left: 3.8rem;
+}
+
+.subHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.4rem;
+  margin-bottom: 1.8rem;
+}
+
+.subHeader h3,
+.scenarioArea h3 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.reliabilityBadge,
+.registrySummary {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0.5rem 0.8rem;
+  border-radius: 0.8rem;
+  background: #f7fafc;
+  color: #4b5563;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.registrySummary.safe {
+  background: rgba(62, 154, 67, 0.1);
+  color: var(--brand-green) !important;
+}
+
+.priceChart {
+  height: 30rem;
+}
+
+.scenarioRows {
+  margin-top: 1.4rem;
+}
+
+.scenarioRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+  gap: 1.1rem 1.6rem;
+  align-items: center;
+  min-height: 4.8rem;
+  padding: 1.6rem 0;
+  border-bottom: 0.1rem solid #eef1f4;
+  color: var(--text-secondary);
+  font-size: 1.4rem;
+}
+
+.scenarioRow:last-child {
+  border-bottom: 0;
+}
+
+.scenarioRow div {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.scenarioRow strong,
+.scenarioRow > span {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.scenarioRate {
+  color: var(--text-primary) !important;
+  font-size: 1.6rem !important;
+  font-weight: 800 !important;
+}
+
+.scenarioProgress {
+  grid-column: 1 / -1;
+  position: relative;
+  height: 0.4rem;
+  overflow: hidden;
+  border-radius: 999rem;
+  background: #eef1f4;
+}
+
+.scenarioProgress span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: inherit;
+  background: rgba(15, 117, 189, 0.42);
+}
+
+.scenarioRow div span {
+  color: #6b7280;
+  font-size: 1.4rem;
+}
+
+.verdict {
+  min-width: 5.8rem;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999rem;
+  text-align: center;
+  font-size: 1.2rem !important;
+}
+
+.safe {
+  color: var(--brand-green) !important;
+}
+
+.caution,
+.unknown {
+  color: #6b7280 !important;
+}
+
+.risk {
+  color: var(--red) !important;
+}
+
+.insightList {
+  display: grid;
+  gap: 0.9rem;
+  margin-top: 2.4rem;
+}
+
+.insightList p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.65;
+}
+
+.insightList svg {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  color: var(--brand-blue);
+  font-size: 1.6rem;
+}
+
+.recoveryValue {
+  display: grid;
+  gap: 0.8rem;
+  margin-bottom: 2.2rem;
+}
+
+.recoveryValue span {
+  color: #6b7280;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.recoveryValue strong {
+  color: var(--text-primary);
+  font-size: 2.5rem;
+  font-weight: 780;
+}
+
+.recoveryCompare {
+  display: grid;
+  gap: 1.8rem;
+  margin-bottom: 2.4rem;
+}
+
+.trackRow {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.trackLabel {
+  display: flex;
+  justify-content: space-between;
+  gap: 1.6rem;
+  color: #6b7280;
+  font-size: 1.4rem;
+}
+
+.trackLabel strong {
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.track {
+  position: relative;
+  height: 1.4rem;
+  overflow: hidden;
+  border-radius: 999rem;
+  background: #eef1f4;
+}
+
+.trackFill,
+.trackExcess {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  border-radius: inherit;
+  background: var(--brand-blue);
+}
+
+.trackExcess {
+  background: var(--red);
+  min-width: 0.6rem;
+}
+
+.shortfallNote {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin: 0;
+  color: var(--red);
+  font-size: 1.4rem;
+  font-weight: 750;
+}
+
+.recoveryRows {
+  display: grid;
+  margin: 0;
+}
+
+.recoveryRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 1.6rem;
+  min-height: 4.4rem;
+  align-items: center;
+  border-bottom: 0.1rem solid #eef1f4;
+}
+
+.recoveryRow:last-child {
+  border-bottom: 0;
+}
+
+.recoveryRow dt {
+  color: #6b7280;
+  font-size: 1.4rem;
+  font-weight: 700;
+}
+
+.recoveryRow dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: right;
+}
+
+.registryRows {
+  display: grid;
+}
+
+.registryRow {
+  display: grid;
+  grid-template-columns: minmax(12rem, 0.82fr) minmax(0, 1.18fr) auto;
+  align-items: center;
+  gap: 1.2rem;
+  min-height: 4.8rem;
+  border-bottom: 0.1rem solid #eef1f4;
+  font-size: 1.4rem;
+}
+
+.registryRow:last-child {
+  border-bottom: 0;
+}
+
+.registryLabel {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--text-primary);
+  font-weight: 750;
+}
+
+.registryLabel svg {
+  color: var(--brand-blue);
+  font-size: 1.6rem;
+}
+
+.registryDetail {
+  color: #6b7280;
+  overflow-wrap: anywhere;
+}
+
+.registryBadge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sectionLead {
+  margin: 0 0 2rem;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.7;
+}
+
+.breakdownChart {
+  max-width: 76rem;
+  height: 26rem;
+}
+
+.bottomAnalysisGrid {
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1.15fr) minmax(30rem, 0.85fr);
+  gap: 4.6rem;
+  margin-top: 4.8rem;
+  padding-top: 3.4rem;
+  border-top: 0.1rem solid #e5e7eb;
+}
+
+.actionsColumn {
+  position: relative;
+  padding-left: 4.6rem;
+}
+
+.actionsColumn::before {
+  content: '';
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  left: 0;
+  width: 0.1rem;
+  background: #edf0f2;
+}
+
+.reasonGroups {
+  display: grid;
+  gap: 2.8rem;
+}
+
+.reasonGroup {
+  display: grid;
+  gap: 1.6rem;
+}
+
+.reasonGroupTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.6rem;
+  font-weight: 800;
+}
+
+.reasonList {
+  display: grid;
+  gap: 2rem;
+}
+
+.reasonItem {
+  display: grid;
+  grid-template-columns: 2rem minmax(0, 1fr);
+  gap: 1.2rem;
+}
+
+.reasonIcon {
+  display: inline-flex;
+  justify-content: center;
+  margin-top: 0.2rem;
+  color: var(--brand-blue);
+  font-size: 1.7rem;
+}
+
+.reasonItem h4,
+.timelineRow h3 {
+  margin: 0 0 0.7rem;
+  color: var(--text-primary);
+  font-size: 1.6rem;
+  font-weight: 750;
+}
+
+.reasonItem p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.7;
+}
+
+.cautionList {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.cautionList p {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.8rem;
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.7;
+}
+
+.cautionList svg {
+  flex-shrink: 0;
+  margin-top: 0.25rem;
+  color: var(--red);
+  font-size: 1.5rem;
+}
+
+.timeline {
+  display: grid;
+}
+
+.timelineRow {
+  position: relative;
+  display: grid;
+  grid-template-columns: 3rem minmax(0, 1fr);
+  gap: 1.4rem;
+  padding-bottom: 2.2rem;
+}
+
+.timelineRow:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  top: 3rem;
+  bottom: 0.4rem;
+  left: 1.5rem;
+  width: 0.1rem;
+  background: #dbe7f2;
+}
+
+.timelineNumber {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  background: var(--blue-tint-50);
+  color: var(--brand-blue);
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.timelineRow p {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 1.4rem;
+  line-height: 1.65;
+}
+
+@media (max-width: 900px) {
+  .conclusion {
+    padding: 2.6rem 2.4rem;
+  }
+
+  .conclusionHeadline {
+    font-size: 2.4rem;
+  }
+
+  .priceStats,
+  .priceAnalysisGrid,
+  .collateralRegistryGrid,
+  .bottomAnalysisGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .priceStat {
+    padding: 1.6rem 0;
+  }
+
+  .priceStat:not(:first-child) {
+    border-top: 0.1rem solid #e5e7eb;
+    border-left: 0;
+  }
+
+  .scenarioArea,
+  .registryArea,
+  .actionsColumn {
+    border-top: 0.1rem solid #e5e7eb;
+    border-left: 0;
+    padding-top: 3rem;
+    padding-left: 0;
+  }
+
+  .actionsColumn::before {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .sectionTitle {
+    font-size: 2rem;
+  }
+
+  .priceStat strong,
+  .recoveryValue strong {
+    font-size: 2.2rem;
+  }
+
+  .registryRow,
+  .scenarioRow {
+    grid-template-columns: 1fr;
+    gap: 0.6rem;
+    padding: 1.4rem 0;
+  }
+
+  .breakdownChart {
+    height: 28rem;
+  }
+}

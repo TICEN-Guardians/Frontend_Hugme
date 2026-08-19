@@ -1,11 +1,12 @@
-import { FaCircleInfo } from 'react-icons/fa6';
+import { FiTrendingDown } from 'react-icons/fi';
 import styles from './PriceScenarioTable.module.css';
 
 export default function PriceScenarioTable({ title, rows, note }) {
   return (
     <div className={styles.card}>
       <p className={styles.title}>
-        {title} <FaCircleInfo aria-hidden="true" />
+        <FiTrendingDown aria-hidden="true" />
+        {title}
       </p>
       <div className={styles.tableWrap}>
         <table className={styles.table}>
