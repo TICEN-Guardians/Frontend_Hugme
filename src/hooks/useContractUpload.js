@@ -1,8 +1,8 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import {
   createApplication,
-  getDocuments,
   getInfo,
+  getResultDocuments,
   updateInfo,
   uploadLeaseContract,
 } from '../services/checklist/checklistService.js';
@@ -20,15 +20,66 @@ export function useContractUpload(productCode) {
   const [uploadError, setUploadError] = useState(null);
   const [isConfirming, setIsConfirming] = useState(false);
   const [finalDocuments, setFinalDocuments] = useState(null);
+  const [isRestoring, setIsRestoring] = useState(true);
+
+  useEffect(() => {
+    let ignore = false;
+    const savedApplicationId = sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+
+    if (!savedApplicationId) {
+      setIsRestoring(false);
+      return undefined;
+    }
+
+    setApplicationId(savedApplicationId);
+    setIsRestoring(true);
+
+    Promise.allSettled([
+      getInfo(savedApplicationId),
+      getResultDocuments(savedApplicationId),
+    ])
+      .then(([infoResult, documentsResult]) => {
+        if (ignore) return;
+
+        if (infoResult.status === 'fulfilled') {
+          setOcrInfo(infoResult.value);
+        }
+
+        if (documentsResult.status === 'fulfilled') {
+          setFinalDocuments(documentsResult.value);
+          setStep('done');
+        } else if (infoResult.status === 'fulfilled') {
+          setStep('idle');
+        } else {
+          sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+          setApplicationId(null);
+          setStep('idle');
+        }
+      })
+      .finally(() => {
+        if (!ignore) setIsRestoring(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
 
   const startUpload = useCallback(
-    async (file) => {
+    async (file, { forceNew = false } = {}) => {
       setUploadError(null);
       setStep('analyzing');
 
       try {
         // 이전 시도에서 만들어진 applicationId가 있으면 재사용하고 새로 만들지 않는다.
-        let currentApplicationId = applicationId;
+        let currentApplicationId = forceNew ? null : applicationId;
+        if (forceNew) {
+          setApplicationId(null);
+          setOcrInfo(null);
+          setFinalDocuments(null);
+          sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+        }
+
         if (!currentApplicationId) {
           const application = await createApplication(productCode);
           currentApplicationId = application.applicationId;
@@ -36,7 +87,7 @@ export function useContractUpload(productCode) {
           sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(currentApplicationId));
 
           if (application.applicationStatus === 'DONE' || application.status === 'DONE') {
-            const docs = await getDocuments(currentApplicationId);
+            const docs = await getResultDocuments(currentApplicationId);
             setFinalDocuments(docs);
             setStep('done');
             return;
@@ -53,6 +104,11 @@ export function useContractUpload(productCode) {
       }
     },
     [applicationId, productCode],
+  );
+
+  const restartUpload = useCallback(
+    (file) => startUpload(file, { forceNew: true }),
+    [startUpload],
   );
 
   const confirmOcrInfo = useCallback(
@@ -76,13 +132,19 @@ export function useContractUpload(productCode) {
     setStep('idle');
   }, []);
 
+  const reopenOcrConfirm = useCallback(() => {
+    setStep('ocrConfirm');
+  }, []);
+
   /** 질문 흐름이 끝난 뒤 최종 서류 목록을 받아와 'done'으로 전환한다. */
   const finishQuestions = useCallback(async () => {
     if (!applicationId) return;
+  
     try {
-      const docs = await getDocuments(applicationId);
-      setFinalDocuments(docs);
-      sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(applicationId));
+      const result = await getResultDocuments(applicationId);
+  
+      setFinalDocuments(result);
+
       setStep('done');
     } catch (err) {
       setUploadError(err);
@@ -95,10 +157,13 @@ export function useContractUpload(productCode) {
     ocrInfo,
     uploadError,
     isConfirming,
+    isRestoring,
     finalDocuments,
     startUpload,
+    restartUpload,
     confirmOcrInfo,
     closeOcrConfirm,
+    reopenOcrConfirm,
     finishQuestions,
   };
 }

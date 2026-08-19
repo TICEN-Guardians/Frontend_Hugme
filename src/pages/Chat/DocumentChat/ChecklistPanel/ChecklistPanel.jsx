@@ -85,12 +85,13 @@ export default function ChecklistPanel({
             visibleDocuments.map((document) => {
               const isExpanded = expandedDocumentId === document.documentId;
               const hasVariants = Array.isArray(document.selectableVariants) && document.selectableVariants.length > 0;
+              const isDocumentSelected = selectedDocumentId === document.documentId;
 
               return (
                 <motion.article
                   key={document.documentId}
                   className={`${styles.item} ${document.prepared ? styles.itemPrepared : ''} ${
-                    selectedDocumentId === document.documentId ? styles.itemSelected : ''
+                    isDocumentSelected ? styles.itemSelected : ''
                   } ${
                     isExpanded ? styles.itemExpanded : ''
                   }`}
@@ -122,6 +123,9 @@ export default function ChecklistPanel({
                         {document.prepared && ' · 준비완료'}
                       </p>
                     </button>
+                    {isDocumentSelected && (
+                      <span className={`${styles.selectedLabel} ${styles.documentSelectedLabel}`}>선택됨</span>
+                    )}
                     {hasVariants && (
                       <button
                         type="button"
@@ -129,7 +133,7 @@ export default function ChecklistPanel({
                         onClick={() => onToggleExpanded(document.documentId)}
                         aria-expanded={isExpanded}
                       >
-                        {!isExpanded && '더보기'}
+                        더보기
                         {isExpanded ? (
                           <FaChevronUp aria-label="접기" />
                         ) : (
@@ -150,44 +154,45 @@ export default function ChecklistPanel({
                         <p className={styles.variantTitle}>내 상황에 맞는 계약서 종류를 선택하세요</p>
                         <div className={styles.variantList}>
                           {document.selectableVariants.map((variant, index) => {
-                          const isSelected = document.selectedVariantId === variant.variantId;
+                            const isSavedVariant = document.selectedVariantId === variant.variantId;
+                            const isSelected = isDocumentSelected && isSavedVariant;
 
-                          return (
-                            <motion.label
-                              key={variant.variantId}
-                              className={`${styles.variantOption} ${
-                                isSelected ? styles.variantOptionSelected : ''
-                              }`}
-                              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 6 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              transition={
-                                prefersReducedMotion
-                                  ? { duration: 0 }
-                                  : {
-                                      ...DOCUMENT_CHAT_TRANSITION,
-                                      delay: index * 0.04,
-                                    }
-                              }
-                            >
-                              <input
-                                type="radio"
-                                name={`document-${document.documentId}-variant`}
-                                checked={isSelected}
-                                onChange={() => onSelectVariant(document.documentId, variant.variantId)}
-                              />
-                              <span className={styles.radioMark} aria-hidden="true" />
-                              <span className={styles.variantText}>
-                                <span className={styles.variantName}>{variant.title}</span>
-                                <span className={styles.variantDescription}>{variant.description}</span>
-                              </span>
-                              {isSelected && <span className={styles.selectedLabel}>선택됨</span>}
-                            </motion.label>
-                          );
-                        })}
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+                            return (
+                              <motion.label
+                                key={variant.variantId}
+                                className={`${styles.variantOption} ${
+                                  isSelected ? styles.variantOptionSelected : ''
+                                }`}
+                                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 6 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={
+                                  prefersReducedMotion
+                                    ? { duration: 0 }
+                                    : {
+                                        ...DOCUMENT_CHAT_TRANSITION,
+                                        delay: index * 0.04,
+                                      }
+                                }
+                              >
+                                <input
+                                  type="radio"
+                                  name={`document-${document.documentId}-variant`}
+                                  checked={isSavedVariant}
+                                  onChange={() => onSelectVariant(document.documentId, variant.variantId)}
+                                />
+                                <span className={styles.radioMark} aria-hidden="true" />
+                                <span className={styles.variantText}>
+                                  <span className={styles.variantName}>{variant.title}</span>
+                                  <span className={styles.variantDescription}>{variant.description}</span>
+                                </span>
+                                {isSelected && <span className={styles.selectedLabel}>선택됨</span>}
+                              </motion.label>
+                            );
+                          })}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </motion.article>
               );
             })

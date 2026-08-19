@@ -57,6 +57,65 @@
   outline: none;
 }
 
+.emailInputRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 10.4rem;
+  gap: var(--space-2);
+  align-items: stretch;
+}
+
+.emailCheckButton {
+  min-height: 5.2rem;
+  padding: 0 var(--space-3);
+  border: 0.1rem solid var(--brand-blue);
+  border-radius: 1.2rem;
+  background: var(--brand-blue);
+  color: var(--on-accent);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background-color 0.18s ease,
+    border-color 0.18s ease,
+    transform 0.18s ease;
+}
+
+.emailCheckButton:hover:not(:disabled) {
+  border-color: #0a67a8;
+  background: #0a67a8;
+  transform: translateY(-0.1rem);
+}
+
+.emailCheckButton:disabled {
+  cursor: not-allowed;
+  border-color: var(--border-default);
+  background: var(--border-subtle);
+  color: var(--text-disabled);
+}
+
+.emailCheckButton:focus-visible {
+  outline: 0.3rem solid rgba(15, 117, 189, 0.16);
+  outline-offset: 0.3rem;
+}
+
+.emailFeedback {
+  margin: 0;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  line-height: 1.4;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.emailFeedback[data-status='success'] {
+  color: var(--brand-green);
+}
+
+.emailFeedback[data-status='error'] {
+  color: var(--text-red-dark);
+}
+
 .passwordWrap {
   position: relative;
 }
@@ -234,4 +293,10 @@
   font-size: var(--text-sm);
   line-height: 1.7;
   word-break: keep-all;
+}
+
+@media (max-width: 480px) {
+  .emailInputRow {
+    grid-template-columns: 1fr;
+  }
 }

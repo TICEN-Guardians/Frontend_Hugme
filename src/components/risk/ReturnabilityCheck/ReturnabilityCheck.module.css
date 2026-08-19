@@ -56,3 +56,8 @@
   background: var(--amber-tint-50);
   color: var(--text-amber-dark);
 }
+
+.badgeDanger {
+  background: var(--red-tint-50);
+  color: var(--text-red-dark);
+}

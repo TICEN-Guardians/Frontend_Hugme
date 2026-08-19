@@ -4,6 +4,7 @@ import {
   mockApplicationInfo,
   mockDocuments,
   mockQuestionsByStep,
+  mockResultDocuments,
   mockSubmitAnswers,
   mockUploadResponse,
 } from '../../mocks/checklist.mock.js';
@@ -93,8 +94,33 @@ function normalizeFinalDocuments(data) {
   };
 }
 
+function normalizeQuestionResponse(data, fallbackStep = null) {
+  const questionStep = data?.questionStep ?? data?.step ?? data?.nextStep ?? fallbackStep;
+  const questions = data?.questions ?? data?.additionalQuestions ?? data?.nextQuestions ?? [];
+
+  return {
+    questionStep,
+    questions: Array.isArray(questions) ? questions : [],
+    isFinalStep:
+      data?.isFinalStep ??
+      data?.finalStep ??
+      (questionStep != null && questionStep !== 'STEP1' && questionStep !== 'STEP2'),
+  };
+}
+
+function isQuestionnaireDone(data) {
+  return Boolean(
+    data?.questionnaireCompleted ??
+      data?.done ??
+      data?.completed ??
+      data?.isCompleted ??
+      (data?.applicationStatus === 'DONE' || data?.status === 'DONE'),
+  );
+}
+
 /**
  * 새 보증 신청 건을 생성한다.
+ * @param {string} productCode - 신청할 상품 코드
  * @returns {Promise<object>} 생성된 신청 정보
  */
 export async function createApplication(productCode) {
@@ -103,6 +129,19 @@ export async function createApplication(productCode) {
   }
   const res = await axiosInstance.post('/api/applications', { productCode });
   return res.data;
+}
+
+/** 현재 로그인 사용자의 체크리스트 완료 여부를 조회한다. */
+export async function getChecklistCompletion() {
+  const res = await axiosInstance.get('/api/applications/check');
+  const data = res.data;
+
+  if (typeof data === 'boolean') return data;
+
+  const completed = data?.completed ?? data?.isCompleted ?? data?.checklistCompleted;
+  if (completed != null) return Boolean(completed);
+
+  return data?.applicationStatus === 'DONE' || data?.status === 'DONE';
 }
 
 /**
@@ -175,53 +214,65 @@ export async function getQuestions(applicationId, questionStep) {
   const res = await axiosInstance.get(`/api/applications/${applicationId}/questions`, {
     params: { step: questionStep },
   });
-  return {
-    questionStep: res.data.questionStep,
-    questions: res.data.questions ?? [],
-    isFinalStep: res.data.questionStep === 'STEP3',
-  };
+  return normalizeQuestionResponse(res.data, questionStep);
 }
 
-/** 한 step의 답변을 제출하고 백엔드가 내려준 nextStep을 화면 흐름용 값으로 정규화한다. */
+
+/**
+ * 한 step의 답변을 제출하고 서버가 결정한 다음 단계 질문을 반환한다.
+ *
+ * @param {number|string} applicationId - 신청 ID
+ * @param {string} currentStep - 이번에 제출하는 질문 단계
+ * @param {number[]} selectedOptionIds - 이 step의 질문마다 하나씩 고른 optionId 배열
+ * @param {boolean} finalSubmission - 이 step이 마지막이면 true
+ * @returns {Promise<{done: boolean, questionStep: string|null, questions: object[]|null, isFinalStep: boolean}>}
+ */
+
 export async function submitAnswers(applicationId, currentStep, selectedOptionIds, finalSubmission) {
+  let data;
+
   if (isMock()) {
-    return Promise.resolve(mockSubmitAnswers(currentStep));
-  }
-
-  const res = await axiosInstance.post(`/api/applications/${applicationId}/answers`, {
-    currentStep,
-    finalSubmission,
-    selectedOptionIds,
-  });
-
-  const data = res.data;
-  if (data.questionnaireCompleted) {
-    return { done: true, questionStep: null, questions: null, isFinalStep: true };
-  }
-
-  if ((data.additionalQuestions ?? []).length > 0) {
-    const questionStep = data.nextStep ?? 'STEP3';
-    return {
-      done: false,
-      questionStep,
-      questions: data.additionalQuestions,
-      isFinalStep: questionStep === 'STEP3',
+    data = mockSubmitAnswers(currentStep);
+    console.log('[answers] mock request', {
+      applicationId,
+      currentStep,
+      finalSubmission: Boolean(finalSubmission),
+      selectedOptionIds,
+    });
+    console.log('[answers] mock response', data);
+  } else {
+    const requestBody = {
+      currentStep,
+      finalSubmission: Boolean(finalSubmission),
+      selectedOptionIds,
     };
+
+    console.log('[answers] request', {
+      applicationId,
+      body: requestBody,
+    });
+
+    const res = await axiosInstance.post(
+      `/api/applications/${applicationId}/answers`,
+      requestBody,
+    );
+    data = res.data;
+    console.log('[answers] response', data);
   }
 
-  if (data.nextStep === 'STEP3') {
-    return { done: true, questionStep: null, questions: null, isFinalStep: true };
-  }
+  const nextQuestionResponse = normalizeQuestionResponse(data);
+  const hasNextQuestions =
+    nextQuestionResponse.questionStep != null && nextQuestionResponse.questions.length > 0;
 
-  if (!data.nextStep) {
+  if (isQuestionnaireDone(data) && !hasNextQuestions) {
     return { done: true, questionStep: null, questions: null, isFinalStep: true };
   }
 
   return {
     done: false,
-    questionStep: data.nextStep,
-    questions: null,
-    isFinalStep: data.nextStep === 'STEP3',
+    questionStep: nextQuestionResponse.questionStep,
+    questions: nextQuestionResponse.questions,
+    isFinalStep: nextQuestionResponse.isFinalStep,
   };
 }
 
@@ -231,9 +282,55 @@ export async function submitAnswers(applicationId, currentStep, selectedOptionId
  * @returns {Promise<object[]>} 서류 목록
  */
 export async function getDocuments(applicationId) {
+  let data;
+
   if (isMock()) {
-    return Promise.resolve(normalizeFinalDocuments(mockDocuments));
+    data = mockDocuments;
+  } else {
+    const res = await axiosInstance.get(`/api/applications/${applicationId}/documents`);
+    data = res.data;
   }
-  const res = await axiosInstance.get(`/api/applications/${applicationId}/documents`);
-  return normalizeFinalDocuments(res.data);
+
+  const documents = Array.isArray(data) ? data : data?.documents ?? [];
+
+  return documents.map((document) => ({
+    ...document,
+    title: document.title ?? document.documentName,
+    tag: document.tag ?? document.documentGroupName ?? null,
+    acceptedVariants: document.acceptedVariants ?? null,
+  }));
+}
+/**
+ * 질문 결과로 확정된 최종 서류 목록을 조회한다.
+ *
+ * @param {number|string} applicationId - 신청 ID
+ * @returns {Promise<{
+*   applicationId: number|string,
+*   sections: Array<{
+*     sectionCode: string,
+*     sectionName: string,
+*     items: Array<{
+*       itemId: number|string,
+*       itemName: string,
+*       sortOrder: number,
+*       defaultIncluded: boolean,
+*       groupId: number|string|null,
+*       groupName: string|null,
+*       groupSortOrder: number|null,
+*       documents: Array<object>
+*     }>
+*   }>
+* }>}
+*/
+export async function getResultDocuments(applicationId) {
+ if (isMock()) {
+   return Promise.resolve(mockResultDocuments);
+ }
+
+ const res = await axiosInstance.get(
+   `/api/applications/${applicationId}/result-documents`,
+ );
+
+ return res.data;
+
 }

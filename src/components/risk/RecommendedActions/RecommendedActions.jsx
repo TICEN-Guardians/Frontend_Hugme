@@ -1,4 +1,4 @@
-import { FaAngleRight, FaCircleInfo } from 'react-icons/fa6';
+import { FaCircleInfo } from 'react-icons/fa6';
 import styles from './RecommendedActions.module.css';
 
 export default function RecommendedActions({ title, actions }) {
@@ -9,17 +9,13 @@ export default function RecommendedActions({ title, actions }) {
       </p>
       <div className={styles.list}>
         {actions.map((action) => (
-          // TODO: 클릭 시 이동/상세 동작이 Design에 정의돼 있지 않음. 지금은 시각적으로만 클릭 가능하게 처리.
-          <button key={action.title} type="button" className={styles.row} onClick={() => {}}>
+          <div key={action.title} className={styles.row}>
             <span className={styles.icon}>{action.icon}</span>
             <div className={styles.content}>
               <p className={styles.actionTitle}>{action.title}</p>
               <p className={styles.actionDescription}>{action.description}</p>
             </div>
-            <span className={styles.chevron} aria-hidden="true">
-              <FaAngleRight />
-            </span>
-          </button>
+          </div>
         ))}
       </div>
     </div>

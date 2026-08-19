@@ -1,14 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { FaArrowRight, FaFileLines, FaLock } from 'react-icons/fa6';
+import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
-import {
-  LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
-} from '../../../hooks/useContractUpload.js';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
+import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
 import { sendDocumentMessage } from '../../../services/docChat/docChatService.js';
+import { getChecklistCompletion, getInfo } from '../../../services/checklist/checklistService.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
 
@@ -63,13 +62,23 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
   };
 }
 
+function hasOcrInfo(info) {
+  return Boolean(
+    info?.applicationId ||
+      info?.contractAddress ||
+      info?.housingTypeCode ||
+      info?.housingType ||
+      info?.contractType,
+  );
+}
+
 export default function DocumentChat() {
   const navigate = useNavigate();
   const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
-  const [applicationId] = useState(
-    () => location.state?.applicationId ?? sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY),
-  );
+  const [checklistCompleted, setChecklistCompleted] = useState(null);
+  const [hasAnalyzedContract, setHasAnalyzedContract] = useState(null);
+  const [checklistCheckError, setChecklistCheckError] = useState(null);
   const [activeSectionCode, setActiveSectionCode] = useState('BASIC');
   const [expandedDocumentId, setExpandedDocumentId] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -77,13 +86,60 @@ export default function DocumentChat() {
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState([]);
 
+  useEffect(() => {
+    let ignore = false;
+    const routeApplicationId = location.state?.applicationId;
+    const savedApplicationId =
+      routeApplicationId ?? sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+
+    if (!savedApplicationId) {
+      setHasAnalyzedContract(false);
+      return () => {
+        ignore = true;
+      };
+    }
+
+    sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(savedApplicationId));
+
+    getInfo(savedApplicationId)
+      .then((info) => {
+        if (!ignore) setHasAnalyzedContract(hasOcrInfo(info));
+      })
+      .catch(() => {
+        if (!ignore) setHasAnalyzedContract(false);
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, [location.state?.applicationId]);
+
+  useEffect(() => {
+    let ignore = false;
+
+    getChecklistCompletion()
+      .then((completed) => {
+        if (!ignore) setChecklistCompleted(completed);
+      })
+      .catch((requestError) => {
+        if (!ignore) {
+          setChecklistCheckError(requestError);
+          setChecklistCompleted(false);
+        }
+      });
+
+    return () => {
+      ignore = true;
+    };
+  }, []);
+
   const {
     preparation,
     isLoading,
     isUpdating,
     error,
     changePrepared,
-  } = useDocumentPreparation(applicationId);
+  } = useDocumentPreparation(checklistCompleted === true && hasAnalyzedContract === true);
 
   const sections = useMemo(
     () =>
@@ -106,7 +162,13 @@ export default function DocumentChat() {
   );
 
   const hasPreparation = Boolean(preparation && preparation.totalDocumentCount > 0);
-  const isLocked = !applicationId || !hasPreparation;
+  const isChecklistLoading = checklistCompleted === null || hasAnalyzedContract === null;
+  const isLocked = checklistCompleted !== true || hasAnalyzedContract !== true || !hasPreparation;
+  const selectedDocument =
+    documents.find((document) => document.documentId === selectedDocumentId) ?? null;
+  const selectedVariant = selectedDocument?.selectableVariants?.find(
+    (variant) => variant.variantId === selectedDocument.selectedVariantId,
+  );
 
   useEffect(() => {
     if (!sections.length) return;
@@ -124,7 +186,13 @@ export default function DocumentChat() {
     setExpandedDocumentId((prev) => (prev === documentId ? null : documentId));
   };
 
+  const handleSelectDocument = (documentId) => {
+    setSelectedDocumentId(documentId);
+    setExpandedDocumentId((prev) => (prev === documentId ? prev : null));
+  };
+
   const handleSelectVariant = (documentId, variantId) => {
+    setSelectedDocumentId(documentId);
     setVariantSelections((prev) => ({
       ...prev,
       [documentId]: variantId,
@@ -184,17 +252,58 @@ export default function DocumentChat() {
               }
             >
               <MessageList messages={messages} animateMessages />
+              {isSending && (
+                <motion.div
+                  className={styles.typingRow}
+                  initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: prefersReducedMotion ? 0.2 : 0.42, ease: [0.16, 1, 0.3, 1] }}
+                  aria-live="polite"
+                >
+                  <div className={styles.typingBubble}>
+                    <span className={styles.typingText}>답변을 생각하는 중</span>
+                    <span className={styles.typingDots} aria-hidden="true">
+                      <span />
+                      <span />
+                      <span />
+                    </span>
+                  </div>
+                </motion.div>
+              )}
+            </motion.div>
+          )}
+          {!isLoading && !isChecklistLoading && !isLocked && messages.length === 0 && (
+            <motion.div
+              className={`${styles.guideBox} ${styles.chatContent}`}
+              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={prefersReducedMotion ? { duration: 0 } : DOCUMENT_CHAT_TRANSITION}
+            >
+              <div className={styles.guideIcon}>
+                <FaRegMessage aria-hidden="true" />
+              </div>
+              <div className={styles.guideText}>
+                <p className={styles.guideTitle}>상담할 서류를 고른 뒤 질문을 입력해 주세요</p>
+                <p className={styles.guideDescription}>
+                  오른쪽 서류 목록에서 궁금한 서류를 선택하고, 입력창에 직접 질문하면 해당 서류 기준으로 안내해 드립니다.
+                </p>
+                <div className={styles.guideExamples} aria-label="질문 예시">
+                  <span>이 서류는 어떻게 준비해야 하나요?</span>
+                  <span>어디서 발급받을 수 있나요?</span>
+                  <span>제출할 때 주의할 점이 있나요?</span>
+                </div>
+              </div>
             </motion.div>
           )}
           {isLoading && (
             <p className={`${styles.status} ${styles.chatContent}`}>맞춤 준비서류를 불러오는 중입니다.</p>
           )}
-          {!isLoading && error && applicationId && (
+          {!isLoading && (error || checklistCheckError) && checklistCompleted === true && (
             <p className={`${styles.status} ${styles.chatContent}`}>
               맞춤 준비서류를 불러오지 못했습니다. 체크리스트 완료 후 다시 시도해주세요.
             </p>
           )}
-          {!isLoading && isLocked && (
+          {!isLoading && !isChecklistLoading && isLocked && (
             <motion.div
               className={styles.lockBox}
               initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12 }}
@@ -228,11 +337,27 @@ export default function DocumentChat() {
                   }
             }
           >
+            {!isChecklistLoading && !isLocked && selectedDocument && (
+              <motion.div
+                key={`${selectedDocument.documentId}-${selectedVariant?.variantId ?? 'document'}`}
+                className={styles.selectionBar}
+                initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8, scale: prefersReducedMotion ? 1 : 0.985 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: prefersReducedMotion ? 0.2 : 0.38, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <div className={styles.selectionContent}>
+                  <span className={styles.selectionLabel}>상담 중</span>
+                  <span className={styles.selectionTitle}>
+                    {selectedVariant?.title ?? selectedDocument.documentName}
+                  </span>
+                </div>
+              </motion.div>
+            )}
             <ChatInput
               onSend={handleSend}
               disabled={isLocked || isSending}
               placeholder={
-                isLocked ? '체크리스트 완료 후 상담이 활성화됩니다' : '서류를 선택하거나 궁금한 점을 입력하세요'
+                isLocked ? '체크리스트 완료 후 상담이 활성화됩니다' : '서류를 선택한 뒤 궁금한 점을 입력하세요'
               }
             />
           </motion.div>
@@ -240,7 +365,7 @@ export default function DocumentChat() {
       </div>
 
       <div className={styles.sidePane}>
-        {isLoading ? (
+        {isChecklistLoading || isLoading ? (
           <p className={styles.sideStatus}>맞춤 준비서류를 불러오는 중입니다.</p>
         ) : isLocked ? (
           <motion.div
@@ -274,7 +399,7 @@ export default function DocumentChat() {
             onTogglePrepared={handleTogglePrepared}
             onToggleExpanded={handleToggleExpanded}
             onSelectVariant={handleSelectVariant}
-            onSelectDocument={setSelectedDocumentId}
+            onSelectDocument={handleSelectDocument}
             isUpdating={isUpdating}
           />
         )}

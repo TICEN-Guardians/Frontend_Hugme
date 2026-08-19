@@ -4,58 +4,94 @@ import {
   getItemDocuments,
 } from '../services/products/productsService.js';
 
-const SECTION_CODES = ['BASIC', 'ADDITIONAL', 'DISCOUNT'];
 
-/**
- * 상품 체크리스트 화면의 데이터 fetch를 담당한다.
- * 섹션(1단계 탭) → pill(2단계, items가 null이 아닐 때만) → 서류 목록 순으로 조회한다.
- * @param {string} productCode - 상품 코드
- */
+const DEFAULT_SECTION_CODE = 'BASIC';
+
+const CHECKLIST_SECTIONS = [
+  { sectionCode: 'BASIC', sectionTitle: '기본서류' },
+  { sectionCode: 'ADDITIONAL', sectionTitle: '추가서류' },
+  { sectionCode: 'DISCOUNT', sectionTitle: '보증료 할인 서류' },
+];
+
+function sortItems(items) {
+  return [...items].sort((a, b) => a.sortOrder - b.sortOrder);
+}
+
+function groupItems(items) {
+  const grouped = new Map();
+
+  items.forEach((item) => {
+    if (item.groupId == null || !item.groupName) return;
+
+    if (!grouped.has(item.groupId)) {
+      grouped.set(item.groupId, {
+        groupId: item.groupId,
+        groupName: item.groupName,
+        groupSortOrder: item.groupSortOrder,
+        items: [],
+      });
+    }
+    grouped.get(item.groupId).items.push(item);
+  });
+
+  return [...grouped.values()]
+    .sort((a, b) => a.groupSortOrder - b.groupSortOrder)
+    .map((group) => ({ ...group, items: sortItems(group.items) }));
+}
+
+/** section → group → item → documents 흐름을 관리한다. */
 export function useProductChecklist(productCode) {
-  const [sections, setSections] = useState([]);
-  const [activeSectionCode, setActiveSectionCode] = useState(null);
-
-  const [pills, setPills] = useState([]);
-  const [activePillId, setActivePillId] = useState(null);
+  const [activeSectionCode, setActiveSectionCode] = useState(DEFAULT_SECTION_CODE);
+  const [groups, setGroups] = useState([]);
+  const [activeGroupId, setActiveGroupId] = useState(null);
+  const [items, setItems] = useState([]);
+  const [activeItemId, setActiveItemId] = useState(null);
 
   const [documents, setDocuments] = useState([]);
 
-  const [status, setStatus] = useState('loading'); // 'loading' | 'success' | 'error'
+  const [status, setStatus] = useState('loading');
   const [error, setError] = useState(null);
   const [isSectionLoading, setIsSectionLoading] = useState(false);
   const [isDocumentsLoading, setIsDocumentsLoading] = useState(false);
   const [documentsError, setDocumentsError] = useState(null);
 
-  const loadPillDocuments = useCallback(
-    (itemId) => {
+  const loadItemDocuments = useCallback(
+    async (itemId) => {
+      setActiveItemId(itemId);
       setIsDocumentsLoading(true);
       setDocumentsError(null);
-      getItemDocuments(productCode, itemId)
-        .then((result) => setDocuments(Array.isArray(result) ? result : []))
-        .catch((err) => setDocumentsError(err))
-        .finally(() => setIsDocumentsLoading(false));
+
+      setDocuments([]);
+
+      try {
+        const nextDocuments = await getItemDocuments(productCode, itemId);
+        setDocuments(Array.isArray(nextDocuments) ? nextDocuments : []);
+      } catch (err) {
+        setDocumentsError(err);
+        setDocuments([]);
+      } finally {
+        setIsDocumentsLoading(false);
+      }
+
     },
     [productCode],
   );
 
   const applySection = useCallback(
     (section) => {
-      setActiveSectionCode(section?.sectionCode ?? null);
+      const sectionItems = sortItems(section?.items ?? []);
+      const nextGroups = groupItems(sectionItems);
+      const nextItems = nextGroups.length > 0 ? nextGroups[0].items : sectionItems;
 
-      const nextPills = section?.items ?? [];
-      setPills(nextPills);
 
-      if (nextPills.length === 0) {
-        setActivePillId(null);
-        setDocuments(section?.documents ?? []);
-        return;
-      }
-
-      const firstPill = nextPills[0];
-      setActivePillId(firstPill.itemId);
-      loadPillDocuments(firstPill.itemId);
+      setActiveSectionCode(section?.sectionCode ?? DEFAULT_SECTION_CODE);
+      setGroups(nextGroups);
+      setActiveGroupId(nextGroups[0]?.groupId ?? null);
+      setItems(nextItems);
+      setActiveItemId(null);
+      setDocuments([]);
     },
-    [loadPillDocuments],
+    [],
   );
 
   useEffect(() => {
@@ -63,12 +99,12 @@ export function useProductChecklist(productCode) {
     setStatus('loading');
     setError(null);
 
-    Promise.all(SECTION_CODES.map((sectionCode) => getChecklistBySection(productCode, sectionCode)))
-      .then((data) => {
+
+    getChecklistBySection(productCode, DEFAULT_SECTION_CODE)
+      .then((section) => {
         if (ignore) return;
-        const nextSections = data.filter(Boolean);
-        setSections(nextSections);
-        applySection(nextSections[0] ?? null);
+        applySection(section);
+
         setStatus('success');
       })
       .catch((err) => {
@@ -83,32 +119,44 @@ export function useProductChecklist(productCode) {
   }, [productCode, applySection]);
 
   const changeSection = useCallback(
-    (sectionCode) => {
+    async (sectionCode) => {
       setIsSectionLoading(true);
-      getChecklistBySection(productCode, sectionCode)
-        .then((section) => applySection(section))
-        .catch((err) => {
-          setError(err);
-          setStatus('error');
-        })
-        .finally(() => setIsSectionLoading(false));
+      setError(null);
+
+      try {
+        const section = await getChecklistBySection(productCode, sectionCode);
+        applySection(section);
+        setStatus('success');
+      } catch (err) {
+        setError(err);
+        setStatus('error');
+      } finally {
+        setIsSectionLoading(false);
+      }
     },
     [productCode, applySection],
   );
 
-  const changePill = useCallback(
-    (itemId) => {
-      setActivePillId(itemId);
-      loadPillDocuments(itemId);
+  const changeGroup = useCallback(
+    (groupId) => {
+      const selectedGroup = groups.find((group) => group.groupId === groupId);
+      const nextItems = selectedGroup?.items ?? [];
+
+      setActiveGroupId(groupId);
+      setItems(nextItems);
+      setActiveItemId(null);
+      setDocuments([]);
     },
-    [loadPillDocuments],
+    [groups],
   );
 
   return {
-    sections,
+    sections: CHECKLIST_SECTIONS,
     activeSectionCode,
-    pills,
-    activePillId,
+    groups,
+    activeGroupId,
+    items,
+    activeItemId,
     documents,
     status,
     error,
@@ -116,6 +164,7 @@ export function useProductChecklist(productCode) {
     isDocumentsLoading,
     documentsError,
     changeSection,
-    changePill,
+    changeGroup,
+    changeItem: loadItemDocuments,
   };
 }

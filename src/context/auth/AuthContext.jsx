@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import {
+  checkEmail as checkEmailRequest,
   getMe,
   login as loginRequest,
   logout as logoutRequest,
@@ -44,6 +45,8 @@ export function AuthProvider({ children }) {
 
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
+  const checkEmail = useCallback((email) => checkEmailRequest(email), []);
+
   const login = useCallback(async (email, password) => {
     await loginRequest(email, password);
     const me = await getMe();
@@ -69,10 +72,11 @@ export function AuthProvider({ children }) {
       isAuthenticated,
       isAuthLoading,
       signup,
+      checkEmail,
       login,
       logout,
     }),
-    [user, isAuthenticated, isAuthLoading, signup, login, logout],
+    [user, isAuthenticated, isAuthLoading, signup, checkEmail, login, logout],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

@@ -1,0 +1,49 @@
+.card {
+  box-sizing: border-box;
+  height: 100%;
+  padding: var(--space-6) var(--space-8);
+  border-radius: var(--radius-xl);
+  background: var(--on-accent);
+  box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.04);
+}
+
+.title {
+  margin: 0 0 var(--space-5);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.headCell {
+  padding: 0 0 var(--space-2);
+  border-bottom: 0.1rem solid var(--border-default);
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  text-align: left;
+}
+
+.row {
+  border-bottom: 0.1rem solid var(--border-subtle);
+}
+
+.row:last-child {
+  border-bottom: none;
+}
+
+.cell {
+  padding: var(--space-3) 0;
+  color: var(--text-strong);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.cell:first-child {
+  color: var(--text-secondary);
+  font-weight: 500;
+}

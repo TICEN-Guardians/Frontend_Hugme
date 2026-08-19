@@ -6,11 +6,20 @@ import styles from './Layout.module.css';
 export default function Layout() {
   const { pathname } = useLocation();
   const isChatAppPage = pathname === '/user-chat' || pathname === '/doc-chat';
+  const isChecklistDetailPage =
+    pathname.startsWith('/guarantee-checklist/') ||
+    (pathname.startsWith('/products/') && pathname.endsWith('/checklist'));
 
   return (
     <div className={`${styles.pageWrapper} ${isChatAppPage ? styles.chatPageWrapper : ''}`}>
       <Header />
-      <main className={isChatAppPage ? `${styles.main} ${styles.chatMain}` : `${styles.main} container`}>
+      <main
+        className={
+          isChatAppPage
+            ? `${styles.main} ${styles.chatMain}`
+            : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
+        }
+      >
         <Outlet />
       </main>
       <Footer />

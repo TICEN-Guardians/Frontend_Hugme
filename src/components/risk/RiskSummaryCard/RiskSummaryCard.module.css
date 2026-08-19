@@ -44,6 +44,13 @@
   color: var(--text-green-dark);
 }
 
+.analyzedAt {
+  margin-left: auto;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+}
+
 .address {
   margin: 0 0 var(--space-5);
   color: var(--text-disabled);
