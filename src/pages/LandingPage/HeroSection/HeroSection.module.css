@@ -17,13 +17,9 @@
   box-shadow: 0 1rem 3rem rgba(15, 23, 42, 0.05);
 }
 
-.landing1Hero::before,
 .landing1Hero::after,
-.landing2Hero::before,
 .landing2Hero::after,
-.landing3Hero::before,
 .landing3Hero::after,
-.landing4Hero::before,
 .landing4Hero::after {
   content: '';
   position: absolute;
@@ -40,38 +36,6 @@
   background-repeat: no-repeat;
   pointer-events: none;
   will-change: opacity, transform;
-}
-
-.landing1Hero::before {
-  z-index: 0;
-  background-image: url('/images/landing/Landing1.png');
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.landing2Hero::before {
-  z-index: 0;
-  background-image: url('/images/landing/Landing2.png');
-  background-position: center center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.landing3Hero::before {
-  z-index: 0;
-  background-image: url('/images/landing/Landing3.png');
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
-}
-
-.landing4Hero::before {
-  z-index: 0;
-  background-image: url('/images/landing/Landing4.png');
-  background-position: center;
-  background-size: cover;
-  background-repeat: no-repeat;
 }
 
 .landing1Hero::after {
@@ -301,12 +265,4 @@
 
 .imageHeroNote .availableIcon {
   color: #72c676;
-}
-
-.imageHeroNote .lockIcon {
-  color: rgba(255, 255, 255, 0.82);
-}
-
-.noteDivider {
-  color: rgba(255, 255, 255, 0.5);
 }

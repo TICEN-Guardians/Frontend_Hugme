@@ -1,4 +1,4 @@
-import axiosInstance from '../../api/axiosInstance.js';
+import axiosInstance from '../axiosInstance.js';
 
 export const searchProperty = async (address) => {
   const { data } = await axiosInstance.post('/api/properties/search', { address });

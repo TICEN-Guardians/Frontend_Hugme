@@ -1,5 +1,5 @@
 import { useCallback, useState } from 'react';
-import { getQuestions, submitAnswers } from '../services/checklist/checklistService.js';
+import { getQuestions, submitAnswers } from '../api/checklist/checklistService.js';
 
 const FIRST_STEP = 'STEP1';
 const SECOND_STEP = 'STEP2';
