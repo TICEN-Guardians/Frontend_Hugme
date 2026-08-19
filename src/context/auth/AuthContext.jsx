@@ -1,5 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo,  useRef,useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  clearAccessToken,
+} from '../../api/tokenStore.js';
 import {
   checkEmail as checkEmailRequest,
   getMe,
@@ -10,13 +13,60 @@ import {
 } from '../../api/auth/authService.js';
 
 export const AuthContext = createContext(null);
-
+const AUTH_CHANNEL_NAME = 'hugme-auth';
 export function AuthProvider({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
+  const authChannelRef = useRef(null);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+ 
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.BroadcastChannel === 'undefined'
+    ) {
+      return undefined;
+    }
+  
+    const channel = new BroadcastChannel(
+      AUTH_CHANNEL_NAME,
+    );
+  
+    authChannelRef.current = channel;
+  
+    const handleAuthMessage = (event) => {
+      if (event.data?.type !== 'LOGOUT') {
+        return;
+      }
+  
+      clearAccessToken();
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAuthLoading(false);
+  
+      navigate('/', { replace: true });
+    };
+  
+    channel.addEventListener(
+      'message',
+      handleAuthMessage,
+    );
+  
+    return () => {
+      channel.removeEventListener(
+        'message',
+        handleAuthMessage,
+      );
+  
+      channel.close();
+  
+      if (authChannelRef.current === channel) {
+        authChannelRef.current = null;
+      }
+    };
+  }, [navigate]);
 
   useEffect(() => {
     let ignore = false;
@@ -66,7 +116,7 @@ export function AuthProvider({ children }) {
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
   const checkEmail = useCallback((email) => checkEmailRequest(email), []);
-
+  
   const login = useCallback(async (email, password) => {
     await loginRequest(email, password);
     const me = await getMe();
@@ -77,14 +127,20 @@ export function AuthProvider({ children }) {
     return me;
   }, []);
 
-  const logout = useCallback(async () => {
-    try {
-      await logoutRequest();
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-  }, []);
+ const logout = useCallback(async () => {
+  try {
+    await logoutRequest();
+  } finally {
+    clearAccessToken();
+    setUser(null);
+    setIsAuthenticated(false);
+
+    authChannelRef.current?.postMessage({
+      type: 'LOGOUT',
+      timestamp: Date.now(),
+    });
+  }
+}, []);
 
   const value = useMemo(
     () => ({
