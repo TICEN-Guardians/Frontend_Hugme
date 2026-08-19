@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getDocumentPreparation,
   updateDocumentPreparation,
-} from '../services/docChat/docChatService.js';
+} from '../api/docChat/docChatService.js';
 
 export function useDocumentPreparation(enabled = true) {
   const [preparation, setPreparation] = useState(null);

@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import {
   getChecklistBySection,
   getItemDocuments,
-} from '../services/products/productsService.js';
+} from '../api/products/productsService.js';
 
 
 const DEFAULT_SECTION_CODE = 'BASIC';

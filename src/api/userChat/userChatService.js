@@ -1,5 +1,5 @@
-import axiosInstance from '../../api/axiosInstance.js';
-import { getAuthorizationHeader } from '../../api/tokenStore.js';
+import axiosInstance from '../axiosInstance.js';
+import { getAuthorizationHeader } from '../tokenStore.js';
 
 const GUIDE_CHAT_BASE_URL = '/api/chatbot/guide';
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -13,7 +13,7 @@ function parseSseEvent(rawEvent) {
   let event = 'message';
   const dataLines = [];
 
-  for (const line of rawEvent.split('\n')) {
+  for (const line of rawEvent.replace(/\r\n/g, '\n').split('\n')) {
     if (line.startsWith('event:')) {
       event = line.slice('event:'.length).trim();
     } else if (line.startsWith('data:')) {
@@ -49,6 +49,7 @@ export async function sendGuideMessage(sessionId, message, onToken) {
     if (done) break;
 
     buffer += decoder.decode(value, { stream: true });
+    buffer = buffer.replace(/\r\n/g, '\n');
 
     let boundary = buffer.indexOf('\n\n');
     while (boundary !== -1) {
@@ -63,6 +64,14 @@ export async function sendGuideMessage(sessionId, message, onToken) {
       }
 
       boundary = buffer.indexOf('\n\n');
+    }
+  }
+
+  buffer += decoder.decode();
+  if (buffer.trim()) {
+    const { event, data } = parseSseEvent(buffer);
+    if (event === 'done' && data) {
+      finalResponse = JSON.parse(data);
     }
   }
 

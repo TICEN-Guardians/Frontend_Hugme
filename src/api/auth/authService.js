@@ -1,5 +1,5 @@
-import axiosInstance from '../../api/axiosInstance.js';
-import { clearAccessToken, setAccessToken } from '../../api/tokenStore.js';
+import axiosInstance from '../axiosInstance.js';
+import { clearAccessToken, setAccessToken } from '../tokenStore.js';
 
 export async function signup(email, password, name) {
   const response = await axiosInstance.post('/api/auth/signup', {

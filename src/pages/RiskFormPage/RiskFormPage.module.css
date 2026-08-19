@@ -127,12 +127,6 @@
   margin-bottom: var(--space-2);
 }
 
-.twoColumnFields {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-4);
-}
-
 .input,
 .unitInputWrapper {
   box-sizing: border-box;
@@ -454,7 +448,6 @@
     font-size: var(--text-2xl);
   }
 
-  .twoColumnFields,
   .inlineRow {
     grid-template-columns: 1fr;
     flex-direction: column;

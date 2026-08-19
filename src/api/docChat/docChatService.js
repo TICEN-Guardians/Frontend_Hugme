@@ -1,4 +1,4 @@
-import axiosInstance from '../../api/axiosInstance.js';
+import axiosInstance from '../axiosInstance.js';
 
 const DOCUMENT_CHAT_BASE_URL = '/api/chatbot/documents';
 

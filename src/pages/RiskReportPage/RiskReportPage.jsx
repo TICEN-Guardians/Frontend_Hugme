@@ -23,7 +23,7 @@ import RiskEvidenceCards from '../../components/risk/RiskEvidenceCards/RiskEvide
 import RiskScoreCard from '../../components/risk/RiskScoreCard/RiskScoreCard.jsx';
 import RiskSummaryCard from '../../components/risk/RiskSummaryCard/RiskSummaryCard.jsx';
 import StatCard from '../../components/risk/StatCard/StatCard.jsx';
-import { getDiagnosis } from '../../services/propertyRisk/propertyRiskService.js';
+import { getDiagnosis } from '../../api/propertyRisk/propertyRiskService.js';
 import styles from './RiskReportPage.module.css';
 
 const GRADE = {

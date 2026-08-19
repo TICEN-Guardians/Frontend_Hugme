@@ -1,8 +1,4 @@
-import axiosInstance from '../../api/axiosInstance.js';
-import { mockChecklistByProduct, mockItemDocuments } from '../../mocks/products.mock.js';
-
-const isMock = () => import.meta.env.VITE_USE_MOCK === 'true';
-
+import axiosInstance from '../axiosInstance.js';
 
 function normalizeDocuments(documents) {
   return [...documents]
@@ -17,7 +13,6 @@ function normalizeDocuments(documents) {
       documentGroupName: document.documentGroupName,
       documentGroupSortOrder: document.documentGroupSortOrder,
     }));
-
 }
 
 /**
@@ -27,9 +22,6 @@ function normalizeDocuments(documents) {
  * @returns {Promise<object|null>} 섹션 체크리스트 데이터
  */
 export async function getChecklistBySection(productCode, sectionCode) {
-  if (isMock()) {
-    return Promise.resolve(mockChecklistByProduct[productCode]?.[sectionCode] ?? null);
-  }
   const res = await axiosInstance.get(`/api/products/${productCode}/checklist`, {
     params: { sectionCode },
   });
@@ -43,17 +35,9 @@ export async function getChecklistBySection(productCode, sectionCode) {
  * @returns {Promise<object[]>} 화면에서 사용하는 서류 목록
  */
 export async function getItemDocuments(productCode, itemId) {
-  let data;
+  const res = await axiosInstance.get(
+    `/api/products/${productCode}/checklist/items/${itemId}/documents`,
+  );
 
-  if (isMock()) {
-    data = mockItemDocuments[itemId] ?? { documents: [] };
-  } else {
-    const res = await axiosInstance.get(
-      `/api/products/${productCode}/checklist/items/${itemId}/documents`,
-    );
-    data = res.data;
-  }
-
-
-  return normalizeDocuments(data.documents ?? []);
+  return normalizeDocuments(res.data.documents ?? []);
 }

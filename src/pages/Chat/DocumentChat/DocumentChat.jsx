@@ -6,8 +6,8 @@ import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
 import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
-import { sendDocumentMessage } from '../../../services/docChat/docChatService.js';
-import { getChecklistCompletion, getInfo } from '../../../services/checklist/checklistService.js';
+import { sendDocumentMessage } from '../../../api/docChat/docChatService.js';
+import { getChecklistCompletion, getInfo } from '../../../api/checklist/checklistService.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
 

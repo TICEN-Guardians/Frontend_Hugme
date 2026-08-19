@@ -4,7 +4,7 @@ import { FaArrowUp, FaCircleCheck, FaCircleInfo } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
 import Modal from '../../components/common/Modal/Modal.jsx';
-import { analyzeDiagnosis, createDiagnosis, resolveProperty, searchProperty, updateDiagnosisDetails, uploadRegistry } from '../../services/propertyRisk/propertyRiskService.js';
+import { analyzeDiagnosis, createDiagnosis, resolveProperty, searchProperty, updateDiagnosisDetails, uploadRegistry } from '../../api/propertyRisk/propertyRiskService.js';
 import styles from './RiskFormPage.module.css';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
@@ -183,7 +183,7 @@ export default function RiskFormPage() {
     <div className={styles.root}>
       <form className={styles.form} onSubmit={handleSubmit} noValidate>
         <motion.header className={styles.hero} initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: prefersReducedMotion ? 0.35 : 1.05, ease: ENTRY_EASE }}>
-          <span className={styles.heroBadge}>HUGME 위험도 진단 · {stage === 'registry' ? '1단계 등기 확인' : '면적 추가 입력'}</span>
+          <span className={styles.heroBadge}>HUGME 위험도 진단</span>
           <h1 className={styles.title}>매물 위험도 진단</h1>
           <p className={styles.subtitle}>계약 전 매물 정보를 입력하고 등기부등본을 첨부해 위험 요소를 확인하세요.</p>
         </motion.header>

@@ -585,8 +585,7 @@
     grid-template-columns: 1fr;
   }
 
-  .boardHeader > :first-child,
-  .pillSlot {
+  .boardHeader > :first-child {
     grid-column: auto;
   }
 

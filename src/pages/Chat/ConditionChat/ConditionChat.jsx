@@ -9,7 +9,7 @@ import {
   getEntryQuestions,
   getGuideChatHistory,
   sendGuideMessage,
-} from '../../../services/userChat/userChatService.js';
+} from '../../../api/userChat/userChatService.js';
 import styles from './ConditionChat.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
