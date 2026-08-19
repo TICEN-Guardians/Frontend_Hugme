@@ -1,4 +1,5 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import { useAuth } from './context/auth/AuthContext.jsx';
 import FullWidthLayout from './layout/FullWidthLayout.jsx';
 import Layout from './layout/Layout.jsx';
 import ConditionChat from './pages/Chat/ConditionChat/ConditionChat.jsx';
@@ -14,6 +15,21 @@ import RiskFormPage from './pages/RiskFormPage/RiskFormPage.jsx';
 import RiskReportPage from './pages/RiskReportPage/RiskReportPage.jsx';
 import SignupPage from './pages/SignupPage/SignupPage.jsx';
 
+function ProtectedRoute() {
+  const { isAuthenticated, isAuthLoading } = useAuth();
+  const location = useLocation();
+
+  if (isAuthLoading) {
+    return null;
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/auth/login" replace state={{ from: location }} />;
+  }
+
+  return <Outlet />;
+}
+
 export default function App() {
   return (
     <Routes>
@@ -27,8 +43,10 @@ export default function App() {
         <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
         <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
         {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
-        <Route path="/risk/new" element={<RiskFormPage />} />
-        <Route path="/risk/:reportId" element={<RiskReportPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/risk/new" element={<RiskFormPage />} />
+          <Route path="/risk/:reportId" element={<RiskReportPage />} />
+        </Route>
       </Route>
 
       {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
@@ -37,9 +55,11 @@ export default function App() {
         <Route path="/guarantee-checklist/:guaranteeType" element={<ProductChecklistPage />} />
         <Route path="/products" element={<ProductsPage />} />
         <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
-        <Route path="/doc-chat" element={<DocumentChat />} />
         <Route path="/user-chat" element={<ConditionChat />} />
-        <Route path="/main" element={<MainPage />} />
+        <Route element={<ProtectedRoute />}>
+          <Route path="/doc-chat" element={<DocumentChat />} />
+          <Route path="/main" element={<MainPage />} />
+        </Route>
       </Route>
 
       <Route path="*" element={<ErrorPage />} />

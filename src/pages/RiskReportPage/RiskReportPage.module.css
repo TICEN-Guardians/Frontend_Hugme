@@ -1,155 +1,91 @@
 .root {
   box-sizing: border-box;
-  padding: var(--space-10) 0 var(--space-20);
-  background: var(--border-subtle);
+  padding: 4rem 0 8rem;
+  background: #fff;
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-8);
-  width: 100%;
+.reportContainer {
+  width: min(140rem, calc(100% - 6.4rem));
+  margin: 0 auto;
 }
 
-.scoreRow {
+.reportLayout {
   display: grid;
-  grid-template-columns: 34rem 1fr;
-  gap: var(--space-5);
-  align-items: stretch;
+  grid-template-columns: 32rem minmax(0, 1fr);
+  gap: 4rem;
+  align-items: start;
+  margin-top: 3.2rem;
 }
 
-.statGrid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
-}
-
-.twoColRow {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: var(--space-5);
-  align-items: stretch;
-}
-
-.sectionHeading {
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: var(--space-2) 0 calc(-1 * var(--space-3));
-}
-
-.sectionIndex {
-  display: flex;
-  flex-shrink: 0;
-  align-items: center;
-  justify-content: center;
-  width: var(--space-6);
-  height: var(--space-6);
-  border-radius: var(--radius-pill);
-  background: var(--brand-blue);
-  color: var(--on-accent);
-  font-size: var(--text-sm);
-  font-weight: 700;
-}
-
-.sectionTitle {
-  margin: 0;
-  color: var(--text-primary);
-  font-size: var(--text-lg);
-  font-weight: 800;
+.summaryColumn {
+  position: sticky;
+  top: 9.6rem;
 }
 
 .disclaimer {
-  margin: var(--space-4) 0 0;
-  color: var(--text-disabled);
-  font-size: var(--text-xs);
+  margin: 5.6rem 0 0;
+  color: #6b7280;
+  font-size: 1.3rem;
+  line-height: 1.6;
   text-align: center;
 }
 
 .stateCard {
   box-sizing: border-box;
-  padding: var(--space-12);
-  border-radius: var(--radius-xl);
-  background: var(--on-accent);
+  padding: 4.8rem 2.4rem;
+  border: 0.1rem solid #e5e7eb;
+  border-radius: 1.8rem;
+  background: #fff;
   color: var(--text-secondary);
+  font-size: 1.5rem;
   text-align: center;
 }
 
-@media (max-width: 900px) {
-  .scoreRow,
-  .twoColRow {
-    grid-template-columns: 1fr;
-  }
-
-  .statGrid {
-    grid-template-columns: repeat(2, 1fr);
-  }
+.restartModal {
+  max-width: 46rem;
 }
 
-.basisNotes {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
-  padding: var(--space-4) var(--space-5);
-  border-radius: var(--radius-lg);
-  background: var(--blue-tint-50);
-}
-
-.basisNote {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  color: var(--text-blue-dark);
-  font-size: var(--text-sm);
-}
-
-.overviewRow {
-  display: grid;
-  grid-template-columns: 30rem 1fr 1fr;
-  gap: var(--space-5);
-  align-items: stretch;
-}
-
-.summaryPanel {
-  box-sizing: border-box;
-  height: 100%;
-  padding: var(--space-6) var(--space-8);
-  border-radius: var(--radius-xl);
-  background: var(--on-accent);
-  box-shadow: 0 0.2rem 1rem rgba(0, 0, 0, 0.04);
-}
-
-.summaryTitle {
-  margin: 0 0 var(--space-4);
+.restartModalTitle {
+  margin: 0 0 1.2rem;
   color: var(--text-primary);
-  font-size: var(--text-sm);
-  font-weight: 700;
+  font-size: 2rem;
+  font-weight: 800;
 }
 
-.summaryText {
+.restartModalDescription {
   margin: 0;
   color: var(--text-secondary);
-  font-size: var(--text-sm);
-  line-height: 1.9;
+  font-size: 1.4rem;
+  line-height: 1.7;
 }
 
-.summaryNote {
+.restartModalActions {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-2);
-  margin: var(--space-4) 0 0;
-  padding: var(--space-3);
-  border-radius: var(--radius-md);
-  background: var(--blue-tint-50);
-  color: var(--text-blue-dark);
-  font-size: var(--text-xs);
-  line-height: 1.6;
+  justify-content: flex-end;
+  gap: 1.2rem;
+  margin-top: 2.4rem;
+}
+
+.restartConfirmButton {
+  gap: 0.8rem;
 }
 
 @media (max-width: 1200px) {
-  .overviewRow {
+  .reportLayout {
     grid-template-columns: 1fr;
+  }
+
+  .summaryColumn {
+    position: static;
+  }
+}
+
+@media (max-width: 760px) {
+  .root {
+    padding-top: 2.8rem;
+  }
+
+  .reportContainer {
+    width: calc(100% - 4rem);
   }
 }

@@ -1,4 +1,5 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   checkEmail as checkEmailRequest,
   getMe,
@@ -11,6 +12,8 @@ import {
 export const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
@@ -42,6 +45,23 @@ export function AuthProvider({ children }) {
       ignore = true;
     };
   }, []);
+
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+
+      if (location.pathname.startsWith('/risk')) {
+        navigate('/', { replace: true });
+      }
+    };
+
+    window.addEventListener('auth:expired', handleAuthExpired);
+
+    return () => {
+      window.removeEventListener('auth:expired', handleAuthExpired);
+    };
+  }, [location.pathname, navigate]);
 
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
