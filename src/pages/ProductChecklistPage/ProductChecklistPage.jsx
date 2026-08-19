@@ -67,8 +67,7 @@ const CONTRACT_TYPE_LABEL = {
 
 const PARTY_TYPE_LABEL = {
   PERSON: '개인',
-  INDIVIDUAL: '개인',
-  CORPORATION: '법인',
+  COMPANY: '법인',
 };
 
 function displayValue(value, labels) {
