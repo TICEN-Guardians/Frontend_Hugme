@@ -154,7 +154,6 @@ function renderAssistantContent(content, sources) {
     if (!trimmed) {
       flushParagraph();
       flushList();
-      flushOrderedList();
       return;
     }
 
