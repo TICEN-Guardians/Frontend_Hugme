@@ -124,6 +124,7 @@ export default function QuestionModal({
   initialAnswerIds = [],
   isLoading,
   isSubmitting,
+  onClose,
   onBack,
   onSubmitStep,
 }) {
@@ -165,7 +166,7 @@ export default function QuestionModal({
   const displayQuestions = getDisplayQuestions(questions);
 
   return (
-    <Modal isOpen={isOpen} onClose={() => {}} panelClassName={styles.modalPanel}>
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.modalPanel}>
       <p className={styles.eyebrow}>맞춤 서류 확인</p>
 
       <div className={styles.headerRow}>

@@ -518,6 +518,13 @@ export default function ProductChecklistPage() {
     reopenOcrConfirm();
   };
 
+  const handleQuestionClose = () => {
+    if (questionFlow.isSubmitting) return;
+
+    questionFlow.reset();
+    closeOcrConfirm();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -532,7 +539,7 @@ export default function ProductChecklistPage() {
     key: group.groupId,
     label: group.groupName,
   }));
-  const hasAnalysisResult = Boolean(ocrInfo);
+  const hasAnalysisResult = step === 'done' && Boolean(ocrInfo);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -718,6 +725,7 @@ export default function ProductChecklistPage() {
           questionFlow.questionStep == null
         }
         isSubmitting={questionFlow.isSubmitting}
+        onClose={handleQuestionClose}
         onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
       />
