@@ -20,34 +20,6 @@ const FEATURE_PATHS = {
   DOCUMENT_GUIDE: '/doc-chat',
 };
 
-const sidebarContainerVariants = {
-  hidden: {
-    opacity: 0,
-  },
-  visible: {
-    opacity: 1,
-    transition: {
-      delayChildren: 0.18,
-      staggerChildren: 0.08,
-    },
-  },
-};
-
-const sidebarItemVariants = {
-  hidden: (reducedMotion) => ({
-    opacity: 0,
-    y: reducedMotion ? 0 : 16,
-  }),
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: {
-      duration: 0.72,
-      ease: ENTRY_EASE,
-    },
-  },
-};
-
 const emptyStateVariants = {
   hidden: {
     opacity: 0,
@@ -345,38 +317,6 @@ export default function ConditionChat() {
 
   return (
     <div className={styles.workspace}>
-      <motion.aside
-        className={styles.sidebar}
-        initial={{ opacity: 0, x: prefersReducedMotion ? 0 : -42 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: prefersReducedMotion ? 0.35 : 1, ease: ENTRY_EASE }}
-      >
-        <motion.div
-          className={styles.sidebarTop}
-          custom={prefersReducedMotion}
-          variants={sidebarContainerVariants}
-          initial="hidden"
-          animate="visible"
-        >
-          <motion.h1
-            className={styles.sidebarTitle}
-            custom={prefersReducedMotion}
-            variants={sidebarItemVariants}
-          >
-            조건상담
-          </motion.h1>
-          <motion.p
-            className={styles.historyTitle}
-            custom={prefersReducedMotion}
-            variants={sidebarItemVariants}
-          >
-            {isAuthenticated
-              ? '로그인 계정의 상담 이력이 이어서 표시됩니다.'
-              : '로그인하면 상담 이력이 저장돼요.'}
-          </motion.p>
-        </motion.div>
-      </motion.aside>
-
       <motion.section
         className={styles.chatPanel}
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 34, scale: prefersReducedMotion ? 1 : 0.988 }}
