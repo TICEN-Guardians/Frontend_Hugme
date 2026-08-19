@@ -5,7 +5,7 @@ import {
   getResultDocuments,
   updateInfo,
   uploadLeaseContract,
-} from '../services/checklist/checklistService.js';
+} from '../api/checklist/checklistService.js';
 
 export const LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY = 'hugme:lastDocumentChatApplicationId';
 

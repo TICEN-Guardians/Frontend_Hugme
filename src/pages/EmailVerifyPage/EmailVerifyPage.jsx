@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { verifyMail } from '../../services/auth/authService.js';
+import { verifyMail } from '../../api/auth/authService.js';
 import AuthLayout from '../../layout/AuthLayout/AuthLayout.jsx';
 import styles from './EmailVerifyPage.module.css';
 

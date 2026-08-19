@@ -6,7 +6,7 @@ import {
   logout as logoutRequest,
   reissue,
   signup as signupRequest,
-} from '../../services/auth/authService.js';
+} from '../../api/auth/authService.js';
 
 export const AuthContext = createContext(null);
 
