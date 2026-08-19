@@ -20,12 +20,21 @@ export async function checkEmail(email) {
 }
 
 export async function login(email, password) {
-  const response = await axiosInstance.post('/api/auth/login', {
-    email,
-    password,
-  });
+  const response = await axiosInstance.post(
+    '/api/auth/login',
+    {
+      email,
+      password,
+    },
+    {
+      skipAuthRefresh: true,
+    },
+  );
 
-  setAccessToken(response.data.accessToken, response.data.tokenType);
+  setAccessToken(
+    response.data.accessToken,
+    response.data.tokenType,
+  );
 
   return response.data;
 }

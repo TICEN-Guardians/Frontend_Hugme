@@ -21,7 +21,12 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
- 
+  const AUTH_ENTRY_PATHS = [
+    '/auth/login',
+    '/auth/signup',
+    '/auth/mail/verify',
+    '/api/auth/mail/verify',
+  ];
   useEffect(() => {
     if (
       typeof window === 'undefined' ||
@@ -69,19 +74,27 @@ export function AuthProvider({ children }) {
   }, [navigate]);
 
   useEffect(() => {
+    if (AUTH_ENTRY_PATHS.includes(location.pathname)) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAuthLoading(false);
+  
+      return undefined;
+    }
+  
     let ignore = false;
-
+  
     reissue()
       .then(() => getMe())
       .then((me) => {
         if (ignore) return;
-
+  
         setUser(me);
         setIsAuthenticated(true);
       })
       .catch(() => {
         if (ignore) return;
-
+  
         setUser(null);
         setIsAuthenticated(false);
       })
@@ -90,7 +103,7 @@ export function AuthProvider({ children }) {
           setIsAuthLoading(false);
         }
       });
-
+  
     return () => {
       ignore = true;
     };

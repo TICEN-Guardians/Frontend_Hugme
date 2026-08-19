@@ -71,11 +71,15 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
 
-    const shouldRefresh =
-      response.status === 401 &&
-      !config._retry &&
-      !config.skipAuthRefresh &&
-      config.url !== REISSUE_URL;
+    const errorCode =
+  response.data?.code ?? null;
+
+const shouldRefresh =
+  response.status === 401 &&
+  errorCode === 'ACCESS_TOKEN_EXPIRED' &&
+  !config._retry &&
+  !config.skipAuthRefresh &&
+  config.url !== REISSUE_URL;
 
     if (!shouldRefresh) {
       return Promise.reject(error);
