@@ -16,6 +16,12 @@ const reissueClient = axios.create({
   },
 });
 
+function notifyAuthExpired() {
+  if (typeof window === 'undefined') return;
+
+  window.dispatchEvent(new CustomEvent('auth:expired'));
+}
+
 axiosInstance.interceptors.request.use((config) => {
   const authHeader = getAuthorizationHeader();
 
@@ -71,6 +77,7 @@ axiosInstance.interceptors.response.use(
       })
       .catch(() => {
         clearAccessToken();
+        notifyAuthExpired();
 
         pendingQueue.forEach(({ reject, error: queuedError }) => reject(queuedError));
         pendingQueue = [];

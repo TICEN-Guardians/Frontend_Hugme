@@ -5,6 +5,7 @@ import { FaComments } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
+import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
 import {
   getEntryQuestions,
   getGuideChatHistory,
@@ -16,7 +17,6 @@ const ENTRY_EASE = [0.16, 1, 0.3, 1];
 const EXIT_EASE = [0.4, 0, 1, 1];
 
 const FEATURE_PATHS = {
-  RISK_DIAGNOSIS: '/risk/new',
   DOCUMENT_GUIDE: '/doc-chat',
 };
 
@@ -160,7 +160,8 @@ const resolveRedirectPath = (redirect) => {
 };
 
 export default function ConditionChat() {
-  const { isAuthenticated, isAuthLoading } = useAuth();
+  const { isAuthenticated, isAuthLoading, user } = useAuth();
+  const { entryPath: riskEntryPath } = useLastRiskAnalysis(user?.email);
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
@@ -310,7 +311,9 @@ export default function ConditionChat() {
   };
 
   const handleRedirect = () => {
-    const path = resolveRedirectPath(redirect);
+    const path = redirect?.feature === 'RISK_DIAGNOSIS'
+      ? riskEntryPath
+      : resolveRedirectPath(redirect);
     if (!path) return;
     navigate(path);
   };

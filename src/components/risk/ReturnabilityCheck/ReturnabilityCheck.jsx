@@ -1,11 +1,10 @@
-import { FaCircleCheck, FaCircleExclamation, FaCircleInfo, FaTriangleExclamation } from 'react-icons/fa6';
+import { FiAlertCircle, FiAlertTriangle, FiCheckCircle } from 'react-icons/fi';
 import styles from './ReturnabilityCheck.module.css';
 
 const STATUS_ICON = {
-  Success: FaCircleCheck,
-  Warning: FaTriangleExclamation,
-  Danger: FaCircleExclamation,
-  Info: FaCircleInfo,
+  Success: FiCheckCircle,
+  Warning: FiAlertTriangle,
+  Danger: FiAlertCircle,
 };
 
 function StatusIcon({ tone }) {

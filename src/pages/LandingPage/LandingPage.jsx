@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
+import useLastRiskAnalysis from '../../hooks/useLastRiskAnalysis.js';
 import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
 import HeroSection from './HeroSection/HeroSection.jsx';
 import styles from './LandingPage.module.css';
@@ -91,16 +92,25 @@ const SLIDES = [
 ];
 
 export default function LandingPage() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const { entryPath: riskEntryPath, hasLastAnalysis } = useLastRiskAnalysis(user?.email);
   const [activeIndex, setActiveIndex] = useState(0);
   const [direction, setDirection] = useState(1);
   const slides = SLIDES.map((slide) => {
     if (slide.id === 'risk') {
       return {
         ...slide,
-        heroNote: isAuthenticated ? '바로 진단을 시작해보세요' : '로그인 후 이용 가능',
-        cardCtaLabel: isAuthenticated ? '매물 진단 시작하기' : '로그인하고 진단하기',
-        to: isAuthenticated ? '/risk/new' : '/auth/login',
+        heroNote: isAuthenticated
+          ? hasLastAnalysis
+            ? '최근 분석 결과를 확인해보세요'
+            : '바로 진단을 시작해보세요'
+          : '로그인 후 이용 가능',
+        cardCtaLabel: isAuthenticated
+          ? hasLastAnalysis
+            ? '최근 진단 결과 보기'
+            : '매물 진단 시작하기'
+          : '로그인하고 진단하기',
+        to: isAuthenticated ? riskEntryPath : '/auth/login',
       };
     }
 

@@ -1,3 +1,4 @@
+import { FiShield } from 'react-icons/fi';
 import styles from './RiskScoreCard.module.css';
 
 const RADIUS = 80;
@@ -16,7 +17,10 @@ export default function RiskScoreCard({ score, maxScore, tone, gradeLabel, note 
 
   return (
     <div className={styles.card}>
-      <p className={styles.label}>종합 위험 점수</p>
+      <p className={styles.label}>
+        <FiShield aria-hidden="true" />
+        종합 위험도
+      </p>
       <div className={styles.gaugeWrap}>
         <svg className={styles.gauge} viewBox="0 0 200 200">
           <circle className={styles.track} cx="100" cy="100" r={RADIUS} />
