@@ -9,7 +9,7 @@ const TONE_CLASS = {
   danger: 'toneDanger',
 };
 
-export default function RiskScoreCard({ score, maxScore, tone, gradeLabel }) {
+export default function RiskScoreCard({ score, maxScore, tone, gradeLabel, note }) {
   const percent = Math.max(0, Math.min(100, Math.round((score / maxScore) * 100)));
   const offset = CIRCUMFERENCE * (1 - percent / 100);
   const toneClass = styles[TONE_CLASS[tone]] ?? '';
@@ -35,6 +35,7 @@ export default function RiskScoreCard({ score, maxScore, tone, gradeLabel }) {
         </div>
       </div>
       <span className={`${styles.badge} ${toneClass}`}>{gradeLabel}</span>
+      {note && <p className={styles.note}>{note}</p>}
     </div>
   );
 }

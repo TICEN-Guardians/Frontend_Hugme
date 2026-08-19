@@ -61,3 +61,8 @@
   background: var(--red-tint-50);
   color: var(--text-red-dark);
 }
+
+.badgeInfo {
+  background: var(--blue-tint-50);
+  color: var(--text-blue-dark);
+}
