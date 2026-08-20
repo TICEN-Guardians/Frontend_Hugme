@@ -256,6 +256,19 @@
   margin: 0 auto;
 }
 
+@media (max-width: 140rem) {
+  .empty,
+  .thread,
+  .inputInner {
+    max-width: 96rem;
+  }
+
+  .messages {
+    padding-right: var(--space-6);
+    padding-left: var(--space-6);
+  }
+}
+
 @media (max-width: 76.7rem) {
   .empty {
     padding: var(--space-8) var(--space-4);

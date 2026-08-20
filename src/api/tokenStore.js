@@ -1,14 +1,6 @@
 let accessToken = null;
 let tokenType = null;
 
-export function getAccessToken() {
-  return accessToken;
-}
-
-export function getTokenType() {
-  return tokenType;
-}
-
 export function setAccessToken(token, type) {
   accessToken = token;
   tokenType = type;

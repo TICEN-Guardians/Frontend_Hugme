@@ -233,26 +233,21 @@ function RiskBreakdownSection({ report }) {
   );
 }
 
-/** 근거가 많으면 앞 4개만 왼쪽에 두고 나머지는 오른쪽 열로 넘긴다. */
-const PRIMARY_REASON_COUNT = 4;
-
 function BottomAnalysis({ report, motionSet }) {
   const evidence = report.reasonGroups?.evidence ?? [];
-  const overflow = evidence.slice(PRIMARY_REASON_COUNT);
 
   return (
     <motion.div
-      className={`${styles.bottomAnalysisGrid} ${overflow.length ? '' : styles.singleColumn}`}
+      className={styles.bottomAnalysisGrid}
       initial="hidden"
       whileInView="visible"
       viewport={VIEWPORT}
       variants={motionSet.section}
     >
       <InsightSection
-        evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
+        evidence={evidence}
         cautions={report.reasonGroups?.cautions ?? []}
       />
-      {overflow.length > 0 && <MoreInsightSection reasons={overflow} />}
     </motion.div>
   );
 }
@@ -273,22 +268,12 @@ function ReasonList({ reasons }) {
   );
 }
 
-function MoreInsightSection({ reasons }) {
-  return (
-    <section className={styles.actionsColumn}>
-      <h3 className={styles.reasonGroupTitle}>그 밖의 분석 근거</h3>
-      <ReasonList reasons={reasons} />
-    </section>
-  );
-}
-
 function InsightSection({ evidence, cautions }) {
   return (
-    <section>
-      <SectionTitle index="04" icon={<LuTriangleAlert />} title="왜 위험한가요?" />
+    <section className={styles.primaryReasonSection}>
+      <SectionTitle index="04" icon={<LuTriangleAlert />} title="주요 분석 근거" />
       <div className={styles.reasonGroups}>
-        <div className={styles.reasonGroup}>
-          <h3 className={styles.reasonGroupTitle}>주요 분석 근거</h3>
+        <div className={`${styles.reasonGroup} ${styles.primaryReasonGroup}`}>
           <ReasonList reasons={evidence} />
         </div>
 
