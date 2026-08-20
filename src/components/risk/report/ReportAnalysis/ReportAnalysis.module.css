@@ -83,43 +83,6 @@
   font-weight: 800;
 }
 
-.priceStats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  padding: 2.2rem 0;
-  border-top: 0.1rem solid #eef1f4;
-  border-bottom: 0.1rem solid #eef1f4;
-}
-
-.priceStat {
-  display: grid;
-  gap: 0.8rem;
-  min-width: 0;
-  padding: 0 2.2rem;
-}
-
-.priceStat:first-child {
-  padding-left: 0;
-}
-
-.priceStat:not(:first-child) {
-  border-left: 0.1rem solid #e5e7eb;
-}
-
-.priceStat span {
-  color: #6b7280;
-  font-size: 1.4rem;
-  font-weight: 700;
-}
-
-.priceStat strong {
-  color: var(--text-primary);
-  font-size: 2.6rem;
-  font-weight: 780;
-  line-height: 1.25;
-  overflow-wrap: anywhere;
-}
-
 .dangerText {
   color: var(--red) !important;
 }
@@ -463,6 +426,10 @@
   border-top: 0.1rem solid #e5e7eb;
 }
 
+.bottomAnalysisGrid.singleColumn {
+  grid-template-columns: minmax(0, 1fr);
+}
+
 .actionsColumn {
   position: relative;
   padding-left: 4.6rem;
@@ -515,13 +482,6 @@
 }
 
 .reasonItem h4,
-.timelineRow h3 {
-  margin: 0 0 0.7rem;
-  color: var(--text-primary);
-  font-size: 1.6rem;
-  font-weight: 750;
-}
-
 .reasonItem p {
   margin: 0;
   color: var(--text-secondary);
@@ -551,50 +511,6 @@
   font-size: 1.5rem;
 }
 
-.timeline {
-  display: grid;
-}
-
-.timelineRow {
-  position: relative;
-  display: grid;
-  grid-template-columns: 3rem minmax(0, 1fr);
-  gap: 1.4rem;
-  padding-bottom: 2.2rem;
-}
-
-.timelineRow:not(:last-child)::after {
-  content: '';
-  position: absolute;
-  top: 3rem;
-  bottom: 0.4rem;
-  left: 1.5rem;
-  width: 0.1rem;
-  background: #dbe7f2;
-}
-
-.timelineNumber {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 3rem;
-  height: 3rem;
-  border-radius: 50%;
-  background: var(--blue-tint-50);
-  color: var(--brand-blue);
-  font-size: 1.2rem;
-  font-weight: 800;
-}
-
-.timelineRow p {
-  margin: 0;
-  color: var(--text-secondary);
-  font-size: 1.4rem;
-  line-height: 1.65;
-}
-
 @media (max-width: 900px) {
   .conclusion {
     padding: 2.6rem 2.4rem;
@@ -604,20 +520,10 @@
     font-size: 2.4rem;
   }
 
-  .priceStats,
   .priceAnalysisGrid,
   .collateralRegistryGrid,
   .bottomAnalysisGrid {
     grid-template-columns: 1fr;
-  }
-
-  .priceStat {
-    padding: 1.6rem 0;
-  }
-
-  .priceStat:not(:first-child) {
-    border-top: 0.1rem solid #e5e7eb;
-    border-left: 0;
   }
 
   .scenarioArea,
@@ -639,7 +545,6 @@
     font-size: 2rem;
   }
 
-  .priceStat strong,
   .recoveryValue strong {
     font-size: 2.2rem;
   }

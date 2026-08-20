@@ -197,10 +197,16 @@ function toReportViewModel(data) {
     { label: '역전세 위험', score: numberOrZero(breakdown.rollover), max: numberOrZero(weights.rollover) },
     { label: '주택 특성', score: numberOrZero(breakdown.property), max: numberOrZero(weights.property) },
     { label: '시장 상황', score: numberOrZero(breakdown.market), max: numberOrZero(weights.market) },
-  ].filter((item) => item.max > 0).map((item) => ({
-    ...item,
-    scoreLabel: `${item.score} / ${item.max}`,
-  }));
+  ].filter((item) => item.max > 0).map((item) => {
+    // 만점이 항목마다 달라 '24 / 35'는 비교가 어렵다. 만점 대비 비율로 보여준다.
+    const ratio = Math.round((item.score / item.max) * 100);
+    return {
+      ...item,
+      ratio,
+      ratioLabel: `${ratio}%`,
+      scoreLabel: `${item.score} / ${item.max}점`,
+    };
+  });
   const notices = reportDetail.notices ?? [];
   const riskReasons = analysisReasons({
     riskNotices: notices.filter((item) => item.severity !== 'INFO'),
@@ -215,7 +221,7 @@ function toReportViewModel(data) {
       amount: deposit ?? 0,
       valueLabel: money(deposit),
       shortLabel: shortMoney(deposit),
-      color: isDepositRisk({ deposit, sale, recoverableAmount }) ? '#e0574c' : '#0F75BD',
+      color: isDepositRisk({ deposit, sale, lease, leasePriceGapRate, recoverableAmount }) ? '#e0574c' : '#0F75BD',
     },
   ];
   const trackMax = Math.max(recoverableAmount ?? 0, deposit ?? 0, 1);
@@ -259,11 +265,6 @@ function toReportViewModel(data) {
       { label: '전세가율', value: ratio(leaseToSaleRate) },
       { label: '전세시세 괴리율', value: ratio(leasePriceGapRate) },
       { label: '담보부담률', value: ratio(collateralBurdenRate) },
-    ],
-    priceStats: [
-      { label: 'AI 예상 매매가', value: money(sale) },
-      { label: 'AI 예상 전세가', value: money(lease) },
-      { label: '계약 보증금', value: money(deposit), tone: isDepositRisk({ deposit, sale, recoverableAmount }) ? 'danger' : undefined },
     ],
     priceBars,
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
@@ -340,9 +341,15 @@ function reliabilityLabel(value) {
   return { HIGH: '높음', MEDIUM: '보통', LOW: '낮음' }[value] ?? null;
 }
 
-function isDepositRisk({ deposit, sale, recoverableAmount }) {
+/** 서버 규칙(gap_severity)과 같은 5% 기준. 이보다 크면 전세시세 대비 고평가로 본다. */
+const LEASE_GAP_DANGER_RATE = 5;
+
+function isDepositRisk({ deposit, sale, lease, leasePriceGapRate, recoverableAmount }) {
   if (deposit == null) return false;
-  return (sale != null && deposit > sale) || (recoverableAmount != null && deposit > recoverableAmount);
+  if (sale != null && deposit > sale) return true;
+  if (recoverableAmount != null && deposit > recoverableAmount) return true;
+  if (leasePriceGapRate != null) return leasePriceGapRate > LEASE_GAP_DANGER_RATE;
+  return lease != null && deposit > lease;
 }
 
 function recoveryInfo({ remaining, depositShortfall }) {
@@ -398,6 +405,7 @@ function priceInsights({ deposit, lease, depositShortfall, leasePriceGapRate }) 
 
 function analysisReasons({ riskNotices, keyFindings, cautions }) {
   const seen = new Set();
+  const shownDescriptions = new Set();
   const evidence = [];
   const cautionItems = [];
 
@@ -405,13 +413,14 @@ function analysisReasons({ riskNotices, keyFindings, cautions }) {
     const key = `${label ?? ''}|${description ?? ''}`;
     if (!label || seen.has(key)) return;
     seen.add(key);
+    shownDescriptions.add(reasonKey(description));
     evidence.push({ label: normalizeReasonLabel(label), description, icon });
   };
 
+  // 주의 문구는 근거 카드와 같은 문장을 쓰는 경우가 많아 이미 노출된 설명은 건너뛴다.
   const addCaution = (description) => {
-    const key = `caution|${description ?? ''}`;
-    if (!description || seen.has(key)) return;
-    seen.add(key);
+    if (!description || shownDescriptions.has(reasonKey(description))) return;
+    shownDescriptions.add(reasonKey(description));
     cautionItems.push({ description });
   };
 
@@ -438,6 +447,10 @@ function analysisReasons({ riskNotices, keyFindings, cautions }) {
   return { evidence, cautions: cautionItems };
 }
 
+function reasonKey(text) {
+  return String(text ?? '').replace(/\s+/g, '');
+}
+
 function normalizeReasonLabel(label) {
   if (/^주의사항\s*\d*$/i.test(label)) return '주의 필요';
   if (/시세|가격|매매|전세/.test(label)) return label;
@@ -445,18 +458,22 @@ function normalizeReasonLabel(label) {
 }
 
 function recommendedActions(actions) {
-  return actions.length
-    ? actions.map((description, index) => ({ title: actionTitle(description, index), description }))
-    : [{ title: '계약 전 최종 확인', description: '계약 직전 최신 등기부등본과 보증 가입 가능 여부를 다시 확인하세요.' }];
-}
+  // 구버전 응답은 문장 배열이라 두 형태를 모두 받는다.
+  const items = actions
+    .map((item) => (typeof item === 'string'
+      ? { label: '', description: item }
+      : { label: String(item?.label ?? ''), description: String(item?.description ?? '') }))
+    .map((item) => ({ label: item.label.trim(), description: item.description.trim() }))
+    .filter((item) => item.description || item.label)
+    .map((item) => ({
+      label: item.label || item.description,
+      description: item.description || item.label,
+    }));
 
-function actionTitle(description, index) {
-  const text = String(description ?? '').trim();
-  if (!text) return `확인 항목 ${index + 1}`;
-  const firstSentence = text.split(/[.。!?]/)[0]?.trim();
-  if (!firstSentence) return `확인 항목 ${index + 1}`;
-  if (firstSentence.length <= 24) return firstSentence;
-  return `${firstSentence.slice(0, 24)}...`;
+  return items.length ? items : [{
+    label: '계약 전 최종 확인',
+    description: '계약 직전 최신 등기부등본과 보증 가입 가능 여부를 다시 확인하세요.',
+  }];
 }
 
 function registryChecks(registry) {

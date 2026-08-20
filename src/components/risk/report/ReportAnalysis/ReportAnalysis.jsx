@@ -12,7 +12,6 @@ import {
 } from 'recharts';
 import {
   LuChartNoAxesColumnIncreasing,
-  LuFileCheck,
   LuLandmark,
   LuShieldCheck,
   LuSparkles,
@@ -59,16 +58,7 @@ export default function ReportAnalysis({ report, motionSet }) {
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
-      <motion.div
-        className={styles.bottomAnalysisGrid}
-        initial="hidden"
-        whileInView="visible"
-        viewport={VIEWPORT}
-        variants={motionSet.section}
-      >
-        <InsightSection groups={report.reasonGroups} />
-        <ActionSection actions={report.recommendedActions} />
-      </motion.div>
+      <BottomAnalysis report={report} motionSet={motionSet} />
     </motion.main>
   );
 }
@@ -101,15 +91,6 @@ function SectionTitle({ index, icon, title }) {
 function PriceRiskSection({ report }) {
   return (
     <>
-      <div className={styles.priceStats}>
-        {report.priceStats.map((stat) => (
-          <div key={stat.label} className={styles.priceStat}>
-            <span>{stat.label}</span>
-            <strong className={stat.tone === 'danger' ? styles.dangerText : ''}>{stat.value}</strong>
-          </div>
-        ))}
-      </div>
-
       <div className={styles.priceAnalysisGrid}>
         <div className={styles.chartArea}>
           <div className={styles.subHeader}>
@@ -233,17 +214,17 @@ function RiskBreakdownSection({ report }) {
   return (
     <>
       <p className={styles.sectionLead}>
-        {report.totalScore ?? '-'}점은 아래 위험요소를 종합해 계산되었습니다.
+        총 {report.totalScore ?? '-'}점은 아래 네 가지 위험요소를 합한 값이며, 막대는 각 항목이 해당 요소의 최대 위험 대비 몇 %인지 보여줍니다.
       </p>
       <div className={styles.breakdownChart}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart layout="vertical" data={report.contribution} margin={{ top: 12, right: 72, bottom: 12, left: 88 }}>
             <CartesianGrid stroke="#eef1f4" horizontal={false} />
-            <XAxis type="number" domain={[0, 'dataMax']} hide />
+            <XAxis type="number" domain={[0, 100]} hide />
             <YAxis dataKey="label" type="category" tick={{ fontSize: 14, fill: '#374151' }} axisLine={false} tickLine={false} width={88} />
-            <Tooltip formatter={(value, name, props) => [`${props.payload.scoreLabel}`, props.payload.label]} contentStyle={{ fontSize: '14px', borderRadius: '10px', borderColor: '#dfe5eb' }} />
-            <Bar dataKey="score" fill="#0F75BD" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
-              <LabelList dataKey="scoreLabel" position="right" fill="#111827" fontSize={14} fontWeight={700} />
+            <Tooltip formatter={(value, name, props) => [`${props.payload.ratioLabel} (${props.payload.scoreLabel})`, props.payload.label]} contentStyle={{ fontSize: '14px', borderRadius: '10px', borderColor: '#dfe5eb' }} />
+            <Bar dataKey="ratio" fill="#0F75BD" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
+              <LabelList dataKey="ratioLabel" position="right" fill="#111827" fontSize={14} fontWeight={700} />
             </Bar>
           </BarChart>
         </ResponsiveContainer>
@@ -252,27 +233,63 @@ function RiskBreakdownSection({ report }) {
   );
 }
 
-function InsightSection({ groups }) {
-  const evidence = groups?.evidence ?? [];
-  const cautions = groups?.cautions ?? [];
+/** 근거가 많으면 앞 4개만 왼쪽에 두고 나머지는 오른쪽 열로 넘긴다. */
+const PRIMARY_REASON_COUNT = 4;
 
+function BottomAnalysis({ report, motionSet }) {
+  const evidence = report.reasonGroups?.evidence ?? [];
+  const overflow = evidence.slice(PRIMARY_REASON_COUNT);
+
+  return (
+    <motion.div
+      className={`${styles.bottomAnalysisGrid} ${overflow.length ? '' : styles.singleColumn}`}
+      initial="hidden"
+      whileInView="visible"
+      viewport={VIEWPORT}
+      variants={motionSet.section}
+    >
+      <InsightSection
+        evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
+        cautions={report.reasonGroups?.cautions ?? []}
+      />
+      {overflow.length > 0 && <MoreInsightSection reasons={overflow} />}
+    </motion.div>
+  );
+}
+
+function ReasonList({ reasons }) {
+  return (
+    <div className={styles.reasonList}>
+      {reasons.map((reason) => (
+        <div key={`${reason.label}-${reason.description}`} className={styles.reasonItem}>
+          <span className={styles.reasonIcon}>{reason.icon}</span>
+          <div>
+            <h4>{reason.label}</h4>
+            <p>{reason.description}</p>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function MoreInsightSection({ reasons }) {
+  return (
+    <section className={styles.actionsColumn}>
+      <h3 className={styles.reasonGroupTitle}>그 밖의 분석 근거</h3>
+      <ReasonList reasons={reasons} />
+    </section>
+  );
+}
+
+function InsightSection({ evidence, cautions }) {
   return (
     <section>
       <SectionTitle index="04" icon={<LuTriangleAlert />} title="왜 위험한가요?" />
       <div className={styles.reasonGroups}>
         <div className={styles.reasonGroup}>
           <h3 className={styles.reasonGroupTitle}>주요 분석 근거</h3>
-          <div className={styles.reasonList}>
-            {evidence.map((reason) => (
-              <div key={`${reason.label}-${reason.description}`} className={styles.reasonItem}>
-                <span className={styles.reasonIcon}>{reason.icon}</span>
-                <div>
-                  <h4>{reason.label}</h4>
-                  <p>{reason.description}</p>
-                </div>
-              </div>
-            ))}
-          </div>
+          <ReasonList reasons={evidence} />
         </div>
 
         {cautions.length > 0 && (
@@ -288,25 +305,6 @@ function InsightSection({ groups }) {
             </div>
           </div>
         )}
-      </div>
-    </section>
-  );
-}
-
-function ActionSection({ actions }) {
-  return (
-    <section className={styles.actionsColumn}>
-      <SectionTitle index="05" icon={<LuFileCheck />} title="계약 전 확인하세요" />
-      <div className={styles.timeline}>
-        {actions.map((action, index) => (
-          <div key={`${index}-${action.description}`} className={styles.timelineRow}>
-            <span className={styles.timelineNumber}>{String(index + 1).padStart(2, '0')}</span>
-            <div>
-              <h3>{action.title}</h3>
-              <p>{action.description}</p>
-            </div>
-          </div>
-        ))}
       </div>
     </section>
   );
