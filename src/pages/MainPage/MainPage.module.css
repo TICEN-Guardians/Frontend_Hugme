@@ -63,3 +63,18 @@
   border: 0.1rem solid var(--border-default);
   border-radius: var(--radius-lg);
 }
+
+@media (max-width: 76.7rem) {
+  .root {
+    gap: var(--space-6);
+    padding: var(--space-4);
+  }
+
+  .section {
+    padding: var(--space-4);
+  }
+
+  .sectionTitle {
+    font-size: var(--text-xl);
+  }
+}

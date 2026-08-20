@@ -77,3 +77,41 @@
 .linkCol a:hover {
   color: var(--footer-text-muted);
 }
+
+@media (max-width: 140rem) {
+  .inner {
+    gap: var(--space-10);
+  }
+}
+
+@media (max-width: 90rem) {
+  .inner {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-6);
+  }
+
+  .brandCol {
+    grid-column: 1 / -1;
+  }
+
+  .linkCol {
+    align-items: flex-start;
+    text-align: left;
+  }
+
+  .linkCol:last-child {
+    align-items: flex-start;
+    text-align: left;
+  }
+}
+
+@media (max-width: 56rem) {
+  .inner {
+    grid-template-columns: 1fr;
+    gap: var(--space-5);
+  }
+
+  .logo {
+    width: 15.6rem;
+  }
+}

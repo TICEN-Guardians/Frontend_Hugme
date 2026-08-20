@@ -72,6 +72,16 @@
   gap: var(--space-4);
 }
 
+@media (max-width: 140rem) {
+  .root {
+    padding-top: var(--space-8);
+  }
+
+  .hero {
+    padding: var(--space-6);
+  }
+}
+
 @media (max-width: 90rem) {
   .groups {
     grid-template-columns: 1fr;

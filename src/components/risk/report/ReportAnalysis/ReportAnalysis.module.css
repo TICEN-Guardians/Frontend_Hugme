@@ -540,6 +540,26 @@
   }
 }
 
+@media (max-width: 140rem) {
+  .priceAnalysisGrid {
+    grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.8fr);
+    gap: 2.8rem;
+  }
+
+  .collateralRegistryGrid {
+    gap: 3rem;
+  }
+
+  .scenarioArea,
+  .registryArea {
+    padding-left: 2.8rem;
+  }
+
+  .primaryReasonGroup {
+    padding: 2.6rem 2.8rem;
+  }
+}
+
 @media (max-width: 900px) {
   .conclusion {
     padding: 2.6rem 2.4rem;
@@ -569,6 +589,16 @@
 }
 
 @media (max-width: 640px) {
+  .conclusion,
+  .primaryReasonGroup {
+    padding: 2rem;
+  }
+
+  .sectionTitleRow {
+    align-items: flex-start;
+    gap: 0.7rem;
+  }
+
   .sectionTitle {
     font-size: 2rem;
   }
@@ -588,8 +618,18 @@
     height: 28rem;
   }
 
-  .primaryReasonGroup {
-    padding: 2rem;
+  .trackLabel,
+  .recoveryRow {
+    grid-template-columns: 1fr;
+  }
+
+  .trackLabel {
+    display: grid;
+    gap: 0.4rem;
+  }
+
+  .recoveryRow dd {
+    text-align: left;
   }
 }
 
