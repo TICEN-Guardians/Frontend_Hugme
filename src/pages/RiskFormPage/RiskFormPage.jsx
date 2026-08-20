@@ -53,6 +53,8 @@ export default function RiskFormPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
+  const [isAreaRequiredModalOpen, setIsAreaRequiredModalOpen] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [progressMessage, setProgressMessage] = useState('');
   const [progressStep, setProgressStep] = useState('resolve');
   const [stage, setStage] = useState('registry');
@@ -177,6 +179,8 @@ export default function RiskFormPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     setIsSubmitting(true);
+    setSubmitError(null);
+    setIsAreaRequiredModalOpen(false);
     let currentStep = stage === 'registry' ? '건물 정보를 확인' : '시세와 위험도를 계산';
     try {
       if (stage === 'registry') {
@@ -226,14 +230,19 @@ export default function RiskFormPage() {
           return;
         }
         setStage('details');
-        setProgressMessage('등기부에서 면적을 확인하지 못했습니다. 면적만 추가로 입력해 주세요.');
+        setProgressMessage('');
+        setIsAreaRequiredModalOpen(true);
       } else {
         setProgress('analyze', '시세와 위험도를 계산하고 있습니다.');
         await completeDiagnosis(analysisId, Number(area), resolvedProperty);
       }
     } catch (error) {
       const status = error?.response?.status ? ' (HTTP ' + error.response.status + ')' : '';
-      setErrors((current) => ({ ...current, submit: currentStep + '하는 단계에서 실패했습니다' + status + '. ' + errorMessage(error, '잠시 후 다시 시도해 주세요.') }));
+      setSubmitError({
+        title: currentStep + '하는 단계에서 실패했습니다',
+        message: errorMessage(error, '잠시 후 다시 시도해 주세요.'),
+        status,
+      });
       setProgressMessage('');
     } finally { setIsSubmitting(false); }
   };
@@ -292,12 +301,12 @@ export default function RiskFormPage() {
           </motion.div>
         </motion.div>
 
-        {errors.submit && <p className={styles.fieldError}>{errors.submit}</p>}
-        {progressMessage && <p className={styles.subtitle}>{progressMessage}</p>}
         <motion.div className={styles.actionRow} initial={{ opacity: 0 }} animate={{ opacity: 1 }}><Button type="submit" disabled={isSubmitting} className={styles.submitButton}>{isSubmitting ? '처리 중...' : stage === 'registry' ? '등기 분석 및 위험도 진단' : '면적 입력 후 위험도 진단'}</Button></motion.div>
       </form>
 
       <Modal isOpen={isConsentModalOpen} onClose={() => setIsConsentModalOpen(false)}><div className={styles.consentModal}><h2 className={styles.consentModalTitle}>매물 위험도 진단 이용 동의</h2><div className={styles.consentModalBody}><ConsentSection title="입력 정보 확인">입력한 주소, 계약 조건, 계약 상대방 이름과 등기부등본은 위험도 진단에 사용됩니다.</ConsentSection><ConsentSection title="파일 이용 범위">업로드한 등기부등본은 매물의 권리관계와 위험 요소 확인 목적으로만 사용됩니다.</ConsentSection><ConsentSection title="진단 결과 안내">진단 결과는 계약 전 참고용 정보이며 최종 판단과 법적 책임은 이용자 본인에게 있습니다.</ConsentSection></div></div></Modal>
+      <AreaRequiredModal isOpen={isAreaRequiredModalOpen} onClose={() => setIsAreaRequiredModalOpen(false)} contractAreaRequired={contractAreaRequired} />
+      <SubmitErrorModal error={submitError} onClose={() => setSubmitError(null)} />
       <RiskProgressModal isOpen={isSubmitting} activeStep={progressStep} message={progressMessage} />
     </div>
   );
@@ -404,6 +413,47 @@ function RiskProgressModal({ isOpen, activeStep, message }) {
             </div>
           );
         })}
+      </div>
+    </Modal>
+  );
+}
+
+function SubmitErrorModal({ error, onClose }) {
+  return (
+    <Modal isOpen={Boolean(error)} onClose={onClose} panelClassName={styles.submitErrorModal}>
+      <div className={styles.submitErrorIcon} aria-hidden="true">
+        <FaCircleInfo />
+      </div>
+      <h2 className={styles.submitErrorTitle}>{error?.title}</h2>
+      <p className={styles.submitErrorDescription}>
+        {error?.message}
+        {error?.status}
+      </p>
+      <div className={styles.submitErrorActions}>
+        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
+          확인
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function AreaRequiredModal({ isOpen, onClose, contractAreaRequired }) {
+  const areaLabel = contractAreaRequired ? '계약면적' : '전용면적';
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.submitErrorModal}>
+      <div className={styles.submitErrorIcon} aria-hidden="true">
+        <FaCircleInfo />
+      </div>
+      <h2 className={styles.submitErrorTitle}>{areaLabel} 입력이 필요합니다</h2>
+      <p className={styles.submitErrorDescription}>
+        등기부등본에서 {areaLabel}을 자동으로 확인하지 못했습니다. 폼에 표시된 {areaLabel}을 추가로 입력한 뒤 다시 진단해 주세요.
+      </p>
+      <div className={styles.submitErrorActions}>
+        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
+          확인
+        </Button>
       </div>
     </Modal>
   );

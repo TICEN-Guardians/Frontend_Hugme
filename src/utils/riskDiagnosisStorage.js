@@ -1,7 +1,7 @@
 const STORAGE_PREFIX = 'hugme:last-risk-analysis';
 export const RISK_ANALYSIS_CHANGED_EVENT = 'hugme:risk-analysis-changed';
 
-export function getRiskStorageKey(email) {
+function getRiskStorageKey(email) {
   return email ? `${STORAGE_PREFIX}:${encodeURIComponent(email)}` : null;
 }
 

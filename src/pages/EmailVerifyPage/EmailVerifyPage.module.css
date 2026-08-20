@@ -18,7 +18,7 @@
   width: 5.2rem;
   height: 5.2rem;
   margin-bottom: var(--space-4);
-  border-radius: 999px;
+  border-radius: var(--radius-pill);
   background: rgba(15, 117, 189, 0.08);
   color: var(--brand-blue);
   font-size: 2.4rem;
