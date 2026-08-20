@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
   createApplication,
+  getChecklistCompletion,
+  getCurrentApplication,
   getInfo,
   getResultDocuments,
   updateInfo,
@@ -21,6 +23,7 @@ export function useContractUpload(productCode) {
   const [isConfirming, setIsConfirming] = useState(false);
   const [finalDocuments, setFinalDocuments] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
+  const [isPreparingUpload, setIsPreparingUpload] = useState(false);
 
   useEffect(() => {
     let ignore = false;
@@ -64,6 +67,74 @@ export function useContractUpload(productCode) {
       ignore = true;
     };
   }, []);
+
+  const resetForNewApplication = useCallback(() => {
+    setApplicationId(null);
+    setOcrInfo(null);
+    setFinalDocuments(null);
+    setStep('idle');
+    sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+  }, []);
+
+  /**
+   * 계약서의 실제 업로드 전에 동일 상품의 완료 내역을 확인한다.
+   * true를 반환하면 신규 업로드를 계속하고,
+   * false를 반환하면 기존 내역을 표시하거나 오류 처리를 끝낸다.
+   */
+  const prepareUpload = useCallback(async () => {
+    if (isPreparingUpload) return false;
+
+    setIsPreparingUpload(true);
+    setUploadError(null);
+
+    try {
+      const exists = await getChecklistCompletion(productCode);
+
+      if (!exists) {
+        resetForNewApplication();
+        return true;
+      }
+
+      const useExisting = window.confirm(
+        '기존 준비서류 내역이 있습니다.\n\n확인: 기존 내역 보기\n취소: 신규로 진행',
+      );
+
+      if (!useExisting) {
+        resetForNewApplication();
+        return true;
+      }
+
+      const application = await getCurrentApplication();
+
+      // /check 결과와 현재 신청 사이에 상태가 바뀐 경우 신규 업로드로 전환한다.
+      if (application.productCode !== productCode) {
+        resetForNewApplication();
+        return true;
+      }
+
+      const currentApplicationId = application.applicationId;
+      const [info, documents] = await Promise.all([
+        getInfo(currentApplicationId),
+        getResultDocuments(currentApplicationId),
+      ]);
+
+      setApplicationId(currentApplicationId);
+      setOcrInfo(info);
+      setFinalDocuments(documents);
+      setStep('done');
+      sessionStorage.setItem(
+        LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
+        String(currentApplicationId),
+      );
+
+      return false;
+    } catch (err) {
+      setUploadError(err);
+      return false;
+    } finally {
+      setIsPreparingUpload(false);
+    }
+  }, [isPreparingUpload, productCode, resetForNewApplication]);
 
   const startUpload = useCallback(
     async (file, { forceNew = false } = {}) => {
@@ -158,7 +229,9 @@ export function useContractUpload(productCode) {
     uploadError,
     isConfirming,
     isRestoring,
+    isPreparingUpload,
     finalDocuments,
+    prepareUpload,
     startUpload,
     restartUpload,
     confirmOcrInfo,
