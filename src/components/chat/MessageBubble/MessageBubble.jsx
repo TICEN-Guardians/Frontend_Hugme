@@ -122,7 +122,7 @@ function renderInlineText(text) {
   });
 }
 
-function renderAssistantContent(content, sources) {
+function renderAssistantContent(content, sources, showOrderedLists, documentChatMode) {
   const { text, links, inlineUrls } = extractLinks(String(content ?? ''), sources);
   const lines = text.split(/\r?\n/);
   const blocks = [];
@@ -153,7 +153,7 @@ function renderAssistantContent(content, sources) {
 
     if (!trimmed) {
       flushParagraph();
-      flushList();
+      if (!documentChatMode) flushList();
       return;
     }
 
@@ -161,7 +161,12 @@ function renderAssistantContent(content, sources) {
     if (orderedItem) {
       flushParagraph();
       flushList();
-      orderedList.push(orderedItem[1]);
+      if (showOrderedLists) {
+        orderedList.push(orderedItem[1]);
+      } else {
+        flushOrderedList();
+        list.push(orderedItem[1]);
+      }
       return;
     }
 
@@ -169,7 +174,11 @@ function renderAssistantContent(content, sources) {
     if (bullet) {
       flushParagraph();
       flushOrderedList();
-      list.push(bullet[1]);
+      const item = bullet[1];
+      list.push({
+        content: item,
+        level: documentChatMode && !/^\*\*[^*]+\*\*/.test(item) ? 1 : 0,
+      });
       return;
     }
 
@@ -188,13 +197,18 @@ function renderAssistantContent(content, sources) {
         block.type === 'list' ? (
           <ul key={blockIndex} className={styles.answerList}>
             {block.items.map((item, itemIndex) => (
-              <li key={itemIndex}>{renderInlineText(item)}</li>
+              <li
+                key={itemIndex}
+                className={item.level ? styles.answerNestedItem : undefined}
+              >
+                {renderInlineText(item.content ?? item)}
+              </li>
             ))}
           </ul>
         ) : block.type === 'orderedList' ? (
           <ol key={blockIndex} className={`${styles.answerList} ${styles.answerOrderedList}`}>
             {block.items.map((item, itemIndex) => (
-              <li key={itemIndex}>{renderInlineText(item)}</li>
+              <li key={itemIndex}>{renderInlineText(item.content ?? item)}</li>
             ))}
           </ol>
         ) : (
@@ -221,11 +235,20 @@ function renderAssistantContent(content, sources) {
   );
 }
 
-export default function MessageBubble({ role, content, sources = [], animate = false }) {
+export default function MessageBubble({
+  role,
+  content,
+  sources = [],
+  showOrderedLists = true,
+  documentChatMode = false,
+  animate = false,
+}) {
   const className = `${styles.row} ${role === 'user' ? styles.rowUser : ''}`;
   const bubble = (
     <div className={`${styles.bubble} ${styles[role]}`}>
-      {role === 'assistant' ? renderAssistantContent(content, sources) : content}
+      {role === 'assistant'
+        ? renderAssistantContent(content, sources, showOrderedLists, documentChatMode)
+        : content}
     </div>
   );
 
