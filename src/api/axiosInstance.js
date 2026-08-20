@@ -2,6 +2,7 @@ import axios from 'axios';
 import { clearAccessToken, getAuthorizationHeader, setAccessToken } from './tokenStore.js';
 
 const baseURL = import.meta.env.VITE_API_BASE_URL;
+const REISSUE_URL = '/api/auth/token/reissue';
 
 const axiosInstance = axios.create({
     baseURL,
@@ -16,6 +17,12 @@ const reissueClient = axios.create({
   },
 });
 
+function notifyAuthExpired() {
+  if (typeof window === 'undefined') return;
+
+  window.dispatchEvent(new CustomEvent('auth:expired'));
+}
+
 axiosInstance.interceptors.request.use((config) => {
   const authHeader = getAuthorizationHeader();
 
@@ -26,60 +33,66 @@ axiosInstance.interceptors.request.use((config) => {
   return config;
 });
 
-let isRefreshing = false;
-let pendingQueue = [];
+let refreshPromise = null;
+
+export function refreshAccessToken() {
+  if (refreshPromise) {
+    return refreshPromise;
+  }
+
+  refreshPromise = reissueClient
+    .post(REISSUE_URL)
+    .then(({ data }) => {
+      if (!data?.accessToken) {
+        throw new Error('재발급 응답에 accessToken이 없습니다.');
+      }
+
+      setAccessToken(data.accessToken, data.tokenType);
+      return data;
+    })
+    .catch((error) => {
+      clearAccessToken();
+      notifyAuthExpired();
+      throw error;
+    })
+    .finally(() => {
+      refreshPromise = null;
+    });
+
+  return refreshPromise;
+}
 
 axiosInstance.interceptors.response.use(
   (response) => response,
-  (error) => {
+  async (error) => {
     const { config, response } = error;
 
-    if (
-      !config ||
-      !response ||
-      response.status !== 401 ||
-      config._retry ||
-      config.url === '/api/auth/token/reissue'
-    ) {
+    if (!config || !response) {
+      return Promise.reject(error);
+    }
+
+    const errorCode =
+  response.data?.code ?? null;
+
+const shouldRefresh =
+  response.status === 401 &&
+  errorCode === 'ACCESS_TOKEN_EXPIRED' &&
+  !config._retry &&
+  !config.skipAuthRefresh &&
+  config.url !== REISSUE_URL;
+
+    if (!shouldRefresh) {
       return Promise.reject(error);
     }
 
     config._retry = true;
 
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        pendingQueue.push({ resolve, reject, config, error });
-      });
+    try {
+      await refreshAccessToken();
+      return axiosInstance(config);
+    } catch (refreshError) {
+      return Promise.reject(refreshError);
     }
-
-    isRefreshing = true;
-
-    return reissueClient
-      .post('/api/auth/token/reissue')
-      .then(({ data }) => {
-        setAccessToken(data.accessToken, data.tokenType);
-        const authHeader = getAuthorizationHeader();
-
-        pendingQueue.forEach(({ resolve, config: queuedConfig }) => {
-          queuedConfig.headers.Authorization = authHeader;
-          resolve(axiosInstance(queuedConfig));
-        });
-        pendingQueue = [];
-
-        config.headers.Authorization = authHeader;
-        return axiosInstance(config);
-      })
-      .catch(() => {
-        clearAccessToken();
-
-        pendingQueue.forEach(({ reject, error: queuedError }) => reject(queuedError));
-        pendingQueue = [];
-
-        return Promise.reject(error);
-      })
-      .finally(() => {
-        isRefreshing = false;
-      });
   },
 );
 

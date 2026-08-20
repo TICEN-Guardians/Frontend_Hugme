@@ -3,33 +3,38 @@ import {
   getDocumentPreparation,
   updateDocumentPreparation,
 } from '../api/docChat/docChatService.js';
+import { getChecklistCompletion } from '../api/checklist/checklistService.js';
 
-export function useDocumentPreparation(enabled = true) {
+export function useDocumentPreparation() {
   const [preparation, setPreparation] = useState(null);
+  const [checklistCompleted, setChecklistCompleted] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
   const [error, setError] = useState(null);
 
   const loadPreparation = useCallback(async () => {
-    if (!enabled) {
-      setPreparation(null);
-      setError(null);
-      return;
-    }
-
     setIsLoading(true);
     setError(null);
 
     try {
+      const completed = await getChecklistCompletion();
+      setChecklistCompleted(completed);
+
+      if (!completed) {
+        setPreparation(null);
+        return;
+      }
+
       const result = await getDocumentPreparation();
       setPreparation(result);
     } catch (requestError) {
+      setChecklistCompleted(false);
       setError(requestError);
       setPreparation(null);
     } finally {
       setIsLoading(false);
     }
-  }, [enabled]);
+  }, []);
 
   useEffect(() => {
     loadPreparation();
@@ -54,6 +59,7 @@ export function useDocumentPreparation(enabled = true) {
 
   return {
     preparation,
+    checklistCompleted,
     isLoading,
     isUpdating,
     error,

@@ -16,6 +16,7 @@ export default function MessageList({ messages, animateMessages = false }) {
           key={index}
           role={message.role}
           content={message.content}
+              sources={message.sources ?? []}
           animate={animateMessages}
         />
       ))}

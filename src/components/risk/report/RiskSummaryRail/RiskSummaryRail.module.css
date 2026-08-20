@@ -1,0 +1,182 @@
+.summaryRail {
+  padding: 3rem 2.6rem;
+  border: 0.1rem solid #dfe5eb;
+  border-radius: 2rem;
+  background: #fff;
+  box-shadow: 0 0.8rem 2.8rem rgba(15, 23, 42, 0.06);
+}
+
+.scoreBlock {
+  text-align: center;
+}
+
+.eyebrow,
+.riskTitle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.eyebrow svg,
+.riskTitle svg {
+  color: var(--brand-blue);
+  font-size: 1.7rem;
+}
+
+.scoreWrap {
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 1.8rem;
+}
+
+.score {
+  color: var(--text-primary);
+  font-size: 6rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.maxScore {
+  margin-bottom: 0.7rem;
+  color: #6b7280;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.gradeBadge {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 1.4rem;
+  padding: 0.7rem 1.4rem;
+  border-radius: 999rem;
+  font-size: 1.4rem;
+  font-weight: 800;
+}
+
+.success {
+  background: rgba(62, 154, 67, 0.1);
+  color: var(--brand-green);
+}
+
+.warning {
+  background: rgba(240, 174, 64, 0.14);
+  color: #9a5b00;
+}
+
+.danger {
+  background: rgba(224, 87, 76, 0.12);
+  color: var(--red);
+}
+
+.divider {
+  border-top: 0.1rem solid #e5e7eb;
+  margin: 2.6rem 0;
+}
+
+.moneyList {
+  display: grid;
+  gap: 2.2rem;
+}
+
+.moneyItem {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.moneyLabel {
+  color: #6b7280;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+.moneyValue {
+  color: var(--text-primary);
+  font-size: 2.2rem;
+  font-weight: 750;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.dangerText {
+  color: var(--red);
+  font-weight: 800;
+}
+
+.riskBlock {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.riskList {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding-left: 1.8rem;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.55;
+}
+
+.riskList li::marker {
+  color: var(--red);
+}
+
+.emptyRisk {
+  margin: 0;
+  color: #6b7280;
+  font-size: 1.4rem;
+  line-height: 1.6;
+}
+
+.checkBlock {
+  display: grid;
+  gap: 1.4rem;
+}
+
+.checkList {
+  display: grid;
+  gap: 1rem;
+  margin: 0;
+  padding-left: 1.8rem;
+  color: var(--text-secondary);
+  font-size: 1.5rem;
+  line-height: 1.55;
+}
+
+.checkList li::marker {
+  color: var(--brand-blue);
+}
+
+@media (max-width: 1200px) {
+  .summaryRail {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr));
+    gap: 2.4rem;
+    align-items: center;
+  }
+
+  .divider {
+    display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .summaryRail {
+    display: block;
+    padding: 2.4rem 2rem;
+  }
+
+  .divider {
+    display: block;
+  }
+
+  .score {
+    font-size: 5.2rem;
+  }
+}

@@ -16,6 +16,7 @@ export default function ProductGroup({
   to,
   index,
   prefersReducedMotion,
+  onClick,
 }) {
   return (
     <motion.section
@@ -57,10 +58,19 @@ export default function ProductGroup({
       </dl>
 
       <div className={styles.ctaArea}>
-        <Link to={to} className={styles.cta}>
-          <span>{ctaLabel}</span>
-          <HiArrowRight aria-hidden="true" />
-        </Link>
+      <Link
+  to={to}
+  className={styles.cta}
+  onClick={(event) => {
+    if (!onClick) return;
+
+    event.preventDefault();
+    onClick();
+  }}
+>
+  <span>{ctaLabel}</span>
+  <HiArrowRight aria-hidden="true" />
+</Link>
       </div>
     </motion.section>
   );

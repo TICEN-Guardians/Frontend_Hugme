@@ -1,4 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo,  useRef,useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
+import {
+  clearAccessToken,
+} from '../../api/tokenStore.js';
 import {
   checkEmail as checkEmailRequest,
   getMe,
@@ -9,26 +13,88 @@ import {
 } from '../../api/auth/authService.js';
 
 export const AuthContext = createContext(null);
-
+const AUTH_CHANNEL_NAME = 'hugme-auth';
 export function AuthProvider({ children }) {
+  const location = useLocation();
+  const navigate = useNavigate();
+  const authChannelRef = useRef(null);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const AUTH_ENTRY_PATHS = [
+    '/auth/login',
+    '/auth/signup',
+    '/auth/mail/verify',
+    '/api/auth/mail/verify',
+  ];
+  useEffect(() => {
+    if (
+      typeof window === 'undefined' ||
+      typeof window.BroadcastChannel === 'undefined'
+    ) {
+      return undefined;
+    }
+  
+    const channel = new BroadcastChannel(
+      AUTH_CHANNEL_NAME,
+    );
+  
+    authChannelRef.current = channel;
+  
+    const handleAuthMessage = (event) => {
+      if (event.data?.type !== 'LOGOUT') {
+        return;
+      }
+  
+      clearAccessToken();
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAuthLoading(false);
+  
+      navigate('/', { replace: true });
+    };
+  
+    channel.addEventListener(
+      'message',
+      handleAuthMessage,
+    );
+  
+    return () => {
+      channel.removeEventListener(
+        'message',
+        handleAuthMessage,
+      );
+  
+      channel.close();
+  
+      if (authChannelRef.current === channel) {
+        authChannelRef.current = null;
+      }
+    };
+  }, [navigate]);
 
   useEffect(() => {
+    if (AUTH_ENTRY_PATHS.includes(location.pathname)) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAuthLoading(false);
+  
+      return undefined;
+    }
+  
     let ignore = false;
-
+  
     reissue()
       .then(() => getMe())
       .then((me) => {
         if (ignore) return;
-
+  
         setUser(me);
         setIsAuthenticated(true);
       })
       .catch(() => {
         if (ignore) return;
-
+  
         setUser(null);
         setIsAuthenticated(false);
       })
@@ -37,16 +103,33 @@ export function AuthProvider({ children }) {
           setIsAuthLoading(false);
         }
       });
-
+  
     return () => {
       ignore = true;
     };
   }, []);
 
+  useEffect(() => {
+    const handleAuthExpired = () => {
+      setUser(null);
+      setIsAuthenticated(false);
+
+      if (location.pathname.startsWith('/risk')) {
+        navigate('/', { replace: true });
+      }
+    };
+
+    window.addEventListener('auth:expired', handleAuthExpired);
+
+    return () => {
+      window.removeEventListener('auth:expired', handleAuthExpired);
+    };
+  }, [location.pathname, navigate]);
+
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
   const checkEmail = useCallback((email) => checkEmailRequest(email), []);
-
+  
   const login = useCallback(async (email, password) => {
     await loginRequest(email, password);
     const me = await getMe();
@@ -57,14 +140,20 @@ export function AuthProvider({ children }) {
     return me;
   }, []);
 
-  const logout = useCallback(async () => {
-    try {
-      await logoutRequest();
-    } finally {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-  }, []);
+ const logout = useCallback(async () => {
+  try {
+    await logoutRequest();
+  } finally {
+    clearAccessToken();
+    setUser(null);
+    setIsAuthenticated(false);
+
+    authChannelRef.current?.postMessage({
+      type: 'LOGOUT',
+      timestamp: Date.now(),
+    });
+  }
+}, []);
 
   const value = useMemo(
     () => ({

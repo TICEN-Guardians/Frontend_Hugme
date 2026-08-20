@@ -1,19 +1,21 @@
-import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
+import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
 import styles from './Header.module.css';
 
 const LOGO_SRC = '/images/Logo.png';
 
-const NAV_ITEMS = [
-  { to: '/risk/new', label: '매물위험도' },
-  { to: '/doc-chat', label: '서류안내챗봇' },
-  { to: '/user-chat', label: '조건상담챗봇' },
-  { to: '/guarantee-checklist', label: '보증 체크리스트' },
-];
-
 export default function Header() {
   const { user, isAuthenticated, isAuthLoading, logout } = useAuth();
+  const { entryPath: riskEntryPath } = useLastRiskAnalysis(user?.email);
   const navigate = useNavigate();
+  const location = useLocation();
+  const navItems = [
+    { to: riskEntryPath, label: '매물위험도', isActive: location.pathname.startsWith('/risk/') },
+    { to: '/doc-chat', label: '서류안내챗봇' },
+    { to: '/user-chat', label: '조건상담챗봇' },
+    { to: '/guarantee-checklist', label: '보증 체크리스트' },
+  ];
 
   const handleLogout = async () => {
     await logout();
@@ -42,12 +44,12 @@ export default function Header() {
           </Link>
 
           <nav className={styles.nav}>
-            {NAV_ITEMS.map((item) => (
+            {navItems.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
                 className={({ isActive }) =>
-                  `${styles.navLink} ${isActive ? styles.navLinkActive : ''}`
+                  `${styles.navLink} ${(item.isActive ?? isActive) ? styles.navLinkActive : ''}`
                 }
               >
                 {item.label}

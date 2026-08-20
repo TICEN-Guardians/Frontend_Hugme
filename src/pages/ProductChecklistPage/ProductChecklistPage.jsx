@@ -67,8 +67,7 @@ const CONTRACT_TYPE_LABEL = {
 
 const PARTY_TYPE_LABEL = {
   PERSON: '개인',
-  INDIVIDUAL: '개인',
-  CORPORATION: '법인',
+  COMPANY: '법인',
 };
 
 function displayValue(value, labels) {
@@ -519,6 +518,13 @@ export default function ProductChecklistPage() {
     reopenOcrConfirm();
   };
 
+  const handleQuestionClose = () => {
+    if (questionFlow.isSubmitting) return;
+
+    questionFlow.reset();
+    closeOcrConfirm();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -533,7 +539,7 @@ export default function ProductChecklistPage() {
     key: group.groupId,
     label: group.groupName,
   }));
-  const hasAnalysisResult = Boolean(ocrInfo);
+  const hasAnalysisResult = step === 'done' && Boolean(ocrInfo);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -719,6 +725,7 @@ export default function ProductChecklistPage() {
           questionFlow.questionStep == null
         }
         isSubmitting={questionFlow.isSubmitting}
+        onClose={handleQuestionClose}
         onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
       />

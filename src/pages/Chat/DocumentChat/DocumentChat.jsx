@@ -1,13 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
-import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
 import { sendDocumentMessage } from '../../../api/docChat/docChatService.js';
-import { getChecklistCompletion, getInfo } from '../../../api/checklist/checklistService.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
 
@@ -62,23 +60,9 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
   };
 }
 
-function hasOcrInfo(info) {
-  return Boolean(
-    info?.applicationId ||
-      info?.contractAddress ||
-      info?.housingTypeCode ||
-      info?.housingType ||
-      info?.contractType,
-  );
-}
-
 export default function DocumentChat() {
   const navigate = useNavigate();
-  const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
-  const [checklistCompleted, setChecklistCompleted] = useState(null);
-  const [hasAnalyzedContract, setHasAnalyzedContract] = useState(null);
-  const [checklistCheckError, setChecklistCheckError] = useState(null);
   const [activeSectionCode, setActiveSectionCode] = useState('BASIC');
   const [expandedDocumentId, setExpandedDocumentId] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -86,60 +70,14 @@ export default function DocumentChat() {
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState([]);
 
-  useEffect(() => {
-    let ignore = false;
-    const routeApplicationId = location.state?.applicationId;
-    const savedApplicationId =
-      routeApplicationId ?? sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
-
-    if (!savedApplicationId) {
-      setHasAnalyzedContract(false);
-      return () => {
-        ignore = true;
-      };
-    }
-
-    sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(savedApplicationId));
-
-    getInfo(savedApplicationId)
-      .then((info) => {
-        if (!ignore) setHasAnalyzedContract(hasOcrInfo(info));
-      })
-      .catch(() => {
-        if (!ignore) setHasAnalyzedContract(false);
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, [location.state?.applicationId]);
-
-  useEffect(() => {
-    let ignore = false;
-
-    getChecklistCompletion()
-      .then((completed) => {
-        if (!ignore) setChecklistCompleted(completed);
-      })
-      .catch((requestError) => {
-        if (!ignore) {
-          setChecklistCheckError(requestError);
-          setChecklistCompleted(false);
-        }
-      });
-
-    return () => {
-      ignore = true;
-    };
-  }, []);
-
   const {
     preparation,
+    checklistCompleted,
     isLoading,
     isUpdating,
     error,
     changePrepared,
-  } = useDocumentPreparation(checklistCompleted === true && hasAnalyzedContract === true);
+  } = useDocumentPreparation();
 
   const sections = useMemo(
     () =>
@@ -162,8 +100,8 @@ export default function DocumentChat() {
   );
 
   const hasPreparation = Boolean(preparation && preparation.totalDocumentCount > 0);
-  const isChecklistLoading = checklistCompleted === null || hasAnalyzedContract === null;
-  const isLocked = checklistCompleted !== true || hasAnalyzedContract !== true || !hasPreparation;
+  const isChecklistLoading = checklistCompleted === null;
+  const isLocked = checklistCompleted !== true || !hasPreparation;
   const selectedDocument =
     documents.find((document) => document.documentId === selectedDocumentId) ?? null;
   const selectedVariant = selectedDocument?.selectableVariants?.find(
@@ -187,7 +125,7 @@ export default function DocumentChat() {
   };
 
   const handleSelectDocument = (documentId) => {
-    setSelectedDocumentId(documentId);
+    setSelectedDocumentId((prev) => (prev === documentId ? null : documentId));
     setExpandedDocumentId((prev) => (prev === documentId ? prev : null));
   };
 
@@ -298,7 +236,7 @@ export default function DocumentChat() {
           {isLoading && (
             <p className={`${styles.status} ${styles.chatContent}`}>맞춤 준비서류를 불러오는 중입니다.</p>
           )}
-          {!isLoading && (error || checklistCheckError) && checklistCompleted === true && (
+          {!isLoading && error && checklistCompleted === true && (
             <p className={`${styles.status} ${styles.chatContent}`}>
               맞춤 준비서류를 불러오지 못했습니다. 체크리스트 완료 후 다시 시도해주세요.
             </p>

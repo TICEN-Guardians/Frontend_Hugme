@@ -51,15 +51,15 @@ export default function Modal({ isOpen, onClose, children, panelClassName = '' }
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 0.75, ease: MODAL_EASE }}
+          transition={{ duration: 0.22, ease: MODAL_EASE }}
         >
           <motion.div
             className={`${styles.panel} ${panelClassName}`.trim()}
             onClick={(event) => event.stopPropagation()}
-            initial={{ opacity: 0, y: 18 }}
+            initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 12 }}
-            transition={{ duration: 0.45, ease: MODAL_EASE }}
+            transition={{ duration: 0.24, ease: MODAL_EASE }}
           >
             <button type="button" className={styles.close} onClick={onClose} aria-label="닫기">
               ×
