@@ -76,16 +76,31 @@ export async function createApplication(productCode) {
 }
 
 /** 현재 로그인 사용자의 체크리스트 완료 여부를 조회한다. */
-export async function getChecklistCompletion() {
-  const res = await axiosInstance.get('/api/applications/check');
+export async function getChecklistCompletion(productCode = null) {
+  const res = await axiosInstance.get('/api/applications/check', {
+    params: productCode ? { productCode } : undefined,
+  });
+
   const data = res.data;
 
   if (typeof data === 'boolean') return data;
 
-  const completed = data?.completed ?? data?.isCompleted ?? data?.checklistCompleted;
+  const completed =
+    data?.completed ??
+    data?.isCompleted ??
+    data?.checklistCompleted;
+
   if (completed != null) return Boolean(completed);
 
-  return data?.applicationStatus === 'DONE' || data?.status === 'DONE';
+  return (
+    data?.applicationStatus === 'DONE' ||
+    data?.status === 'DONE'
+  );
+}
+
+export async function getCurrentApplication() {
+  const res = await axiosInstance.get('/api/applications/current');
+  return res.data;
 }
 
 /**

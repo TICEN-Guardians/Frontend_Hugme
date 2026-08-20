@@ -1,4 +1,4 @@
-import axiosInstance from '../axiosInstance.js';
+import axiosInstance, { refreshAccessToken } from '../axiosInstance.js';
 import { clearAccessToken, setAccessToken } from '../tokenStore.js';
 
 export async function signup(email, password, name) {
@@ -20,22 +20,27 @@ export async function checkEmail(email) {
 }
 
 export async function login(email, password) {
-  const response = await axiosInstance.post('/api/auth/login', {
-    email,
-    password,
-  });
+  const response = await axiosInstance.post(
+    '/api/auth/login',
+    {
+      email,
+      password,
+    },
+    {
+      skipAuthRefresh: true,
+    },
+  );
 
-  setAccessToken(response.data.accessToken, response.data.tokenType);
+  setAccessToken(
+    response.data.accessToken,
+    response.data.tokenType,
+  );
 
   return response.data;
 }
 
-export async function reissue() {
-  const response = await axiosInstance.post('/api/auth/token/reissue');
-
-  setAccessToken(response.data.accessToken, response.data.tokenType);
-
-  return response.data;
+export function reissue() {
+  return refreshAccessToken();
 }
 
 export async function verifyMail(token) {
