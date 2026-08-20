@@ -15,12 +15,18 @@ export default function ChecklistBanner({ onFileSelected, onBeforeUpload, isPrep
   const fileInputRef = useRef(null);
   const [fileError, setFileError] = useState('');
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     setFileError('');
+
+    const shouldOpenFilePicker = onBeforeUpload
+      ? await onBeforeUpload()
+      : true;
+
+    if (!shouldOpenFilePicker) return;
     fileInputRef.current?.click();
   };
 
-  const handleFileChange = async (event) => {
+  const handleFileChange = (event) => {
     const file = event.target.files?.[0] ?? null;
     // 같은 파일을 다시 선택해도 onChange가 발동하도록 매번 비워둔다.
     event.target.value = '';
@@ -36,12 +42,6 @@ export default function ChecklistBanner({ onFileSelected, onBeforeUpload, isPrep
     }
 
     setFileError('');
-
-    const shouldUpload = onBeforeUpload
-      ? await onBeforeUpload()
-      : true;
-
-    if (!shouldUpload) return;
     onFileSelected(file);
   };
 
