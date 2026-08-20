@@ -552,6 +552,27 @@
   background: var(--accent-tint-50);
 }
 
+@media (max-width: 140rem) {
+  .root {
+    padding-top: var(--space-6);
+  }
+
+  .boardHeader,
+  .checklistLayout {
+    grid-template-columns: minmax(24rem, 30%) minmax(0, 70%);
+    gap: var(--space-4);
+  }
+
+  .itemArea {
+    --checklist-panel-height: 46rem;
+  }
+
+  .detailContent {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+}
+
 @media (max-width: 110rem) {
   .summaryGrid {
     grid-template-columns: repeat(2, minmax(0, 1fr));

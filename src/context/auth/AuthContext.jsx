@@ -13,7 +13,11 @@ import {
 } from '../../api/auth/authService.js';
 
 export const AuthContext = createContext(null);
+
 const AUTH_CHANNEL_NAME = 'hugme-auth';
+const LAST_ACTIVITY_KEY = 'hugme:lastActivityAt';
+const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+const IDLE_CHECK_INTERVAL_MS = 5 * 1000;
 export function AuthProvider({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
@@ -154,6 +158,135 @@ export function AuthProvider({ children }) {
     });
   }
 }, []);
+
+useEffect(() => {
+  // 로그인하지 않은 상태에서는 타이머를 실행하지 않는다.
+  if (!isAuthenticated) {
+    return undefined;
+  }
+
+  let isIdleLogoutStarted = false;
+  let lastActivityWriteAt = 0;
+
+  // 사용자의 마지막 활동 시간을 기록한다.
+  const recordActivity = () => {
+    const now = Date.now();
+
+    // 스크롤 등의 이벤트가 너무 자주 발생해도
+    // localStorage는 1초에 한 번만 갱신한다.
+    if (now - lastActivityWriteAt < 1000) {
+      return;
+    }
+
+    lastActivityWriteAt = now;
+
+    localStorage.setItem(
+      LAST_ACTIVITY_KEY,
+      String(now),
+    );
+  };
+
+  // 5분 이상 활동이 없었는지 확인한다.
+  const checkIdleTime = async () => {
+    const savedLastActivity =
+      localStorage.getItem(LAST_ACTIVITY_KEY);
+
+    const lastActivityAt =
+      Number(savedLastActivity);
+
+    // 저장된 활동 시간이 없으면 현재 시간부터 계산한다.
+    if (!lastActivityAt) {
+      recordActivity();
+      return;
+    }
+
+    const idleTime =
+      Date.now() - lastActivityAt;
+
+    // 아직 5분이 지나지 않은 경우
+    if (idleTime < IDLE_TIMEOUT_MS) {
+      return;
+    }
+
+    // 로그아웃 요청이 이미 시작된 경우
+    if (isIdleLogoutStarted) {
+      return;
+    }
+
+    isIdleLogoutStarted = true;
+
+    try {
+      await logout();
+    } catch (error) {
+      console.error(
+        '자동 로그아웃 API 호출 실패:',
+        error,
+      );
+    } finally {
+      window.alert(
+        '장시간 사용하지 않아 자동 로그아웃되었습니다.\n다시 로그인해주세요.',
+      );
+      navigate('/', { replace: true });
+    }
+  };
+
+  // 백그라운드에 있던 탭을 다시 열었을 때 즉시 확인한다.
+  const handleVisibilityChange = () => {
+    if (document.visibilityState === 'visible') {
+      checkIdleTime();
+    }
+  };
+
+  const activityEvents = [
+    'pointerdown',
+    'keydown',
+    'scroll',
+    'touchstart',
+  ];
+
+  // 사용자 활동 이벤트 등록
+  activityEvents.forEach((eventName) => {
+    window.addEventListener(
+      eventName,
+      recordActivity,
+      { passive: true },
+    );
+  });
+
+  document.addEventListener(
+    'visibilitychange',
+    handleVisibilityChange,
+  );
+
+  // 로그인 직후부터 5분 계산 시작
+  recordActivity();
+
+  // 5초마다 미사용 시간 확인
+  const intervalId = window.setInterval(
+    checkIdleTime,
+    IDLE_CHECK_INTERVAL_MS,
+  );
+
+  return () => {
+    window.clearInterval(intervalId);
+
+    activityEvents.forEach((eventName) => {
+      window.removeEventListener(
+        eventName,
+        recordActivity,
+      );
+    });
+
+    document.removeEventListener(
+      'visibilitychange',
+      handleVisibilityChange,
+    );
+  };
+}, [
+  isAuthenticated,
+  logout,
+  navigate,
+]);
 
   const value = useMemo(
     () => ({

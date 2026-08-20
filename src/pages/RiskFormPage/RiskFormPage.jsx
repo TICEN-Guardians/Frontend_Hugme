@@ -15,6 +15,7 @@ const ENTRY_EASE = [0.16, 1, 0.3, 1];
 const HOUSING_LABEL = { APARTMENT: '아파트', VILLA: '연립·다세대', OFFICETEL: '오피스텔', DETACHED_MULTI: '단독·다가구' };
 const errorMessage = (error, fallback) => error?.response?.data?.message ?? error?.response?.data?.detail?.message ?? fallback;
 const onlyDigits = (value) => value.replace(/\D/g, '');
+const parseFloorInput = (value) => (String(value).trim() === '' ? null : Number(value));
 const formatMoneyInput = (value) => {
   const digits = onlyDigits(value);
   return digits ? Number(digits).toLocaleString('ko-KR') : '';
@@ -52,6 +53,8 @@ export default function RiskFormPage() {
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
+  const [isAreaRequiredModalOpen, setIsAreaRequiredModalOpen] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
   const [progressMessage, setProgressMessage] = useState('');
   const [progressStep, setProgressStep] = useState('resolve');
   const [stage, setStage] = useState('registry');
@@ -61,7 +64,10 @@ export default function RiskFormPage() {
   const selectedCandidate = selectedIndex === '' ? null : candidates[Number(selectedIndex)];
   const housingType = selectedCandidate?.housingType ?? null;
   const contractAreaRequired = resolvedProperty?.contractAreaRequired ?? housingType === 'DETACHED_MULTI';
-  const unitNumberRequired = Boolean(housingType && housingType !== 'DETACHED_MULTI');
+  // 단독·다가구는 집합건물이 아니라 '호'가 없고, 예측 모델에도 층 Feature가 없다.
+  // 받아도 버려지는 값이라 입력칸을 아예 내리고 값도 보내지 않는다.
+  // 아직 동을 고르지 않아 유형을 모를 때는 기존처럼 보여준다.
+  const unitFieldsEnabled = housingType !== 'DETACHED_MULTI';
 
   const resetAddressResult = () => {
     setNormalizedAddress(''); setCandidates([]); setAddressCandidates([]); setSelectedIndex(''); setHoName(''); setResolvedProperty(null);
@@ -124,8 +130,12 @@ export default function RiskFormPage() {
     if (addressCandidates.length) next.address = '검색된 주소 중 하나를 선택해 주세요.';
     else if (!address.trim() || !normalizedAddress) next.address = '주소 검색을 완료해 주세요.';
     if (!selectedCandidate) next.candidate = '진단할 건물 또는 동을 선택해 주세요.';
-    if (unitNumberRequired && !hoName.trim()) next.hoName = '호수를 입력해 주세요.';
-    if (floor === '' || !Number.isInteger(Number(floor))) next.floor = '해당 층을 정수로 입력해 주세요.';
+    if (unitFieldsEnabled) {
+      const floorText = String(floor).trim();
+      if (!hoName.trim()) next.hoName = '호수를 입력해 주세요.';
+      if (floorText === '') next.floor = '해당 층을 입력해 주세요.';
+      else if (!Number.isInteger(Number(floorText))) next.floor = '해당 층을 정수로 입력해 주세요.';
+    }
     if (!landlordName.trim()) next.landlordName = '계약 상대방 이름을 입력해 주세요.';
     if (!deposit || Number(deposit.replaceAll(',', '')) <= 0) next.deposit = '보증금을 입력해 주세요.';
     if (!contractDate) next.contractDate = '계약 예정일을 입력해 주세요.';
@@ -142,12 +152,12 @@ export default function RiskFormPage() {
 
   const diagnosisDetails = (resolvedArea, useContractArea) => ({
     dongName: selectedCandidate.dongName || null,
-    hoName: unitNumberRequired ? hoName.trim() : null,
+    hoName: unitFieldsEnabled ? hoName.trim() : null,
     deposit: Number(deposit.replaceAll(',', '')),
     contractDate,
     contractArea: useContractArea ? Number(resolvedArea) : null,
     exclusiveArea: useContractArea ? null : Number(resolvedArea),
-    floor: Number(floor),
+    floor: unitFieldsEnabled ? parseFloorInput(floor) : null,
     landlordName: landlordName.trim(),
   });
 
@@ -169,6 +179,8 @@ export default function RiskFormPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     setIsSubmitting(true);
+    setSubmitError(null);
+    setIsAreaRequiredModalOpen(false);
     let currentStep = stage === 'registry' ? '건물 정보를 확인' : '시세와 위험도를 계산';
     try {
       if (stage === 'registry') {
@@ -176,27 +188,33 @@ export default function RiskFormPage() {
         const resolved = await resolveProperty({
           address: address.trim(),
           dongName: selectedCandidate.dongName,
-          hoName: unitNumberRequired ? hoName.trim() : null,
+          hoName: unitFieldsEnabled ? hoName.trim() : null,
         });
         setResolvedProperty(resolved);
         currentStep = '계약 정보를 저장';
         setProgress('save', '입력한 계약 정보를 저장하고 있습니다.');
-        const payload = {
+        // 진단 재사용 여부는 사용자가 입력한 값으로만 판단한다.
+        // 매물 스냅샷은 같은 입력이면 항상 같은 값이라 키에 넣지 않는다.
+        const contract = {
           address: address.trim(),
           dongName: selectedCandidate.dongName || null,
-          hoName: unitNumberRequired ? hoName.trim() : null,
+          hoName: unitFieldsEnabled ? hoName.trim() : null,
           deposit: Number(deposit.replaceAll(',', '')),
           contractDate,
           contractArea: null,
           exclusiveArea: null,
-          floor: Number(floor),
+          floor: unitFieldsEnabled ? parseFloorInput(floor) : null,
           landlordName: landlordName.trim(),
         };
-        const payloadKey = JSON.stringify(payload) + '|' + (file ? `${file.name}:${file.size}:${file.lastModified}` : '');
+        const payloadKey = JSON.stringify(contract) + '|' + (file ? `${file.name}:${file.size}:${file.lastModified}` : '');
         const reusableAnalysisId = pendingDiagnosisRef.current?.payloadKey === payloadKey
           ? pendingDiagnosisRef.current.analysisId
           : null;
-        const targetAnalysisId = reusableAnalysisId ?? (await createDiagnosis(payload)).analysisId;
+        const targetAnalysisId = reusableAnalysisId ?? (await createDiagnosis({
+          ...contract,
+          // 분석 단계에서 주소·건축물대장을 다시 조회하지 않도록 그대로 돌려준다.
+          propertySnapshot: resolved?.propertySnapshot ?? null,
+        })).analysisId;
         pendingDiagnosisRef.current = { analysisId: targetAnalysisId, payloadKey };
         currentStep = '등기부등본을 분석';
         setProgress('registry', '등기부등본에서 전용면적과 권리관계를 확인하고 있습니다.');
@@ -212,14 +230,19 @@ export default function RiskFormPage() {
           return;
         }
         setStage('details');
-        setProgressMessage('등기부에서 면적을 확인하지 못했습니다. 면적만 추가로 입력해 주세요.');
+        setProgressMessage('');
+        setIsAreaRequiredModalOpen(true);
       } else {
         setProgress('analyze', '시세와 위험도를 계산하고 있습니다.');
         await completeDiagnosis(analysisId, Number(area), resolvedProperty);
       }
     } catch (error) {
       const status = error?.response?.status ? ' (HTTP ' + error.response.status + ')' : '';
-      setErrors((current) => ({ ...current, submit: currentStep + '하는 단계에서 실패했습니다' + status + '. ' + errorMessage(error, '잠시 후 다시 시도해 주세요.') }));
+      setSubmitError({
+        title: currentStep + '하는 단계에서 실패했습니다',
+        message: errorMessage(error, '잠시 후 다시 시도해 주세요.'),
+        status,
+      });
       setProgressMessage('');
     } finally { setIsSubmitting(false); }
   };
@@ -246,9 +269,9 @@ export default function RiskFormPage() {
                 <button type="button" className={styles.searchButton} disabled={isSearching || stage === 'details'} onClick={handleAddressSearch}>{isSearching ? '검색 중' : '주소 검색'}</button>
               </div>
             </div>
-            <TextField id="risk-ho" label="호수" value={hoName} setValue={setHoName} error={errors.hoName} placeholder="예: 1301" disabled={stage === 'details'} />
+            {unitFieldsEnabled && <TextField id="risk-ho" label="호수" value={hoName} setValue={setHoName} error={errors.hoName} placeholder="예: 1301" disabled={stage === 'details'} />}
             {stage === 'details' && <UnitField id="risk-area" label={contractAreaRequired ? '계약 면적' : '전용 면적'} unit="m²" value={area} setValue={setArea} error={errors.area} inputMode="decimal" placeholder="예: 33.12" />}
-            <UnitField id="risk-floor" label="해당 층" unit="층" value={floor} setValue={setFloor} error={errors.floor} inputMode="numeric" placeholder="예: 13" disabled={stage === 'details'} />
+            {unitFieldsEnabled && <UnitField id="risk-floor" label="해당 층" unit="층" value={floor} setValue={setFloor} error={errors.floor} inputMode="numeric" placeholder="예: 13" disabled={stage === 'details'} />}
             <TextField id="risk-landlord" label="계약 상대방(임대인) 이름" value={landlordName} setValue={setLandlordName} error={errors.landlordName} placeholder="계약서에 적힌 임대인 이름" disabled={stage === 'details'} />
             <UnitField id="risk-deposit" label="전세보증금" unit="원" value={deposit} setValue={(value) => setDeposit(formatMoneyInput(value))} error={errors.deposit} inputMode="numeric" placeholder="예: 50,000,000" disabled={stage === 'details'} />
             <div className={styles.field}><FieldLabel htmlFor="risk-contract-date" label="계약 예정일" error={errors.contractDate} /><div className={styles.unitInputWrapper} onClick={stage === 'registry' ? openContractDatePicker : undefined}><input ref={contractDateInputRef} id="risk-contract-date" type="date" className={styles.unitInput} value={contractDate} disabled={stage === 'details'} onChange={(event) => setContractDate(event.target.value)} /></div></div>          </motion.div>
@@ -278,12 +301,12 @@ export default function RiskFormPage() {
           </motion.div>
         </motion.div>
 
-        {errors.submit && <p className={styles.fieldError}>{errors.submit}</p>}
-        {progressMessage && <p className={styles.subtitle}>{progressMessage}</p>}
         <motion.div className={styles.actionRow} initial={{ opacity: 0 }} animate={{ opacity: 1 }}><Button type="submit" disabled={isSubmitting} className={styles.submitButton}>{isSubmitting ? '처리 중...' : stage === 'registry' ? '등기 분석 및 위험도 진단' : '면적 입력 후 위험도 진단'}</Button></motion.div>
       </form>
 
       <Modal isOpen={isConsentModalOpen} onClose={() => setIsConsentModalOpen(false)}><div className={styles.consentModal}><h2 className={styles.consentModalTitle}>매물 위험도 진단 이용 동의</h2><div className={styles.consentModalBody}><ConsentSection title="입력 정보 확인">입력한 주소, 계약 조건, 계약 상대방 이름과 등기부등본은 위험도 진단에 사용됩니다.</ConsentSection><ConsentSection title="파일 이용 범위">업로드한 등기부등본은 매물의 권리관계와 위험 요소 확인 목적으로만 사용됩니다.</ConsentSection><ConsentSection title="진단 결과 안내">진단 결과는 계약 전 참고용 정보이며 최종 판단과 법적 책임은 이용자 본인에게 있습니다.</ConsentSection></div></div></Modal>
+      <AreaRequiredModal isOpen={isAreaRequiredModalOpen} onClose={() => setIsAreaRequiredModalOpen(false)} contractAreaRequired={contractAreaRequired} />
+      <SubmitErrorModal error={submitError} onClose={() => setSubmitError(null)} />
       <RiskProgressModal isOpen={isSubmitting} activeStep={progressStep} message={progressMessage} />
     </div>
   );
@@ -390,6 +413,47 @@ function RiskProgressModal({ isOpen, activeStep, message }) {
             </div>
           );
         })}
+      </div>
+    </Modal>
+  );
+}
+
+function SubmitErrorModal({ error, onClose }) {
+  return (
+    <Modal isOpen={Boolean(error)} onClose={onClose} panelClassName={styles.submitErrorModal}>
+      <div className={styles.submitErrorIcon} aria-hidden="true">
+        <FaCircleInfo />
+      </div>
+      <h2 className={styles.submitErrorTitle}>{error?.title}</h2>
+      <p className={styles.submitErrorDescription}>
+        {error?.message}
+        {error?.status}
+      </p>
+      <div className={styles.submitErrorActions}>
+        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
+          확인
+        </Button>
+      </div>
+    </Modal>
+  );
+}
+
+function AreaRequiredModal({ isOpen, onClose, contractAreaRequired }) {
+  const areaLabel = contractAreaRequired ? '계약면적' : '전용면적';
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.submitErrorModal}>
+      <div className={styles.submitErrorIcon} aria-hidden="true">
+        <FaCircleInfo />
+      </div>
+      <h2 className={styles.submitErrorTitle}>{areaLabel} 입력이 필요합니다</h2>
+      <p className={styles.submitErrorDescription}>
+        등기부등본에서 {areaLabel}을 자동으로 확인하지 못했습니다. 폼에 표시된 {areaLabel}을 추가로 입력한 뒤 다시 진단해 주세요.
+      </p>
+      <div className={styles.submitErrorActions}>
+        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
+          확인
+        </Button>
       </div>
     </Modal>
   );
