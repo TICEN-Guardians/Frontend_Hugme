@@ -158,6 +158,30 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
   );
 }
 
+function ExistingChecklistConfirmModal({ isOpen, onClose, onUseExisting, onStartNew }) {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.reanalysisModal}>
+      <div className={styles.reanalysisContent}>
+        <p className={styles.reanalysisEyebrow}>기존 내역 확인</p>
+        <h2 className={styles.reanalysisTitle}>기존 준비서류 내역이 있어요</h2>
+        <p className={styles.reanalysisDescription}>
+          기존 신청의 최종 준비서류를 확인하거나,
+          <br />
+          새 계약서로 다시 진행할 수 있어요.
+        </p>
+        <div className={styles.reanalysisActions}>
+          <Button type="button" variant="secondary" onClick={onStartNew}>
+            신규 진행
+          </Button>
+          <Button type="button" onClick={onUseExisting}>
+            기존 내역 보기
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
 function ContractAnalysisPanel({
   isDone,
   ocrInfo,
@@ -486,8 +510,12 @@ export default function ProductChecklistPage() {
     isConfirming,
     isRestoring,
     isPreparingUpload,
+    isExistingChecklistModalOpen,
     finalDocuments,
     prepareUpload,
+    useExistingChecklist,
+    startNewChecklist,
+    closeExistingChecklistModal,
     startUpload,
     restartUpload,
     confirmOcrInfo,
@@ -720,6 +748,13 @@ export default function ProductChecklistPage() {
       )}
 
       <AnalyzingModal isOpen={step === 'analyzing'} />
+
+      <ExistingChecklistConfirmModal
+        isOpen={isExistingChecklistModalOpen}
+        onClose={closeExistingChecklistModal}
+        onUseExisting={useExistingChecklist}
+        onStartNew={startNewChecklist}
+      />
 
       <OcrConfirmModal
         isOpen={step === 'ocrConfirm'}
