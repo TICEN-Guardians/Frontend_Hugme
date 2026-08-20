@@ -344,28 +344,6 @@
   }
 }
 
-@media (max-width: 110rem) {
-  .root {
-    height: auto;
-    min-height: 100%;
-    overflow: visible;
-    flex-direction: column;
-  }
-
-  .chatPane {
-    flex: none;
-    min-height: 58rem;
-    border-right: none;
-    border-bottom: 0.1rem solid var(--border-subtle);
-  }
-
-  .sidePane {
-    flex: none;
-    width: 100%;
-    min-height: 52rem;
-  }
-}
-
 @media (max-width: 76.7rem) {
   .root {
     min-height: auto;
