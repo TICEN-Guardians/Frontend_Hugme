@@ -77,8 +77,8 @@ export function useContractUpload(productCode) {
   }, []);
 
   /**
-   * 계약서의 실제 업로드 전에 동일 상품의 완료 내역을 확인한다.
-   * true를 반환하면 신규 업로드를 계속하고,
+   * 계약서 파일 선택 전에 동일 상품의 완료 내역을 확인한다.
+   * true를 반환하면 신규 업로드를 위해 파일 선택창을 열고,
    * false를 반환하면 기존 내역을 표시하거나 오류 처리를 끝낸다.
    */
   const prepareUpload = useCallback(async () => {
