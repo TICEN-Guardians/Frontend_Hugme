@@ -11,6 +11,7 @@ import {
   reissue,
   signup as signupRequest,
 } from '../../api/auth/authService.js';
+import SuccessModal from '../../components/common/Modal/SuccessModal.jsx';
 
 export const AuthContext = createContext(null);
 
@@ -25,6 +26,7 @@ export function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
+  const [isIdleLogoutNoticeOpen, setIsIdleLogoutNoticeOpen] = useState(false);
   const AUTH_ENTRY_PATHS = [
     '/auth/login',
     '/auth/signup',
@@ -54,6 +56,10 @@ export function AuthProvider({ children }) {
       setUser(null);
       setIsAuthenticated(false);
       setIsAuthLoading(false);
+
+      if (event.data?.reason === 'IDLE') {
+        setIsIdleLogoutNoticeOpen(true);
+      }
   
       navigate('/', { replace: true });
     };
@@ -144,7 +150,7 @@ export function AuthProvider({ children }) {
     return me;
   }, []);
 
- const logout = useCallback(async () => {
+ const logout = useCallback(async (reason = 'MANUAL') => {
   try {
     await logoutRequest();
   } finally {
@@ -154,6 +160,7 @@ export function AuthProvider({ children }) {
 
     authChannelRef.current?.postMessage({
       type: 'LOGOUT',
+      reason,
       timestamp: Date.now(),
     });
   }
@@ -216,16 +223,14 @@ useEffect(() => {
     isIdleLogoutStarted = true;
 
     try {
-      await logout();
+      await logout('IDLE');
     } catch (error) {
       console.error(
         '자동 로그아웃 API 호출 실패:',
         error,
       );
     } finally {
-      window.alert(
-        '장시간 사용하지 않아 자동 로그아웃되었습니다.\n다시 로그인해주세요.',
-      );
+      setIsIdleLogoutNoticeOpen(true);
       navigate('/', { replace: true });
     }
   };
@@ -301,7 +306,20 @@ useEffect(() => {
     [user, isAuthenticated, isAuthLoading, signup, checkEmail, login, logout],
   );
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+      <SuccessModal
+        isOpen={isIdleLogoutNoticeOpen}
+        tone="error"
+        title="자동 로그아웃 안내"
+        description="장시간 사용하지 않아 자동 로그아웃되었습니다. 다시 로그인해주세요."
+        actionLabel="확인"
+        onAction={() => setIsIdleLogoutNoticeOpen(false)}
+        onClose={() => setIsIdleLogoutNoticeOpen(false)}
+      />
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {

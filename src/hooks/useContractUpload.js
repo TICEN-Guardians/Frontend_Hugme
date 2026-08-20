@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   createApplication,
   getChecklistCompletion,
@@ -24,6 +24,8 @@ export function useContractUpload(productCode) {
   const [finalDocuments, setFinalDocuments] = useState(null);
   const [isRestoring, setIsRestoring] = useState(true);
   const [isPreparingUpload, setIsPreparingUpload] = useState(false);
+  const [isExistingChecklistModalOpen, setIsExistingChecklistModalOpen] = useState(false);
+  const existingChecklistChoiceResolverRef = useRef(null);
 
   useEffect(() => {
     let ignore = false;
@@ -76,6 +78,34 @@ export function useContractUpload(productCode) {
     sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
   }, []);
 
+  const requestExistingChecklistChoice = useCallback(
+    () =>
+      new Promise((resolve) => {
+        existingChecklistChoiceResolverRef.current = resolve;
+        setIsExistingChecklistModalOpen(true);
+      }),
+    [],
+  );
+
+  const resolveExistingChecklistChoice = useCallback((choice) => {
+    const resolve = existingChecklistChoiceResolverRef.current;
+    existingChecklistChoiceResolverRef.current = null;
+    setIsExistingChecklistModalOpen(false);
+    resolve?.(choice);
+  }, []);
+
+  const useExistingChecklist = useCallback(() => {
+    resolveExistingChecklistChoice('existing');
+  }, [resolveExistingChecklistChoice]);
+
+  const startNewChecklist = useCallback(() => {
+    resolveExistingChecklistChoice('new');
+  }, [resolveExistingChecklistChoice]);
+
+  const closeExistingChecklistModal = useCallback(() => {
+    resolveExistingChecklistChoice('cancel');
+  }, [resolveExistingChecklistChoice]);
+
   /**
    * 계약서 파일 선택 전에 동일 상품의 완료 내역을 확인한다.
    * true를 반환하면 신규 업로드를 위해 파일 선택창을 열고,
@@ -95,11 +125,13 @@ export function useContractUpload(productCode) {
         return true;
       }
 
-      const useExisting = window.confirm(
-        '기존 준비서류 내역이 있습니다.\n\n확인: 기존 내역 보기\n취소: 신규로 진행',
-      );
+      const choice = await requestExistingChecklistChoice();
 
-      if (!useExisting) {
+      if (choice === 'cancel') {
+        return false;
+      }
+
+      if (choice === 'new') {
         resetForNewApplication();
         return true;
       }
@@ -134,7 +166,12 @@ export function useContractUpload(productCode) {
     } finally {
       setIsPreparingUpload(false);
     }
-  }, [isPreparingUpload, productCode, resetForNewApplication]);
+  }, [
+    isPreparingUpload,
+    productCode,
+    requestExistingChecklistChoice,
+    resetForNewApplication,
+  ]);
 
   const startUpload = useCallback(
     async (file, { forceNew = false } = {}) => {
@@ -230,8 +267,12 @@ export function useContractUpload(productCode) {
     isConfirming,
     isRestoring,
     isPreparingUpload,
+    isExistingChecklistModalOpen,
     finalDocuments,
     prepareUpload,
+    useExistingChecklist,
+    startNewChecklist,
+    closeExistingChecklistModal,
     startUpload,
     restartUpload,
     confirmOcrInfo,
