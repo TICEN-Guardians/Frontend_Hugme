@@ -289,6 +289,13 @@ export default function RiskFormPage() {
   );
 }
 
+/** 건축물대장 dongNm은 '101동'처럼 이미 동이 붙어 오는 경우가 많다. */
+function dongLabel(dongName) {
+  const name = String(dongName ?? '').trim();
+  if (!name) return '';
+  return name.endsWith('동') ? name : `${name}동`;
+}
+
 function FieldLabel({ htmlFor, label, error }) {
   return (
     <div className={styles.labelRow}>
@@ -333,7 +340,7 @@ function SearchResultPanel({
         <>
           <select className={styles.input} disabled={disabled} value={selectedIndex} onChange={(event) => setSelectedIndex(event.target.value)}>
             <option value="">건물 또는 동을 선택해 주세요</option>
-            {candidates.map((candidate, index) => <option key={`${candidate.buildingName}-${candidate.dongName}-${index}`} value={index}>{[candidate.buildingName, candidate.dongName && `${candidate.dongName}동`].filter(Boolean).join(' · ') || HOUSING_LABEL[candidate.housingType]}</option>)}
+            {candidates.map((candidate, index) => <option key={`${candidate.buildingName}-${candidate.dongName}-${index}`} value={index}>{[candidate.buildingName, dongLabel(candidate.dongName)].filter(Boolean).join(' · ') || HOUSING_LABEL[candidate.housingType]}</option>)}
           </select>
           {selectedCandidate && <div className={styles.housingTypeBox}><span className={styles.housingTypeInfo}><span className={styles.infoIcon}><FaCircleInfo /></span>{HOUSING_LABEL[housingType]}</span><span className={styles.housingTypeConfirmed}><FaCircleCheck /> {normalizedAddress}</span></div>}
         </>
