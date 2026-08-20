@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion';
-import { LuCircleDollarSign, LuShieldAlert } from 'react-icons/lu';
+import { LuCircleDollarSign, LuFileCheck, LuShieldAlert } from 'react-icons/lu';
 import styles from './RiskSummaryRail.module.css';
 
 export default function RiskSummaryRail({ summary, motionSet }) {
@@ -49,6 +49,24 @@ export default function RiskSummaryRail({ summary, motionSet }) {
           <p className={styles.emptyRisk}>요약할 주요 위험 신호가 없습니다.</p>
         )}
       </div>
+
+      {summary.recommendedActions?.length > 0 && (
+        <>
+          <div className={styles.divider} />
+
+          <div className={styles.checkBlock}>
+            <p className={styles.riskTitle}>
+              <LuFileCheck aria-hidden="true" />
+              계약 전 확인
+            </p>
+            <ul className={styles.checkList}>
+              {summary.recommendedActions.map((action) => (
+                <li key={action.label} title={action.description}>{action.label}</li>
+              ))}
+            </ul>
+          </div>
+        </>
+      )}
     </motion.aside>
   );
 }

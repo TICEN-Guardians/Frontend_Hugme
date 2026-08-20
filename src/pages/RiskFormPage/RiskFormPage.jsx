@@ -20,9 +20,9 @@ const formatMoneyInput = (value) => {
   return digits ? Number(digits).toLocaleString('ko-KR') : '';
 };
 const PROGRESS_STEPS = [
+  { key: 'resolve', label: '건물 정보 확인', description: '건축물 정보와 계약 대상 호수를 대조하고 있습니다.' },
   { key: 'save', label: '계약 정보 저장', description: '입력한 계약 조건을 진단 요청으로 준비하고 있습니다.' },
   { key: 'registry', label: '등기부등본 분석', description: '등기부등본에서 권리관계와 면적 정보를 확인하고 있습니다.' },
-  { key: 'resolve', label: '건물 정보 확인', description: '건축물 정보와 계약 대상 호수를 대조하고 있습니다.' },
   { key: 'analyze', label: '위험도 계산', description: '시세와 담보 정보를 바탕으로 위험도를 계산하고 있습니다.' },
 ];
 
@@ -36,6 +36,8 @@ export default function RiskFormPage() {
   const [address, setAddress] = useState('');
   const [normalizedAddress, setNormalizedAddress] = useState('');
   const [candidates, setCandidates] = useState([]);
+  const [addressCandidates, setAddressCandidates] = useState([]);
+  const [resolvedProperty, setResolvedProperty] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState('');
   const [hoName, setHoName] = useState('');
   const [area, setArea] = useState('');
@@ -51,26 +53,33 @@ export default function RiskFormPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
   const [progressMessage, setProgressMessage] = useState('');
-  const [progressStep, setProgressStep] = useState('save');
+  const [progressStep, setProgressStep] = useState('resolve');
   const [stage, setStage] = useState('registry');
   const [analysisId, setAnalysisId] = useState(null);
   const [ocrResult, setOcrResult] = useState(null);
 
   const selectedCandidate = selectedIndex === '' ? null : candidates[Number(selectedIndex)];
   const housingType = selectedCandidate?.housingType ?? null;
-  const contractAreaRequired = housingType === 'DETACHED_MULTI';
+  const contractAreaRequired = resolvedProperty?.contractAreaRequired ?? housingType === 'DETACHED_MULTI';
   const unitNumberRequired = Boolean(housingType && housingType !== 'DETACHED_MULTI');
 
   const resetAddressResult = () => {
-    setNormalizedAddress(''); setCandidates([]); setSelectedIndex(''); setHoName('');
+    setNormalizedAddress(''); setCandidates([]); setAddressCandidates([]); setSelectedIndex(''); setHoName(''); setResolvedProperty(null);
   };
 
-  const handleAddressSearch = async () => {
-    if (!address.trim()) return setErrors((current) => ({ ...current, address: '주소를 입력해 주세요.' }));
+  const runAddressSearch = async (keyword) => {
+    if (!keyword) return setErrors((current) => ({ ...current, address: '주소를 입력해 주세요.' }));
     setIsSearching(true);
     setErrors((current) => ({ ...current, address: '', candidate: '' }));
     try {
-      const result = await searchProperty(address.trim());
+      const result = await searchProperty(keyword);
+      const nextAddresses = result.addressCandidates ?? [];
+      if (nextAddresses.length) {
+        setNormalizedAddress(''); setCandidates([]); setSelectedIndex(''); setResolvedProperty(null);
+        setAddressCandidates(nextAddresses);
+        return;
+      }
+      setAddressCandidates([]);
       const nextCandidates = result.candidates ?? [];
       setNormalizedAddress(result.normalizedAddress);
       setCandidates(nextCandidates);
@@ -80,6 +89,14 @@ export default function RiskFormPage() {
       resetAddressResult();
       setErrors((current) => ({ ...current, address: errorMessage(error, '주소 검색에 실패했습니다.') }));
     } finally { setIsSearching(false); }
+  };
+
+  const handleAddressSearch = () => runAddressSearch(address.trim());
+
+  const handleAddressCandidateSelect = (roadAddress) => {
+    setAddress(roadAddress);
+    setAddressCandidates([]);
+    runAddressSearch(roadAddress);
   };
 
   const handleFileChange = (event) => {
@@ -104,7 +121,8 @@ export default function RiskFormPage() {
 
   const validateRegistry = () => {
     const next = {};
-    if (!address.trim() || !normalizedAddress) next.address = '주소 검색을 완료해 주세요.';
+    if (addressCandidates.length) next.address = '검색된 주소 중 하나를 선택해 주세요.';
+    else if (!address.trim() || !normalizedAddress) next.address = '주소 검색을 완료해 주세요.';
     if (!selectedCandidate) next.candidate = '진단할 건물 또는 동을 선택해 주세요.';
     if (unitNumberRequired && !hoName.trim()) next.hoName = '호수를 입력해 주세요.';
     if (floor === '' || !Number.isInteger(Number(floor))) next.floor = '해당 층을 정수로 입력해 주세요.';
@@ -133,14 +151,7 @@ export default function RiskFormPage() {
     landlordName: landlordName.trim(),
   });
 
-  const completeDiagnosis = async (targetAnalysisId, resolvedArea) => {
-    setProgress('resolve', '건물과 소유자 정보를 확인하고 있습니다.');
-    const resolved = await resolveProperty({
-      address: address.trim(),
-      dongName: selectedCandidate.dongName,
-      hoName: unitNumberRequired ? hoName.trim() : null,
-    });
-    // 면적을 계약면적/전용면적 중 어디에 넣을지는 서버가 확정한 주택유형 기준을 따른다.
+  const completeDiagnosis = async (targetAnalysisId, resolvedArea, resolved) => {
     const useContractArea = resolved?.contractAreaRequired ?? contractAreaRequired;
     await updateDiagnosisDetails(
       targetAnalysisId,
@@ -158,9 +169,17 @@ export default function RiskFormPage() {
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
     setIsSubmitting(true);
-    let currentStep = stage === 'registry' ? '등기부등본을 분석' : '시세와 위험도를 계산';
+    let currentStep = stage === 'registry' ? '건물 정보를 확인' : '시세와 위험도를 계산';
     try {
       if (stage === 'registry') {
+        setProgress('resolve', '건물과 소유자 정보를 확인하고 있습니다.');
+        const resolved = await resolveProperty({
+          address: address.trim(),
+          dongName: selectedCandidate.dongName,
+          hoName: unitNumberRequired ? hoName.trim() : null,
+        });
+        setResolvedProperty(resolved);
+        currentStep = '계약 정보를 저장';
         setProgress('save', '입력한 계약 정보를 저장하고 있습니다.');
         const payload = {
           address: address.trim(),
@@ -179,22 +198,24 @@ export default function RiskFormPage() {
           : null;
         const targetAnalysisId = reusableAnalysisId ?? (await createDiagnosis(payload)).analysisId;
         pendingDiagnosisRef.current = { analysisId: targetAnalysisId, payloadKey };
+        currentStep = '등기부등본을 분석';
         setProgress('registry', '등기부등본에서 전용면적과 권리관계를 확인하고 있습니다.');
         const registry = await uploadRegistry({ analysisId: targetAnalysisId, file });
         pendingDiagnosisRef.current = null;
         setAnalysisId(targetAnalysisId);
         setOcrResult(registry);
-        const ocrArea = contractAreaRequired ? null : Number(registry.exclusiveArea);
+        const useContractArea = resolved?.contractAreaRequired ?? contractAreaRequired;
+        const ocrArea = useContractArea ? null : Number(registry.exclusiveArea);
         if (Number.isFinite(ocrArea) && ocrArea > 0) {
           currentStep = '시세와 위험도를 계산';
-          await completeDiagnosis(targetAnalysisId, ocrArea);
+          await completeDiagnosis(targetAnalysisId, ocrArea, resolved);
           return;
         }
         setStage('details');
         setProgressMessage('등기부에서 면적을 확인하지 못했습니다. 면적만 추가로 입력해 주세요.');
       } else {
-        setProgress('resolve', '건물과 소유자 정보를 확인하고 있습니다.');
-        await completeDiagnosis(analysisId, Number(area));
+        setProgress('analyze', '시세와 위험도를 계산하고 있습니다.');
+        await completeDiagnosis(analysisId, Number(area), resolvedProperty);
       }
     } catch (error) {
       const status = error?.response?.status ? ' (HTTP ' + error.response.status + ')' : '';
@@ -234,8 +255,10 @@ export default function RiskFormPage() {
 
           <motion.div className={styles.sideColumn} variants={motionVariants}>
             <SearchResultPanel
+              addressCandidates={addressCandidates}
               candidates={candidates}
               disabled={stage === 'details'}
+              onSelectAddress={handleAddressCandidateSelect}
               error={errors.candidate}
               housingType={housingType}
               normalizedAddress={normalizedAddress}
@@ -276,15 +299,33 @@ function FieldLabel({ htmlFor, label, error }) {
 }
 
 function SearchResultPanel({
+  addressCandidates,
   candidates,
   disabled,
   error,
   housingType,
   normalizedAddress,
+  onSelectAddress,
   selectedCandidate,
   selectedIndex,
   setSelectedIndex,
 }) {
+  if (addressCandidates.length > 0) {
+    return (
+      <div className={styles.searchResultPanel}>
+        <FieldLabel label="주소 검색 결과" error={error} />
+        <select className={styles.input} disabled={disabled} value="" onChange={(event) => { if (event.target.value !== '') onSelectAddress(addressCandidates[Number(event.target.value)].roadAddress); }}>
+          <option value="">검색된 주소 {addressCandidates.length}건 중에서 선택해 주세요</option>
+          {addressCandidates.map((candidate, index) => <option key={`${candidate.roadAddress}-${index}`} value={index}>{[candidate.roadAddress, candidate.buildingName].filter(Boolean).join(' · ')}</option>)}
+        </select>
+        <div className={styles.searchEmptyBox}>
+          <span className={styles.infoIcon}><FaCircleInfo /></span>
+          <span>입력한 주소로 여러 건물이 검색되었습니다. 진단할 건물의 주소를 선택하면 다시 검색합니다.</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.searchResultPanel}>
       <FieldLabel label="주소 검색 결과" error={error} />
