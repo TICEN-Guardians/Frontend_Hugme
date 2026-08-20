@@ -165,7 +165,12 @@ export default function DocumentChat() {
                     }
               }
             >
-              <MessageList messages={messages} animateMessages />
+              <MessageList
+                messages={messages}
+                animateMessages
+                showOrderedLists={false}
+                documentChatMode
+              />
               {isSending && (
                 <motion.div
                   className={styles.typingRow}
