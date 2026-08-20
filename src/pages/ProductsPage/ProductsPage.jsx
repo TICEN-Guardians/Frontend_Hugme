@@ -8,10 +8,6 @@ import ProductGroup from './ProductGroup/ProductGroup.jsx';
 import styles from './ProductsPage.module.css';
 import { useNavigate } from 'react-router-dom';
 import {
-  getChecklistCompletion,
-  getCurrentApplication,
-} from '../../api/checklist/checklistService.js';
-import {
   LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
 } from '../../hooks/useContractUpload.js';
 
@@ -66,48 +62,10 @@ export default function ProductsPage() {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
 
-  const handleProductClick = async (product) => {
-    try {
-      const exists = await getChecklistCompletion(product.productCode);
-
-      // 해당 상품의 기존 최종 서류가 없는 경우
-      if (!exists) {
-        sessionStorage.removeItem(
-          LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
-        );
-
-        navigate(product.to);
-        return;
-      }
-
-      // 기존 내역이 있는 경우
-      const useExisting = window.confirm(
-        '기존 준비서류 내역이 있습니다.\n\n확인: 기존 내역 보기\n취소: 신규로 진행',
-      );
-
-      // 신규 진행 선택
-      if (!useExisting) {
-        sessionStorage.removeItem(
-          LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
-        );
-
-        navigate(product.to);
-        return;
-      }
-
-      // 기존 내역 선택
-      const application = await getCurrentApplication();
-
-      sessionStorage.setItem(
-        LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
-        String(application.applicationId),
-      );
-
-      navigate(product.to);
-    } catch (error) {
-      console.error('준비서류 내역 확인 실패:', error);
-      window.alert('준비서류 내역을 확인하지 못했습니다.');
-    }
+  const handleProductClick = (product) => {
+    // 기존 신청 확인은 상세 화면의 계약서 업로드 시점에 수행한다.
+    sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+    navigate(product.to);
   };
 
   return (

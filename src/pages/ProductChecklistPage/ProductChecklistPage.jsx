@@ -158,7 +158,16 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
   );
 }
 
-function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset, onChat }) {
+function ContractAnalysisPanel({
+  isDone,
+  ocrInfo,
+  onUpload,
+  onBeforeUpload,
+  isPreparingUpload,
+  uploadError,
+  onReset,
+  onChat,
+}) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
   const fileInputRef = useRef(null);
   const [fileError, setFileError] = useState('');
@@ -196,7 +205,11 @@ function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: PANEL_EASE }}
       >
-        <ChecklistBanner onFileSelected={onUpload} />
+        <ChecklistBanner
+          onFileSelected={onUpload}
+          onBeforeUpload={onBeforeUpload}
+          isPreparingUpload={isPreparingUpload}
+        />
         {uploadError && (
           <p className={styles.uploadError}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
         )}
@@ -472,7 +485,9 @@ export default function ProductChecklistPage() {
     uploadError,
     isConfirming,
     isRestoring,
+    isPreparingUpload,
     finalDocuments,
+    prepareUpload,
     startUpload,
     restartUpload,
     confirmOcrInfo,
@@ -657,6 +672,8 @@ export default function ProductChecklistPage() {
             <ContractAnalysisPanel
               isDone={false}
               onUpload={startUpload}
+              onBeforeUpload={prepareUpload}
+              isPreparingUpload={isPreparingUpload}
               uploadError={uploadError}
             />
             <motion.section
