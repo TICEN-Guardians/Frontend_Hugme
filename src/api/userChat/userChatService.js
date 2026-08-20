@@ -82,7 +82,18 @@ export async function sendGuideMessage(sessionId, message, onToken) {
   return finalResponse;
 }
 
-export async function getGuideChatHistory() {
-  const response = await axiosInstance.get(`${GUIDE_CHAT_BASE_URL}/history`);
+export async function getGuideChatHistory(sessionId) {
+  const response = await axiosInstance.get(`${GUIDE_CHAT_BASE_URL}/history`, {
+    params: { sessionId },
+  });
   return response.data;
+}
+
+export async function getGuideSessions() {
+  const response = await axiosInstance.get(`${GUIDE_CHAT_BASE_URL}/sessions`);
+  return response.data;
+}
+
+export async function deleteGuideSession(sessionId) {
+  await axiosInstance.delete(`${GUIDE_CHAT_BASE_URL}/sessions/${sessionId}`);
 }

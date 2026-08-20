@@ -1,14 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { FiMessageSquare, FiPlus, FiTrash2 } from 'react-icons/fi';
 import { FaComments } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
+import LoginRequiredModal from '../../../components/common/Modal/LoginRequiredModal.jsx';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
+import useGuardedNavigate from '../../../hooks/useGuardedNavigate.js';
 import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
 import {
+  deleteGuideSession,
   getEntryQuestions,
   getGuideChatHistory,
+  getGuideSessions,
   sendGuideMessage,
 } from '../../../api/userChat/userChatService.js';
 import styles from './ConditionChat.module.css';
@@ -18,6 +22,34 @@ const EXIT_EASE = [0.4, 0, 1, 1];
 
 const FEATURE_PATHS = {
   DOCUMENT_GUIDE: '/doc-chat',
+};
+
+const sidebarContainerVariants = {
+  hidden: {
+    opacity: 0,
+  },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.18,
+      staggerChildren: 0.08,
+    },
+  },
+};
+
+const sidebarItemVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 16,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      duration: 0.72,
+      ease: ENTRY_EASE,
+    },
+  },
 };
 
 const emptyStateVariants = {
@@ -169,10 +201,10 @@ export default function ConditionChat() {
   const [entryQuestions, setEntryQuestions] = useState([]);
   const [isEntryLoading, setIsEntryLoading] = useState(true);
   const [entryError, setEntryError] = useState(null);
-  const [isHistoryLoading, setIsHistoryLoading] = useState(true);
+  const [sessions, setSessions] = useState([]);
   const [isSending, setIsSending] = useState(false);
   const [isAwaitingFirstToken, setIsAwaitingFirstToken] = useState(false);
-  const navigate = useNavigate();
+  const { guardedNavigate, isLoginModalOpen, confirmLogin, cancelLogin } = useGuardedNavigate();
   const prefersReducedMotion = useReducedMotion();
   const followUpQuestions = suggestedQuestions;
 
@@ -215,40 +247,67 @@ export default function ConditionChat() {
   }, []);
 
   useEffect(() => {
-    if (isAuthLoading) return undefined;
-
-    if (!isAuthenticated) {
-      setMessages([]);
-      setIsHistoryLoading(false);
+    if (isAuthLoading || !isAuthenticated) {
+      setSessions([]);
       return undefined;
     }
 
     let ignore = false;
 
-    async function loadHistory() {
-      setIsHistoryLoading(true);
-
-      try {
-        const history = await getGuideChatHistory();
-
+    getGuideSessions()
+      .then((result) => {
         if (ignore) return;
-        setMessages(Array.isArray(history) ? historyToMessages(history) : []);
-      } catch {
+        setSessions(Array.isArray(result) ? result : []);
+      })
+      .catch(() => {
         if (ignore) return;
-        setMessages([]);
-      } finally {
-        if (!ignore) {
-          setIsHistoryLoading(false);
-        }
-      }
-    }
-
-    loadHistory();
+        setSessions([]);
+      });
 
     return () => {
       ignore = true;
     };
   }, [isAuthenticated, isAuthLoading]);
+
+  const startNewChat = () => {
+    if (isSending || sessionId === null) return;
+
+    setSessionId(null);
+    setMessages([]);
+    setSuggestedQuestions([]);
+    setRedirect(null);
+  };
+
+  const openSession = async (session) => {
+    if (session.sessionId === sessionId || isSending) return;
+
+    setSuggestedQuestions([]);
+    setRedirect(null);
+    setSessionId(session.sessionId);
+
+    try {
+      const history = await getGuideChatHistory(session.sessionId);
+      setMessages(Array.isArray(history) ? historyToMessages(history) : []);
+    } catch {
+      setMessages([]);
+    }
+  };
+
+  const removeSession = async (event, targetSessionId) => {
+    event.stopPropagation();
+
+    try {
+      await deleteGuideSession(targetSessionId);
+    } catch {
+      return;
+    }
+
+    setSessions((prev) => prev.filter((session) => session.sessionId !== targetSessionId));
+
+    if (targetSessionId === sessionId) {
+      startNewChat();
+    }
+  };
 
   const sendQuestion = async (question) => {
     const trimmedQuestion = question.trim();
@@ -296,6 +355,12 @@ export default function ConditionChat() {
         Array.isArray(response.suggestedQuestions) ? response.suggestedQuestions : [],
       );
       setRedirect(response.redirect ?? null);
+
+      if (isAuthenticated) {
+        getGuideSessions()
+          .then((result) => setSessions(Array.isArray(result) ? result : []))
+          .catch(() => {});
+      }
     } catch (error) {
       setMessages((prev) => [
         ...prev,
@@ -315,11 +380,104 @@ export default function ConditionChat() {
       ? riskEntryPath
       : resolveRedirectPath(redirect);
     if (!path) return;
-    navigate(path);
+    guardedNavigate(path);
   };
 
   return (
     <div className={styles.workspace}>
+      {isAuthenticated && (
+        <motion.aside
+          className={styles.sidebar}
+          initial={{ opacity: 0, x: prefersReducedMotion ? 0 : -42 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: prefersReducedMotion ? 0.35 : 1, ease: ENTRY_EASE }}
+        >
+          <motion.div
+            className={styles.sidebarTop}
+            custom={prefersReducedMotion}
+            variants={sidebarContainerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.h1
+              className={styles.sidebarTitle}
+              custom={prefersReducedMotion}
+              variants={sidebarItemVariants}
+            >
+              조건상담
+            </motion.h1>
+            <motion.button
+              type="button"
+              className={styles.newChatButton}
+              onClick={startNewChat}
+              disabled={isSending}
+              custom={prefersReducedMotion}
+              variants={sidebarItemVariants}
+              whileHover={prefersReducedMotion ? undefined : { y: -1 }}
+              whileTap={prefersReducedMotion ? undefined : { scale: 0.985 }}
+              transition={{ duration: 0.22, ease: 'easeOut' }}
+            >
+              <FiPlus aria-hidden="true" />
+              새 상담
+            </motion.button>
+          </motion.div>
+
+          <motion.div
+            className={styles.historyBlock}
+            custom={prefersReducedMotion}
+            variants={sidebarContainerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.p
+              className={styles.historyTitle}
+              custom={prefersReducedMotion}
+              variants={sidebarItemVariants}
+            >
+              최근 대화
+            </motion.p>
+            <motion.div className={styles.historyList}>
+              {sessions.map((session) => {
+                const isActive = session.sessionId === sessionId;
+
+                return (
+                  <motion.button
+                    key={session.sessionId}
+                    type="button"
+                    className={`${styles.historyItem} ${isActive ? styles.historyItemActive : ''}`}
+                    onClick={() => openSession(session)}
+                    disabled={isSending}
+                    custom={prefersReducedMotion}
+                    variants={sidebarItemVariants}
+                    initial="hidden"
+                    animate="visible"
+                    whileHover={prefersReducedMotion ? undefined : { x: 2 }}
+                    transition={{ duration: 0.25, ease: 'easeOut' }}
+                  >
+                    <FiMessageSquare aria-hidden="true" />
+                    <span>{session.title}</span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      aria-label="상담 삭제"
+                      className={styles.historyItemDelete}
+                      onClick={(event) => removeSession(event, session.sessionId)}
+                      onKeyDown={(event) => {
+                        if (event.key === 'Enter' || event.key === ' ') {
+                          removeSession(event, session.sessionId);
+                        }
+                      }}
+                    >
+                      <FiTrash2 aria-hidden="true" />
+                    </span>
+                  </motion.button>
+                );
+              })}
+            </motion.div>
+          </motion.div>
+        </motion.aside>
+      )}
+
       <motion.section
         className={styles.chatPanel}
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 34, scale: prefersReducedMotion ? 1 : 0.988 }}
@@ -328,17 +486,7 @@ export default function ConditionChat() {
       >
         <div className={styles.chatMain}>
           <AnimatePresence mode="wait" custom={prefersReducedMotion}>
-            {isHistoryLoading ? (
-              <motion.div
-                key="history-loading"
-                className={styles.empty}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-              >
-                <motion.p className={styles.emptyDescription}>상담 이력을 불러오는 중입니다.</motion.p>
-              </motion.div>
-            ) : messages.length === 0 ? (
+            {messages.length === 0 ? (
               <motion.div
                 key="empty"
                 className={styles.empty}
@@ -518,7 +666,7 @@ export default function ConditionChat() {
           <div className={styles.inputInner}>
             <ChatInput
               onSend={sendQuestion}
-              disabled={isSending || isHistoryLoading}
+              disabled={isSending}
               placeholder={
                 messages.length === 0
                   ? '궁금한 가입조건을 선택하거나 직접 입력하세요'
@@ -528,6 +676,12 @@ export default function ConditionChat() {
           </div>
         </motion.div>
       </motion.section>
+
+      <LoginRequiredModal
+        isOpen={isLoginModalOpen}
+        onConfirm={confirmLogin}
+        onCancel={cancelLogin}
+      />
     </div>
   );
 }
