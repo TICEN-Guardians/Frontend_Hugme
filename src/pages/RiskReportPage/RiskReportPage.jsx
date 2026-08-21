@@ -18,7 +18,11 @@ import ReportHeader from '../../components/risk/report/ReportHeader/ReportHeader
 import RiskSummaryRail from '../../components/risk/report/RiskSummaryRail/RiskSummaryRail.jsx';
 import { getDiagnosis } from '../../api/propertyRisk/propertyRiskService.js';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
-import { clearLastRiskAnalysisId, setLastRiskAnalysisId } from '../../utils/riskDiagnosisStorage.js';
+import {
+  clearAnonymousRiskSession,
+  clearLastRiskAnalysisId,
+  setLastRiskAnalysisId,
+} from '../../utils/riskDiagnosisStorage.js';
 import styles from './RiskReportPage.module.css';
 
 const GRADE = {
@@ -77,6 +81,7 @@ export default function RiskReportPage() {
 
   const handleRestartDiagnosis = () => {
     clearLastRiskAnalysisId(user?.email);
+    clearAnonymousRiskSession(reportId);
     setIsRestartModalOpen(false);
     navigate('/risk/new');
   };
@@ -105,7 +110,9 @@ export default function RiskReportPage() {
         </div>
 
         <p className={styles.disclaimer}>
-          본 리포트는 AI와 규칙 기반 분석을 이용한 참고자료이며, 계약 전 최신 등기부와 전문가 검토가 필요합니다.
+          {report.isDetailed
+            ? '본 리포트는 AI와 규칙 기반 분석을 이용한 참고자료이며, 계약 전 최신 등기부와 전문가 검토가 필요합니다.'
+            : '간편진단은 등기 권리관계를 반영하지 않은 참고 결과입니다. 계약 전 정밀진단과 최신 등기부 확인이 필요합니다.'}
         </p>
       </div>
 
@@ -175,7 +182,8 @@ function toReportViewModel(data) {
   const valuation = data.valuation ?? {};
   const property = data.property ?? {};
   const indicators = data.indicators ?? {};
-  const registry = data.registry ?? {};
+  const registry = data.registry ?? null;
+  const isDetailed = data.mode === 'DETAILED';
   const reportDetail = data.reportDetail ?? {};
   const explanation = reportDetail.explanation ?? {};
   const weights = risk.weights ?? {};
@@ -183,8 +191,11 @@ function toReportViewModel(data) {
   const grade = GRADE[risk.grade] ?? GRADE.MEDIUM;
   const sale = numberOrNull(valuation.estimatedSalePrice);
   const lease = numberOrNull(valuation.estimatedLeasePrice);
-  const deposit = numberOrNull(findMetric(data, 'collateral', 'deposit')?.value);
-  const mortgage = numberOrNull(registry.totalActiveMaxClaimAmount);
+  const deposit = numberOrNull(
+    findMetric(data, 'valuation', 'deposit')?.value
+    ?? findMetric(data, 'collateral', 'deposit')?.value,
+  );
+  const mortgage = numberOrNull(registry?.totalActiveMaxClaimAmount);
   const recoverableAmount = numberOrNull(indicators.recoverableAmount);
   const remaining = numberOrNull(indicators.remainingCollateralCapacity);
   const depositShortfall = numberOrNull(indicators.depositShortfall);
@@ -238,6 +249,9 @@ function toReportViewModel(data) {
   const maxScenarioRate = Math.max(...scenarios.map((item) => item.rateValue), 1);
 
   return {
+    mode: data.mode,
+    isDetailed,
+    scoreEyebrow: isDetailed ? '종합 위험도' : '간편 위험도',
     title: reportDetail.title,
     badgeLabel: `위험도 ${grade.label}`,
     badgeTone: grade.tone,
@@ -264,8 +278,8 @@ function toReportViewModel(data) {
     metricChips: [
       { label: '전세가율', value: ratio(leaseToSaleRate) },
       { label: '전세시세 괴리율', value: ratio(leasePriceGapRate) },
-      { label: '담보부담률', value: ratio(collateralBurdenRate) },
-    ],
+      isDetailed ? { label: '담보부담률', value: ratio(collateralBurdenRate) } : null,
+    ].filter(Boolean),
     priceBars,
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
     scenarios: scenarios.map((item) => ({

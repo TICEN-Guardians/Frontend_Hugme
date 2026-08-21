@@ -50,11 +50,13 @@ export default function ReportAnalysis({ report, motionSet }) {
         <PriceRiskSection report={report} />
       </ReportSection>
 
-      <ReportSection index="02" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
-        <RecoveryRegistrySection report={report} />
-      </ReportSection>
+      {report.isDetailed && (
+        <ReportSection index="02" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
+          <RecoveryRegistrySection report={report} />
+        </ReportSection>
+      )}
 
-      <ReportSection index="03" icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
+      <ReportSection index={report.isDetailed ? '03' : '02'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
@@ -113,24 +115,26 @@ function PriceRiskSection({ report }) {
           </div>
         </div>
 
-        <div className={styles.scenarioArea}>
-          <h3>가격 하락 시나리오</h3>
-          <div className={styles.scenarioRows}>
-            {report.scenarios.map((scenario) => (
-              <div key={scenario.label} className={styles.scenarioRow}>
-                <div>
-                  <strong>{scenario.label}</strong>
-                  <span>{scenario.price}</span>
+        {report.scenarios.length > 0 && (
+          <div className={styles.scenarioArea}>
+            <h3>가격 하락 시나리오</h3>
+            <div className={styles.scenarioRows}>
+              {report.scenarios.map((scenario) => (
+                <div key={scenario.label} className={styles.scenarioRow}>
+                  <div>
+                    <strong>{scenario.label}</strong>
+                    <span>{scenario.price}</span>
+                  </div>
+                  <span className={styles.scenarioRate}>{scenario.rate}</span>
+                  <span className={`${styles.verdict} ${styles[scenario.verdictTone]}`}>{scenario.verdictLabel}</span>
+                  <span className={styles.scenarioProgress} aria-hidden="true">
+                    <span style={{ width: `${scenario.progressWidth}%` }} />
+                  </span>
                 </div>
-                <span className={styles.scenarioRate}>{scenario.rate}</span>
-                <span className={`${styles.verdict} ${styles[scenario.verdictTone]}`}>{scenario.verdictLabel}</span>
-                <span className={styles.scenarioProgress} aria-hidden="true">
-                  <span style={{ width: `${scenario.progressWidth}%` }} />
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <InsightList insights={report.priceInsights} />
@@ -249,6 +253,7 @@ function BottomAnalysis({ report, motionSet }) {
       variants={motionSet.section}
     >
       <InsightSection
+        index={report.isDetailed ? '04' : '03'}
         evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
         cautions={report.reasonGroups?.cautions ?? []}
       />
@@ -282,10 +287,10 @@ function MoreInsightSection({ reasons }) {
   );
 }
 
-function InsightSection({ evidence, cautions }) {
+function InsightSection({ index, evidence, cautions }) {
   return (
     <section>
-      <SectionTitle index="04" icon={<LuTriangleAlert />} title="왜 위험한가요?" />
+      <SectionTitle index={index} icon={<LuTriangleAlert />} title="왜 위험한가요?" />
       <div className={styles.reasonGroups}>
         <div className={styles.reasonGroup}>
           <h3 className={styles.reasonGroupTitle}>주요 분석 근거</h3>
