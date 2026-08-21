@@ -31,7 +31,7 @@ export default function useGuardedNavigate() {
 
   return {
     guardedNavigate,
-    isLoginModalOpen: pendingPath !== null,
+    isLoginConfirmPending: pendingPath !== null,
     confirmLogin,
     cancelLogin,
   };

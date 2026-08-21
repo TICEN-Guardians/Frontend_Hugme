@@ -1,4 +1,5 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
+import FloatingChatWidget from './components/floatingChat/FloatingChatWidget.jsx';
 import { useAuth } from './context/auth/AuthContext.jsx';
 import FullWidthLayout from './layout/FullWidthLayout.jsx';
 import Layout from './layout/Layout.jsx';
@@ -32,37 +33,40 @@ function ProtectedRoute() {
 
 export default function App() {
   return (
-    <Routes>
-      {/* 화면 폭 전체를 쓰는 예외 페이지 */}
-      {/* 배경(히어로/스플릿)만 풀블리드가 필요한 예외 페이지. 콘텐츠 자체는 각 페이지가
-          스스로 max-width로 가운데 정렬한다 (히어로 텍스트, 로그인/회원가입 폼 등). */}
-      <Route element={<FullWidthLayout />}>
-        <Route path="/" element={<LandingPage />} />
-        <Route path="/auth/login" element={<LoginPage />} />
-        <Route path="/auth/signup" element={<SignupPage />} />
-        <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
-        <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
-        {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
-        <Route element={<ProtectedRoute />}>
-          <Route path="/risk/new" element={<RiskFormPage />} />
-          <Route path="/risk/:reportId" element={<RiskReportPage />} />
+    <>
+      <Routes>
+        {/* 화면 폭 전체를 쓰는 예외 페이지 */}
+        {/* 배경(히어로/스플릿)만 풀블리드가 필요한 예외 페이지. 콘텐츠 자체는 각 페이지가
+            스스로 max-width로 가운데 정렬한다 (히어로 텍스트, 로그인/회원가입 폼 등). */}
+        <Route element={<FullWidthLayout />}>
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/auth/login" element={<LoginPage />} />
+          <Route path="/auth/signup" element={<SignupPage />} />
+          <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
+          <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
+          {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/risk/new" element={<RiskFormPage />} />
+            <Route path="/risk/:reportId" element={<RiskReportPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
-      <Route element={<Layout />}>
-        <Route path="/guarantee-checklist" element={<ProductsPage />} />
-        <Route path="/guarantee-checklist/:guaranteeType" element={<ProductChecklistPage />} />
-        <Route path="/products" element={<ProductsPage />} />
-        <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
-        <Route path="/user-chat" element={<ConditionChat />} />
-        <Route element={<ProtectedRoute />}>
-          <Route path="/doc-chat" element={<DocumentChat />} />
-          <Route path="/main" element={<MainPage />} />
+        {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
+        <Route element={<Layout />}>
+          <Route path="/guarantee-checklist" element={<ProductsPage />} />
+          <Route path="/guarantee-checklist/:guaranteeType" element={<ProductChecklistPage />} />
+          <Route path="/products" element={<ProductsPage />} />
+          <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
+          <Route path="/user-chat" element={<ConditionChat />} />
+          <Route element={<ProtectedRoute />}>
+            <Route path="/doc-chat" element={<DocumentChat />} />
+            <Route path="/main" element={<MainPage />} />
+          </Route>
         </Route>
-      </Route>
 
-      <Route path="*" element={<ErrorPage />} />
-    </Routes>
+        <Route path="*" element={<ErrorPage />} />
+      </Routes>
+      <FloatingChatWidget />
+    </>
   );
 }
