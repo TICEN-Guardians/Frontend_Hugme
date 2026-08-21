@@ -1,0 +1,174 @@
+.panel {
+  position: fixed;
+  right: var(--space-6);
+  bottom: var(--space-6);
+  z-index: 900;
+  display: flex;
+  flex-direction: column;
+  width: 38rem;
+  height: 58rem;
+  max-height: calc(100vh - 4.8rem);
+  border-radius: var(--radius-xl);
+  background: var(--on-accent);
+  box-shadow: 0 1.6rem 4rem rgba(0, 0, 0, 0.18);
+  overflow: hidden;
+}
+
+.header {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 0.1rem solid var(--border-subtle);
+  background: linear-gradient(135deg, var(--brand-blue) 0%, var(--brand-green) 100%);
+  color: var(--on-accent);
+}
+
+.title {
+  font-size: var(--text-base);
+  font-weight: 800;
+}
+
+.headerActions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.iconButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.2rem;
+  height: 3.2rem;
+  border: none;
+  border-radius: var(--radius-md);
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--on-accent);
+  font-size: 1.6rem;
+  cursor: pointer;
+}
+
+.iconButton:hover {
+  background: rgba(255, 255, 255, 0.28);
+}
+
+.body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: var(--space-4);
+}
+
+.empty {
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+
+.emptyIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-12);
+  height: var(--space-12);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--blue-tint-50) 0%, var(--green-tint-50) 100%);
+  color: var(--brand-blue);
+  font-size: var(--text-xl);
+}
+
+.emptyTitle {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: var(--text-base);
+  font-weight: 800;
+}
+
+.emptySuggestions {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+}
+
+.suggestionChip {
+  padding: var(--space-3);
+  border: 0.1rem solid var(--border-default);
+  border-radius: var(--radius-md);
+  background: var(--on-accent);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.suggestionChip:hover {
+  border-color: var(--brand-blue);
+  background: rgba(15, 117, 189, 0.04);
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.typingRow {
+  padding: var(--space-2) 0;
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.followUps {
+  margin-top: var(--space-2);
+}
+
+.followUpLabel {
+  margin: 0 0 var(--space-2);
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.followUpRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.followUpChip {
+  padding: var(--space-2) var(--space-3);
+  border: 0.1rem solid var(--brand-green);
+  border-radius: var(--radius-pill);
+  background: var(--on-accent);
+  color: var(--brand-green);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.redirectChip {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
+}
+
+.inputDock {
+  flex-shrink: 0;
+  padding: var(--space-3) var(--space-4);
+  border-top: 0.1rem solid var(--border-subtle);
+}
+
+@media (max-width: 76.7rem) {
+  .panel {
+    right: var(--space-3);
+    bottom: var(--space-3);
+    left: var(--space-3);
+    width: auto;
+    height: calc(100vh - 6rem);
+  }
+}
