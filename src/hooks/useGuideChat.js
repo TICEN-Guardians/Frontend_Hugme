@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/auth/AuthContext.jsx';
 import useGuardedNavigate from './useGuardedNavigate.js';
 import useLastRiskAnalysis from './useLastRiskAnalysis.js';
@@ -11,7 +12,16 @@ import {
 } from '../api/userChat/userChatService.js';
 
 const FEATURE_PATHS = {
-  DOCUMENT_GUIDE: '/doc-chat',
+  DOCUMENT_GUIDE: '/guarantee-checklist',
+};
+
+// 로그인 사용자의 상담 세션 목록이 바뀔 때(새 세션 생성, 삭제) 쏘는 전역 이벤트. 이 훅과
+// 별도로 자체 세션 목록을 들고 있는 공통 Sidebar의 GuideChatSidebarSection이 이 이벤트를
+// 구독해서 다시 불러온다 — 훅 인스턴스를 공유하지 않고도 두 곳의 세션 목록을 동기화하기 위함.
+export const GUIDE_SESSIONS_UPDATED_EVENT = 'guide-chat-sessions-updated';
+
+const notifySessionsUpdated = () => {
+  window.dispatchEvent(new Event(GUIDE_SESSIONS_UPDATED_EVENT));
 };
 
 const historyToMessages = (history) =>
@@ -46,6 +56,8 @@ export const getConversationTitle = (conversation) => {
 export default function useGuideChat() {
   const { isAuthenticated, isAuthLoading, user } = useAuth();
   const { entryPath: riskEntryPath } = useLastRiskAnalysis(user?.email);
+  const location = useLocation();
+  const navigate = useNavigate();
   const [sessionId, setSessionId] = useState(null);
   const [messages, setMessages] = useState([]);
   const [suggestedQuestions, setSuggestedQuestions] = useState([]);
@@ -215,6 +227,41 @@ export default function useGuideChat() {
     }
   };
 
+  // 사이드바("히스토리")에서 특정 상담 세션을 클릭해 이 페이지로 들어온 경우, navigate의
+  // state로 넘어온 sessionId를 소비해서 그 세션 이력을 자동으로 불러온다. (Sidebar.jsx가
+  // navigate('/user-chat', { state: { openGuideSessionId } })로 전달) location.state 객체
+  // 자체를 기준으로 삼아서, 이미 /user-chat에 있는 상태에서 다른 세션을 연달아 클릭해도
+  // (매번 새 state 객체가 들어오므로) 계속 반응하도록 한다.
+  const lastOpenSessionStateRef = useRef(null);
+
+  useEffect(() => {
+    if (isAuthLoading || !isAuthenticated) return;
+
+    const requestedSessionId = location.state?.openGuideSessionId;
+    if (!requestedSessionId) return;
+    if (lastOpenSessionStateRef.current === location.state) return;
+
+    lastOpenSessionStateRef.current = location.state;
+    openSession({ sessionId: requestedSessionId });
+    navigate(location.pathname, { replace: true, state: {} });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isAuthLoading, location.state]);
+
+  // 공통 사이드바("새 상담 진행하기")에서 navigate('/user-chat', { state: { startNewGuideSession } })로
+  // 넘어온 경우, 그때마다 새 세션으로 초기화한다. location.state 객체 자체를 기준으로 삼아서(한 번
+  // 소비하면 그 객체는 다시 트리거하지 않되) 버튼을 반복해서 눌러 매번 새 state가 들어오는 경우엔
+  // 계속 반응하도록 한다.
+  const lastStartNewSessionStateRef = useRef(null);
+
+  useEffect(() => {
+    if (!location.state?.startNewGuideSession) return;
+    if (lastStartNewSessionStateRef.current === location.state) return;
+
+    lastStartNewSessionStateRef.current = location.state;
+    resetToNewSession();
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.state, location.pathname]);
+
   const removeSession = async (event, targetSessionId) => {
     event.stopPropagation();
 
@@ -225,6 +272,7 @@ export default function useGuideChat() {
     }
 
     setSessions((prev) => prev.filter((session) => session.sessionId !== targetSessionId));
+    notifySessionsUpdated();
 
     if (targetSessionId === sessionId) {
       startNewChat();
@@ -255,6 +303,7 @@ export default function useGuideChat() {
       getGuideSessions()
         .then((result) => setSessions(Array.isArray(result) ? result : []))
         .catch(() => {});
+      notifySessionsUpdated();
     } catch (error) {
       setMessages((prev) => [
         ...prev,
