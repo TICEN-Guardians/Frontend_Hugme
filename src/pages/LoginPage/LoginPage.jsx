@@ -76,7 +76,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successModal, setSuccessModal] = useState({ isOpen: false, redirectTo: '/' });
+  const [successModal, setSuccessModal] = useState({ isOpen: false, redirectTo: '/main' });
   const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
 
   const handleSubmit = async (event) => {
@@ -88,7 +88,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      const redirectTo = location.state?.from?.pathname ?? '/';
+      const redirectTo = location.state?.from?.pathname ?? '/main';
       setSuccessModal({ isOpen: true, redirectTo });
     } catch (error) {
       setErrorModal({

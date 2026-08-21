@@ -1,4 +1,151 @@
 .root {
+  position: relative;
+  width: 100%;
+  height: 100dvh;
+  min-height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 18% 20%, rgba(15, 117, 189, 0.065), transparent 30%),
+    radial-gradient(circle at 82% 74%, rgba(62, 154, 67, 0.055), transparent 28%),
+    #fff;
+  color: var(--text-primary);
+}
+
+.topbar {
+  position: absolute;
+  top: clamp(2rem, 3.2vh, 3.6rem);
+  left: 50%;
+  z-index: 80;
   display: flex;
-  flex-direction: column;
+  width: min(calc(100% - 8rem), 140rem);
+  align-items: center;
+  justify-content: space-between;
+  transform: translateX(-50%);
+}
+
+.logoLink { display: inline-flex; align-items: center; }
+.logo { display: block; width: clamp(12.5rem, 9vw, 14.5rem); height: auto; }
+.authLinks { display: inline-flex; align-items: center; gap: clamp(1.2rem, 1.5vw, 2rem); }
+.loginLink, .signupLink { font-size: clamp(1.35rem, 1vw, 1.55rem); font-weight: 750; text-decoration: none; }
+.loginLink { color: #333; }
+.signupLink { display: inline-flex; height: clamp(3.8rem, 3.2vw, 4.2rem); align-items: center; justify-content: center; padding: 0 clamp(1.5rem, 1.4vw, 1.9rem); border-radius: 1rem; background: var(--brand-blue); color: #fff; }
+.loginLink:focus-visible, .signupLink:focus-visible { outline: .3rem solid rgba(62, 154, 67, .34); outline-offset: .3rem; }
+
+.sceneLayer, .storyStage {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  will-change: transform, opacity;
+}
+
+.storyStage {
+  z-index: 10;
+  padding: clamp(8rem, 9vh, 9.6rem) clamp(2.4rem, 4vw, 5.6rem) clamp(1.5rem, 2.5vh, 2.8rem);
+}
+
+.storyCanvas {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  width: min(100%, 140rem);
+  height: 100%;
+  margin: 0 auto;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  grid-template-rows: repeat(10, minmax(0, 1fr));
+  gap: clamp(.5rem, .8vh, .9rem) clamp(.8rem, 1vw, 1.5rem);
+}
+
+.stepSlot { position: relative; z-index: 6; min-width: 0; min-height: 0; }
+.step1Slot { grid-column: 1 / 5; grid-row: 1 / 4; }
+.step2Slot { grid-column: 5 / 9; grid-row: 7 / 10; }
+.step3Slot { grid-column: 9 / 13; grid-row: 1 / 4; }
+
+.routePoint {
+  position: absolute;
+  z-index: 2;
+  display: block;
+  width: 1px;
+  height: 1px;
+  pointer-events: none;
+}
+
+.thought {
+  position: relative;
+  z-index: 8;
+  align-self: center;
+  max-width: 32rem;
+  padding: .45rem .8rem;
+  background: transparent;
+  color: #27313a;
+  font-size: clamp(1.7rem, 1.15vw, 2rem);
+  font-weight: 800;
+  line-height: 1.35;
+  letter-spacing: -.025em;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.thought1 { grid-column: 1 / 4; grid-row: 4 / 6; justify-self: start; }
+.thought2 { grid-column: 2 / 5; grid-row: 8 / 10; align-self: end; justify-self: end; color: var(--brand-blue); }
+.thought3 { grid-column: 9 / 12; grid-row: 8 / 10; align-self: end; justify-self: start; }
+.thought4 { grid-column: 10 / 13; grid-row: 4 / 6; justify-self: end; color: var(--brand-blue); }
+.mobileThought { display: none; }
+
+@media (max-width: 119.9rem) {
+  .topbar { width: calc(100% - 4rem); }
+  .storyStage { padding-right: 2.4rem; padding-left: 2.4rem; }
+  .storyCanvas { grid-template-columns: repeat(10, minmax(0, 1fr)); }
+  .step1Slot { grid-column: 1 / 5; }
+  .step2Slot { grid-column: 4 / 8; }
+  .step3Slot { grid-column: 7 / 11; }
+  .thought { max-width: 25rem; font-size: clamp(1.45rem, 1.65vw, 1.9rem); }
+  .thought1 { grid-column: 1 / 4; }
+  .thought2 { grid-column: 1 / 4; }
+  .thought3 { grid-column: 8 / 11; }
+  .thought4 { grid-column: 8 / 11; }
+}
+
+@media (max-width: 76.7rem) {
+  .topbar { top: 1.4rem; width: calc(100% - 2.4rem); }
+  .logo { width: 10.5rem; }
+  .authLinks { gap: 1rem; }
+  .loginLink, .signupLink { font-size: 1.25rem; }
+  .signupLink { height: 3.6rem; padding: 0 1.3rem; }
+  .storyStage { padding: 6.4rem 1.2rem 1rem; }
+  .storyCanvas {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows:
+      clamp(11.8rem, 15.5svh, 14.5rem)
+      auto
+      auto
+      clamp(11.8rem, 15.5svh, 14.5rem)
+      auto
+      auto
+      clamp(11.8rem, 15.5svh, 14.5rem);
+    align-content: space-between;
+    gap: .2rem;
+    padding-left: 2.8rem;
+  }
+  .step1Slot, .step2Slot, .step3Slot, .thought1, .thought2, .thought3, .thought4 { grid-column: 1; }
+  .step1Slot { grid-row: 1; }
+  .thought1 { grid-row: 2; }
+  .thought2 { grid-row: 3; }
+  .step2Slot { grid-row: 4; }
+  .thought3 { grid-row: 5; }
+  .thought4 { grid-row: 6; }
+  .step3Slot { grid-row: 7; }
+  .thought { align-self: center; justify-self: start; max-width: min(80vw, 30rem); padding: .1rem .7rem; font-size: clamp(1.2rem, 3.3vw, 1.4rem); line-height: 1.24; letter-spacing: -.015em; text-align: left; }
+  .desktopThought { display: none; }
+  .mobileThought { display: inline; }
+}
+
+@media (max-width: 42rem) {
+  .storyStage { padding-right: .9rem; padding-left: .9rem; }
+  .storyCanvas { gap: .22rem; }
+}
+
+@media (max-height: 72rem) and (min-width: 76.8rem) {
+  .storyStage { padding-top: 7.6rem; padding-bottom: 1.2rem; }
+  .thought { font-size: clamp(1.4rem, 1.12vw, 1.7rem); }
 }
