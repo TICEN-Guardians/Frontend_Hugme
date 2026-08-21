@@ -8,6 +8,7 @@ import {
   FaUser,
 } from 'react-icons/fa6';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
+import GuideChatSidebarSection from '../../chat/GuideChatSidebarSection/GuideChatSidebarSection.jsx';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
 import styles from './Sidebar.module.css';
@@ -118,7 +119,7 @@ export default function Sidebar({ showHistory = true }) {
               <FaClockRotateLeft aria-hidden="true" />
             </div>
 
-            {hasLastAnalysis ? (
+            {hasLastAnalysis && (
               <Link to={riskEntryPath} className={styles.historyItem}>
                 <span className={styles.historyIcon} aria-hidden="true">
                   <FaHouse />
@@ -128,9 +129,9 @@ export default function Sidebar({ showHistory = true }) {
                   <small>분석 결과 다시 보기</small>
                 </span>
               </Link>
-            ) : (
-              <p className={styles.emptyHistory}>아직 저장된 이용 내역이 없어요.</p>
             )}
+
+            <GuideChatSidebarSection />
           </section>
         )}
       </div>
