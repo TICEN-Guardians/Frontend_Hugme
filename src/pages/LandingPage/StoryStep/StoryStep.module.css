@@ -1,0 +1,92 @@
+.card {
+  position: relative;
+  z-index: 6;
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  flex-direction: column;
+  overflow: hidden;
+  padding: clamp(1.6rem, 1.55vw, 2.2rem);
+  border: .1rem solid rgba(15, 117, 189, .14);
+  border-radius: clamp(1.8rem, 1.6vw, 2.4rem);
+  background: rgba(255, 255, 255, .98);
+  box-shadow: 0 1.5rem 4rem rgba(29, 58, 79, .085);
+}
+
+.green { border-color: rgba(62, 154, 67, .18); }
+.cardHeader { display: flex; flex-shrink: 0; align-items: baseline; gap: clamp(.6rem, .65vw, .9rem); margin-bottom: clamp(1rem, 1.3vh, 1.5rem); }
+.cardHeader span { color: var(--brand-blue); font-size: clamp(1.1rem, .8vw, 1.35rem); font-weight: 900; letter-spacing: .055em; white-space: nowrap; }
+.cardHeader h2 { margin: 0; color: var(--brand-blue); font-size: clamp(1.45rem, 1.15vw, 1.85rem); font-weight: 850; line-height: 1.2; }
+.green .cardHeader span, .green .cardHeader h2 { color: var(--brand-green); }
+.question { margin: 0; color: #20272d; font-size: clamp(1.7rem, 1.35vw, 2.15rem); font-weight: 850; line-height: 1.3; letter-spacing: -.025em; }
+.riskContent, .checklistContent, .documentContent { display: flex; min-height: 0; flex: 1; flex-direction: column; }
+
+.keywordGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: clamp(.65rem, .8vh, 1rem) clamp(1rem, 1.2vw, 1.6rem); margin-top: clamp(1.3rem, 2vh, 2.2rem); }
+.keywordGrid span, .compactList span, .module span, .module strong { display: inline-flex; min-width: 0; align-items: center; gap: .55rem; color: #4b565e; font-size: clamp(1.15rem, .9vw, 1.4rem); font-weight: 720; line-height: 1.3; }
+.keywordGrid svg { flex: 0 0 auto; color: var(--brand-blue); }
+.statusRow { display: flex; align-items: center; justify-content: center; gap: .85rem; margin-top: auto; padding-top: 1rem; color: var(--brand-green); }
+.statusRow strong { font-size: clamp(1.5rem, 1.2vw, 1.9rem); font-weight: 900; }
+.shield { position: relative; display: inline-flex; align-items: center; color: var(--brand-blue); font-size: clamp(2.7rem, 2.3vw, 3.5rem); }
+.shield svg:last-child { position: absolute; right: -.35rem; bottom: -.1rem; color: var(--brand-green); font-size: 1.35rem; }
+
+.documentFlow, .documentModules { display: flex; min-height: 0; flex: 1; align-items: center; justify-content: center; gap: clamp(.7rem, 1vw, 1.2rem); margin-top: clamp(1rem, 1.5vh, 1.6rem); }
+.contractBox { display: flex; min-width: 0; flex: 0 1 43%; align-items: center; justify-content: center; gap: .7rem; padding: clamp(.9rem, 1.2vw, 1.35rem) .8rem; border: .1rem solid #d9ecd9; border-radius: 1.3rem; background: #f5faf5; color: var(--brand-green); }
+.contractBox svg { flex: 0 0 auto; font-size: clamp(2.3rem, 2vw, 3rem); }
+.contractBox strong { color: #35423a; font-size: clamp(1.1rem, .9vw, 1.35rem); white-space: nowrap; }
+.flowArrow { flex: 0 0 auto; color: var(--brand-blue); font-size: clamp(1.8rem, 1.6vw, 2.4rem); font-weight: 900; }
+.green .flowArrow { color: var(--brand-green); }
+.compactList { display: flex; min-width: 0; flex: 1; flex-direction: column; gap: clamp(.35rem, .55vh, .65rem); }
+.compactList span { color: #3f4b43; }
+.compactList svg { flex: 0 0 auto; color: var(--brand-green); }
+.documentModules { gap: clamp(.6rem, .8vw, 1rem); }
+.module { display: flex; min-width: 0; min-height: 8.5rem; max-height: 11.5rem; flex: 1; flex-direction: column; justify-content: center; gap: .55rem; padding: clamp(.8rem, 1vw, 1.1rem); border: .1rem solid #dceaf4; border-radius: 1.2rem; background: #f8fbfd; }
+.moduleTitle { display: flex; align-items: center; gap: .5rem; color: var(--brand-blue); font-size: clamp(1.15rem, .95vw, 1.45rem); font-weight: 900; }
+.module span, .module strong { font-size: clamp(1rem, .78vw, 1.2rem); }
+.module strong { color: var(--brand-green); }
+
+.anchor { position: absolute; z-index: 10; display: block; width: 1px; height: 1px; pointer-events: none; }
+.inAnchor { top: 50%; left: .2rem; }
+.outAnchor { bottom: .2rem; left: 50%; }
+.step2OutAnchor { top: 50%; right: .2rem; }
+.step3InAnchor { bottom: .2rem; left: 50%; }
+
+@media (max-width: 119.9rem) {
+  .card { padding: clamp(1.35rem, 1.7vw, 1.8rem); }
+  .cardHeader { margin-bottom: .9rem; }
+  .question { font-size: clamp(1.45rem, 1.75vw, 1.85rem); }
+  .keywordGrid span, .compactList span, .module span, .module strong { font-size: clamp(1rem, 1.2vw, 1.2rem); }
+}
+
+@media (max-width: 76.7rem) {
+  .card { padding: 1rem 1.2rem; border-radius: 1.5rem; box-shadow: 0 .8rem 2.2rem rgba(29, 58, 79, .08); }
+  .cardHeader { gap: .55rem; margin-bottom: .45rem; }
+  .cardHeader span { font-size: clamp(.95rem, 2.6vw, 1.05rem); }
+  .cardHeader h2 { font-size: clamp(1.15rem, 3.2vw, 1.3rem); }
+  .question { font-size: clamp(1.3rem, 3.6vw, 1.55rem); }
+  .keywordGrid { gap: .3rem .8rem; margin-top: .55rem; }
+  .keywordGrid span, .compactList span, .module span, .module strong, .contractBox strong, .moduleTitle { font-size: clamp(.92rem, 2.6vw, 1.08rem); }
+  .statusRow { margin-top: auto; padding-top: .35rem; }
+  .statusRow strong { font-size: 1.2rem; }
+  .shield { font-size: 2.1rem; }
+  .documentFlow, .documentModules { margin-top: .45rem; }
+  .contractBox { padding: .65rem .5rem; }
+  .contractBox svg { font-size: 1.8rem; }
+  .compactList { gap: .2rem; }
+  .module { min-height: 0; max-height: 5rem; gap: .15rem; padding: .35rem .5rem; border-radius: .9rem; }
+  .flowArrow { font-size: 1.4rem; }
+  .mobileHidden { display: none !important; }
+  .inAnchor { top: .2rem; left: -1.6rem; }
+  .outAnchor, .step2OutAnchor { top: auto; right: auto; bottom: .2rem; left: -1.6rem; }
+  .step3InAnchor { top: .2rem; right: auto; bottom: auto; left: -1.6rem; }
+}
+
+@media (max-height: 72rem) and (min-width: 76.8rem) {
+  .card { padding: 1.25rem 1.45rem; }
+  .cardHeader { margin-bottom: .65rem; }
+  .question { font-size: 1.5rem; }
+  .keywordGrid { margin-top: .8rem; }
+  .keywordGrid span, .compactList span, .module span, .module strong { font-size: 1rem; }
+  .module { min-height: 7rem; }
+}

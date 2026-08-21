@@ -5,16 +5,30 @@ import FullWidthLayout from './layout/FullWidthLayout.jsx';
 import Layout from './layout/Layout.jsx';
 import ConditionChat from './pages/Chat/ConditionChat/ConditionChat.jsx';
 import DocumentChat from './pages/Chat/DocumentChat/DocumentChat.jsx';
+import EmailVerifyPage from './pages/EmailVerifyPage/EmailVerifyPage.jsx';
 import ErrorPage from './pages/ErrorPage/ErrorPage.jsx';
 import LandingPage from './pages/LandingPage/LandingPage.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
 import MainPage from './pages/MainPage/MainPage.jsx';
-import EmailVerifyPage from './pages/EmailVerifyPage/EmailVerifyPage.jsx';
 import ProductChecklistPage from './pages/ProductChecklistPage/ProductChecklistPage.jsx';
 import ProductsPage from './pages/ProductsPage/ProductsPage.jsx';
 import RiskFormPage from './pages/RiskFormPage/RiskFormPage.jsx';
 import RiskReportPage from './pages/RiskReportPage/RiskReportPage.jsx';
 import SignupPage from './pages/SignupPage/SignupPage.jsx';
+
+function GuestLandingRoute() {
+  const { isAuthenticated, isAuthLoading } = useAuth();
+
+  if (isAuthLoading) {
+    return null;
+  }
+
+  if (isAuthenticated) {
+    return <Navigate to="/main" replace />;
+  }
+
+  return <LandingPage />;
+}
 
 function ProtectedRoute() {
   const { isAuthenticated, isAuthLoading } = useAuth();
@@ -31,6 +45,16 @@ function ProtectedRoute() {
   return <Outlet />;
 }
 
+function GlobalFloatingChatWidget() {
+  const location = useLocation();
+
+  if (location.pathname === '/') {
+    return null;
+  }
+
+  return <FloatingChatWidget />;
+}
+
 export default function App() {
   return (
     <>
@@ -44,11 +68,6 @@ export default function App() {
           <Route path="/auth/signup" element={<SignupPage />} />
           <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
           <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
-          {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/risk/new" element={<RiskFormPage />} />
-            <Route path="/risk/:reportId" element={<RiskReportPage />} />
-          </Route>
         </Route>
 
         {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
@@ -59,6 +78,8 @@ export default function App() {
           <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
           <Route path="/user-chat" element={<ConditionChat />} />
           <Route element={<ProtectedRoute />}>
+            <Route path="/risk/new" element={<RiskFormPage />} />
+            <Route path="/risk/:reportId" element={<RiskReportPage />} />
             <Route path="/doc-chat" element={<DocumentChat />} />
             <Route path="/main" element={<MainPage />} />
           </Route>
@@ -66,7 +87,7 @@ export default function App() {
 
         <Route path="*" element={<ErrorPage />} />
       </Routes>
-      <FloatingChatWidget />
+      <GlobalFloatingChatWidget />
     </>
   );
 }

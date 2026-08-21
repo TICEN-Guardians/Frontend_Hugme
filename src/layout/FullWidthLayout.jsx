@@ -10,14 +10,16 @@ import styles from './Layout.module.css';
 export default function FullWidthLayout() {
   const location = useLocation();
   const isAuthPage = location.pathname === '/auth/login' || location.pathname === '/auth/signup';
+  const isLandingPage = location.pathname === '/';
+  const shouldHideChrome = isAuthPage || isLandingPage;
 
   return (
     <div className={styles.pageWrapper}>
-      {!isAuthPage && <Header />}
+      {!shouldHideChrome && <Header />}
       <main className={styles.main}>
         <Outlet />
       </main>
-      {!isAuthPage && <Footer />}
+      {!shouldHideChrome && <Footer />}
     </div>
   );
 }

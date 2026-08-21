@@ -1,6 +1,6 @@
 import { Outlet, useLocation } from 'react-router-dom';
 import Footer from '../components/common/Footer/Footer.jsx';
-import Header from '../components/common/Header/Header.jsx';
+import Sidebar from '../components/common/Sidebar/Sidebar.jsx';
 import styles from './Layout.module.css';
 
 export default function Layout() {
@@ -9,20 +9,23 @@ export default function Layout() {
   const isChecklistDetailPage =
     pathname.startsWith('/guarantee-checklist/') ||
     (pathname.startsWith('/products/') && pathname.endsWith('/checklist'));
+  const isMainPage = pathname === '/main';
 
   return (
     <div className={`${styles.pageWrapper} ${isChatAppPage ? styles.chatPageWrapper : ''}`}>
-      <Header />
-      <main
-        className={
-          isChatAppPage
-            ? `${styles.main} ${styles.chatMain}`
-            : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
-        }
-      >
-        <Outlet />
-      </main>
-      <Footer />
+      <Sidebar showHistory={!isMainPage} />
+      <div className={styles.contentColumn}>
+        <main
+          className={
+            isChatAppPage
+              ? `${styles.main} ${styles.chatMain}`
+              : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
+          }
+        >
+          <Outlet />
+        </main>
+        {!isChatAppPage && <Footer />}
+      </div>
     </div>
   );
 }

@@ -14,6 +14,21 @@
   overflow: hidden;
 }
 
+.landingPanel {
+  position: fixed;
+  top: 50%;
+  right: auto;
+  bottom: auto;
+  left: 50%;
+  z-index: 100;
+  width: min(36rem, calc(100vw - 4rem));
+  height: min(54rem, 68dvh);
+  max-height: calc(100dvh - 4rem);
+  border-radius: 2rem;
+  box-shadow: 0 2.4rem 7rem rgba(24, 52, 74, 0.2);
+  translate: -50% -42%;
+}
+
 .header {
   display: flex;
   flex-shrink: 0;
@@ -170,5 +185,17 @@
     left: var(--space-3);
     width: auto;
     height: calc(100vh - 6rem);
+  }
+
+  .landingPanel {
+    position: fixed;
+    top: auto !important;
+    right: 1.2rem !important;
+    bottom: 1.2rem !important;
+    left: 1.2rem !important;
+    width: auto;
+    height: min(58rem, 68svh);
+    max-height: calc(100svh - 2.4rem);
+    translate: none !important;
   }
 }

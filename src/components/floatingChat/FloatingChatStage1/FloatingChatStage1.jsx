@@ -9,7 +9,7 @@ const ENTRY_EASE = [0.16, 1, 0.3, 1];
 
 // chat: useGuideChat()의 반환값. 세션/대화 상태는 FloatingChatWidget이 한 번만 소유하고
 // 여기로 내려받아 쓴다 — 1단계<->2단계 전환 시 대화가 끊기지 않게 하기 위함.
-export default function FloatingChatStage1({ chat, onClose, onExpand }) {
+export default function FloatingChatStage1({ mode = 'floating', style, chat, onClose, onExpand }) {
   const prefersReducedMotion = useReducedMotion();
   const {
     currentMessages,
@@ -29,7 +29,8 @@ export default function FloatingChatStage1({ chat, onClose, onExpand }) {
 
   return (
     <motion.div
-      className={styles.panel}
+      className={`${styles.panel} ${mode === 'landing' ? styles.landingPanel : ''}`}
+      style={style}
       initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 24, scale: prefersReducedMotion ? 1 : 0.96 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 16, scale: prefersReducedMotion ? 1 : 0.97 }}

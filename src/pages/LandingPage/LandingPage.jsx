@@ -1,182 +1,205 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/auth/AuthContext.jsx';
-import useLastRiskAnalysis from '../../hooks/useLastRiskAnalysis.js';
-import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
-import HeroSection from './HeroSection/HeroSection.jsx';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import Xarrow, { Xwrapper, useXarrow } from 'react-xarrows';
+
+import LandingIntro from './LandingIntro/LandingIntro.jsx';
+import StoryCharacters from './StoryCharacters/StoryCharacters.jsx';
+import StoryStep from './StoryStep/StoryStep.jsx';
 import styles from './LandingPage.module.css';
 
-const SLIDES = [
-  {
-    id: 'risk',
-    label: '① 매물 위험도 진단',
-    title: '여러 정보를 분석해 매물의 위험 신호를 확인해요',
-    heroTitle: ['계약하기 전,', '이 집의 위험 요소를 먼저 확인하세요'],
-    heroSubtitle: [
-      '등기부등본 등 매물 정보를 바탕으로',
-      '계약 전에 확인해야 할 여러 위험 요소를 분석해드려요',
-    ],
-    primaryCtaLabel: '매물 위험도 진단하기',
-    heroNote: '로그인 후 이용 가능',
-    description: [
-      '입력한 매물 정보를 바탕으로',
-      '계약 전에 확인해야 할 여러 위험 요소와 진단 결과를 보여드려요',
-    ],
-    featurePoints: ['매물 정보 분석', '여러 위험 요소 진단', '종합 결과 제공'],
-    cardCtaLabel: '로그인하고 진단하기',
-    image: '/images/landing/Carousel1.png',
-    to: '/auth/login',
-  },
-  {
-    id: 'doc-chat',
-    label: '② 서류안내 챗봇',
-    title: '필요한 서류에 대해 자세하게 질문해보세요',
-    heroTitle: ['궁금한 서류가 있다면,', '챗봇에게 바로 물어보세요'],
-    heroSubtitle: [
-      '준비해야 할 서류에 대해 궁금한 내용을',
-      '대화하면서 자세하게 안내받을 수 있어요',
-    ],
-    primaryCtaLabel: '서류 질문하기',
-    secondaryCtaLabel: '체크리스트 보기',
-    heroNote: '로그인 후 이용 가능',
-    description: [
-      '특정 서류가 무엇인지 궁금하거나 추가로 확인하고 싶은 내용을',
-      '챗봇과 대화하며 계속 질문할 수 있어요',
-    ],
-    featurePoints: ['서류별 상세 안내', '궁금한 내용 추가 질문', '대화로 계속 확인'],
-    cardCtaLabel: '로그인하고 질문하기',
-    image: '/images/landing/Carousel2.png',
-    to: '/auth/login',
-  },
-  {
-    id: 'user-chat',
-    label: '③ 조건상담 챗봇',
-    title: '내 조건으로 HUG 보증 가입이 가능한지 상담해보세요',
-    heroTitle: ['내 조건으로 HUG 보증 가입이 가능한지', '챗봇에게 바로 물어보세요'],
-    heroSubtitle: [
-      '내 상황과 조건을 바탕으로',
-      'HUG 보증 가입 가능 여부를 대화로 확인할 수 있어요',
-    ],
-    primaryCtaLabel: '조건 상담 시작',
-    secondaryCtaLabel: '보증 조건 알아보기',
-    heroNote: '로그인 없이 바로 이용 가능',
-    description: [
-      '보증금, 전세가율 등 내 상황과 조건을 바탕으로',
-      '챗봇과 대화하며 가입 가능 여부를 확인할 수 있어요',
-    ],
-    featurePoints: ['가입 가능 여부 상담', '조건별 추가 질문', '로그인 없이 바로 이용'],
-    cardCtaLabel: '바로 상담하기',
-    image: '/images/landing/Carousel3.png',
-    to: '/user-chat',
-  },
-  {
-    id: 'checklist',
-    label: '④ 체크리스트',
-    title: '내 계약에 필요한 서류를 한눈에 확인하세요',
-    heroTitle: ['내가 준비해야 할 서류를', '체크리스트로 확인하세요'],
-    heroSubtitle: [
-      '기본 준비 서류를 바로 확인하고,',
-      '로그인하면 임대차계약서를 바탕으로 필요한 서류만 확인할 수 있어요',
-    ],
-    primaryCtaLabel: '체크리스트 확인',
-    secondaryCtaLabel: '맞춤 서류 확인',
-    heroNote: '기본 체크리스트 바로 이용 · 맞춤 서류 확인은 로그인 필요',
-    description: [
-      '기본 준비 서류를 확인하고,',
-      '로그인하면 임대차계약서를 바탕으로 내게 필요한 서류만 확인할 수 있어요',
-    ],
-    featurePoints: ['기본 준비 서류 확인', '서류별 상세 정보 제공', '계약서 기반 맞춤 서류 확인'],
-    cardCtaLabel: '체크리스트 확인하기',
-    image: '/images/landing/Carousel4.png',
-    to: '/guarantee-checklist',
-  },
+const INTRO_DURATION_MS = 2000;
+const SCENE_EASE = [0.65, 0, 0.35, 1];
+
+const STEPS = [
+  { id: 'risk', step: 'STEP 01', title: '전세 안전 확인', accent: 'blue', variant: 'risk' },
+  { id: 'checklist', step: 'STEP 02', title: '보증 체크리스트', accent: 'green', variant: 'checklist' },
+  { id: 'document', step: 'STEP 03', title: '서류 준비', accent: 'blue', variant: 'document' },
 ];
 
-export default function LandingPage() {
-  const { isAuthenticated, user } = useAuth();
-  const { entryPath: riskEntryPath, hasLastAnalysis } = useLastRiskAnalysis(user?.email);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const slides = SLIDES.map((slide) => {
-    if (slide.id === 'risk') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated
-          ? hasLastAnalysis
-            ? '최근 분석 결과를 확인해보세요'
-            : '바로 진단을 시작해보세요'
-          : '로그인 후 이용 가능',
-        cardCtaLabel: isAuthenticated
-          ? hasLastAnalysis
-            ? '최근 진단 결과 보기'
-            : '매물 진단 시작하기'
-          : '로그인하고 진단하기',
-        to: isAuthenticated ? riskEntryPath : '/auth/login',
-      };
-    }
+const DESKTOP_CONNECTIONS = [
+  { start: 'step1-out', end: 'left-turn', showHead: false },
+  { start: 'left-turn', end: 'step2-in', showHead: true },
+  { start: 'step2-out', end: 'right-turn', showHead: false },
+  { start: 'right-turn', end: 'step3-in', showHead: true },
+];
 
-    if (slide.id === 'doc-chat') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated ? '궁금한 서류를 바로 질문해보세요' : '로그인 후 이용 가능',
-        cardCtaLabel: isAuthenticated ? '서류 챗봇 시작하기' : '로그인하고 질문하기',
-        to: isAuthenticated ? '/doc-chat' : '/auth/login',
-      };
-    }
+const MOBILE_CONNECTIONS = [
+  { start: 'step1-out', end: 'step2-in', showHead: true },
+  { start: 'step2-out', end: 'step3-in', showHead: true },
+];
 
-    if (slide.id === 'user-chat') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated ? '내 조건으로 바로 상담해보세요' : '로그인 없이 바로 이용 가능',
-        featurePoints: isAuthenticated
-          ? ['가입 가능 여부 상담', '조건별 추가 질문', '바로 상담 가능']
-          : slide.featurePoints,
-      };
-    }
-
-    if (slide.id === 'checklist') {
-      return {
-        ...slide,
-        heroSubtitle: isAuthenticated
-          ? ['기본 준비 서류를 바로 확인하고,', '상세 체크리스트에서 필요한 서류를 살펴볼 수 있어요']
-          : slide.heroSubtitle,
-        description: isAuthenticated
-          ? ['기본 준비 서류를 확인하고,', '상세 체크리스트에서 필요한 항목을 바로 살펴볼 수 있어요']
-          : slide.description,
-        heroNote: isAuthenticated ? '내 계약에 필요한 서류를 확인해보세요' : '기본 체크리스트 바로 이용',
-      };
-    }
-
-    return slide;
+function StoryConnections({ canvasRef }) {
+  const updateXarrow = useXarrow();
+  const updateXarrowRef = useRef(updateXarrow);
+  updateXarrowRef.current = updateXarrow;
+  const [route, setRoute] = useState({
+    left: { x: 0, y: 0 },
+    right: { x: 0, y: 0 },
+    mobile: false,
   });
-  const activeSlide = slides[activeIndex];
 
-  const paginate = (nextDirection) => {
-    setDirection(nextDirection);
-    setActiveIndex((prev) => {
-      if (nextDirection > 0) {
-        return prev === slides.length - 1 ? 0 : prev + 1;
-      }
-      return prev === 0 ? slides.length - 1 : prev - 1;
-    });
-  };
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
 
-  const goTo = (index) => {
-    if (index === activeIndex) return;
-    setDirection(index > activeIndex ? 1 : -1);
-    setActiveIndex(index);
-  };
+    let frameId = 0;
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      frameId = window.requestAnimationFrame(() => {
+        const canvasRect = canvas.getBoundingClientRect();
+        const step1Out = document.getElementById('step1-out')?.getBoundingClientRect();
+        const step2In = document.getElementById('step2-in')?.getBoundingClientRect();
+        const step2Out = document.getElementById('step2-out')?.getBoundingClientRect();
+        const step3In = document.getElementById('step3-in')?.getBoundingClientRect();
+
+        if (step1Out && step2In && step2Out && step3In) {
+          setRoute({
+            left: {
+              x: step1Out.left + step1Out.width / 2 - canvasRect.left,
+              y: step2In.top + step2In.height / 2 - canvasRect.top,
+            },
+            right: {
+              x: step3In.left + step3In.width / 2 - canvasRect.left,
+              y: step2Out.top + step2Out.height / 2 - canvasRect.top,
+            },
+            mobile: canvasRect.width <= 767,
+          });
+        }
+
+        window.requestAnimationFrame(() => updateXarrowRef.current());
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    resizeObserver.observe(canvas);
+    window.addEventListener('resize', scheduleUpdate);
+    window.addEventListener('orientationchange', scheduleUpdate);
+    if (document.fonts?.ready) document.fonts.ready.then(scheduleUpdate).catch(() => {});
+    scheduleUpdate();
+    const settleTimerIds = [100, 400, 900].map((delay) => window.setTimeout(scheduleUpdate, delay));
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      settleTimerIds.forEach((timerId) => window.clearTimeout(timerId));
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+      window.removeEventListener('orientationchange', scheduleUpdate);
+    };
+  }, [canvasRef]);
+
+  const connections = route.mobile ? MOBILE_CONNECTIONS : DESKTOP_CONNECTIONS;
 
   return (
-    <div className={styles.root}>
-      <HeroSection slide={activeSlide} direction={direction} />
-      <FeatureCarousel
-        slides={slides}
-        activeIndex={activeIndex}
-        direction={direction}
-        onPrev={() => paginate(-1)}
-        onNext={() => paginate(1)}
-        onGoTo={goTo}
-      />
-    </div>
+    <>
+      <span id="left-turn" className={styles.routePoint} style={{ left: route.left.x, top: route.left.y }} />
+      <span id="right-turn" className={styles.routePoint} style={{ left: route.right.x, top: route.right.y }} />
+      {connections.map(({ start, end, showHead }) => (
+        <Xarrow
+          key={`${start}-${end}`}
+          start={start}
+          end={end}
+          startAnchor="middle"
+          endAnchor="middle"
+          path="straight"
+          color="#0F75BD"
+          strokeWidth={3.2}
+          headSize={showHead ? 3.8 : 0}
+          showHead={showHead}
+          dashness={{ strokeLen: 10, nonStrokeLen: 8, animation: 0 }}
+          animateDrawing={false}
+          zIndex={2}
+          arrowBodyProps={{ strokeLinecap: 'round', strokeLinejoin: 'round' }}
+          divContainerStyle={{ pointerEvents: 'none' }}
+          SVGcanvasStyle={{ maxWidth: 'none', overflow: 'visible' }}
+        />
+      ))}
+    </>
+  );
+}
+
+function Thought({ id, className, desktop, mobile }) {
+  return (
+    <p id={id} className={`${styles.thought} ${className}`}>
+      <span className={styles.desktopThought}>{desktop}</span>
+      <span className={styles.mobileThought}>{mobile}</span>
+    </p>
+  );
+}
+
+function StoryStage({ prefersReducedMotion }) {
+  const canvasRef = useRef(null);
+
+  return (
+    <motion.section
+      className={styles.storyStage}
+      aria-label="HUGME 이용 시나리오"
+      initial={{
+        x: prefersReducedMotion ? 0 : '105%',
+        opacity: prefersReducedMotion ? 0 : 1,
+      }}
+      animate={{ x: 0, opacity: 1 }}
+      transition={{
+        duration: prefersReducedMotion ? 0.2 : 1.5,
+        ease: SCENE_EASE,
+      }}
+    >
+      <Xwrapper>
+        <div ref={canvasRef} className={styles.storyCanvas}>
+          <div className={`${styles.stepSlot} ${styles.step1Slot}`}><StoryStep step={STEPS[0]} index={0} /></div>
+          <Thought id="thought-1" className={styles.thought1} desktop={<>“위험한 요소는 크게 없네.<br />이 정도면 괜찮겠어.”</>} mobile={<>“이 정도면 괜찮겠어.”</>} />
+          <Thought id="thought-2" className={styles.thought2} desktop={<>“보증보험도 가입해야 하는데,<br />내 전셋집엔 어떤 서류가 필요하지?”</>} mobile={<>“보증보험엔 어떤<br />서류가 필요하지?”</>} />
+          <div className={`${styles.stepSlot} ${styles.step2Slot}`}><StoryStep step={STEPS[1]} index={1} /></div>
+          <Thought id="thought-3" className={styles.thought3} desktop={<>“나는 이 서류들을<br />준비하면 되는구나.”</>} mobile={<>“이 서류들이 필요하구나.”</>} />
+          <Thought id="thought-4" className={styles.thought4} desktop={<>“전입세대확인서...?<br />어디서 발급받지?”</>} mobile={<>“이 서류는 어디서 발급받지?”</>} />
+          <div className={`${styles.stepSlot} ${styles.step3Slot}`}><StoryStep step={STEPS[2]} index={2} /></div>
+          <StoryConnections canvasRef={canvasRef} />
+        </div>
+      </Xwrapper>
+    </motion.section>
+  );
+}
+
+export default function LandingPage() {
+  const [showStory, setShowStory] = useState(false);
+  const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => setShowStory(true), INTRO_DURATION_MS);
+    return () => window.clearTimeout(timerId);
+  }, []);
+
+  return (
+    <main className={styles.root}>
+      <header className={styles.topbar}>
+        <Link to="/" className={styles.logoLink} aria-label="HUGME 홈"><img className={styles.logo} src="/images/Logo.png" alt="HUGME" /></Link>
+        <nav className={styles.authLinks} aria-label="인증">
+          <Link className={styles.loginLink} to="/auth/login">로그인</Link>
+          <Link className={styles.signupLink} to="/auth/signup">회원가입</Link>
+        </nav>
+      </header>
+
+      <AnimatePresence initial={false} mode="sync">
+        {!showStory ? (
+          <motion.div
+            key="intro"
+            className={styles.sceneLayer}
+            initial={{ x: 0, opacity: 1 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{
+              x: prefersReducedMotion ? 0 : '-105%',
+              opacity: prefersReducedMotion ? 0 : 1,
+            }}
+            transition={{ duration: prefersReducedMotion ? 0.2 : 1.5, ease: SCENE_EASE }}
+          >
+            <LandingIntro />
+          </motion.div>
+        ) : (
+          <StoryStage key="story" prefersReducedMotion={prefersReducedMotion} />
+        )}
+      </AnimatePresence>
+
+      <StoryCharacters />
+    </main>
   );
 }

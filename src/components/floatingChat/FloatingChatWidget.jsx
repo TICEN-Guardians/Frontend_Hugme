@@ -1,9 +1,9 @@
-import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import FloatingIcon from './FloatingIcon/FloatingIcon.jsx';
-import FloatingChatStage1 from './FloatingChatStage1/FloatingChatStage1.jsx';
 import useGuideChat from '../../hooks/useGuideChat.js';
+import FloatingChatStage1 from './FloatingChatStage1/FloatingChatStage1.jsx';
+import FloatingIcon from './FloatingIcon/FloatingIcon.jsx';
 
 const STAGE = {
   CLOSED: 'CLOSED',
@@ -20,12 +20,13 @@ const DEFAULT_COLLAPSE_PATH = '/';
 // 위젯을 열 때마다(닫았다 다시 열기 포함), 그리고 로그인<->로그아웃이 실제로 일어날 때마다
 // 항상 새 세션으로 시작한다 — 과거 대화를 이어보고 싶은 로그인 사용자는 2단계(/user-chat)
 // 페이지의 세션 목록에서 찾아 들어가면 된다(그 목록 UI는 별도 사이드바 레이아웃에 연결 예정).
-export default function FloatingChatWidget() {
+export default function FloatingChatWidget({ mode = 'floating' }) {
   const location = useLocation();
   const navigate = useNavigate();
   const [stage, setStage] = useState(STAGE.CLOSED);
   const [collapsePath, setCollapsePath] = useState(DEFAULT_COLLAPSE_PATH);
   const chat = useGuideChat();
+  const isLandingMode = mode === 'landing';
 
   const isExpandedPage = location.pathname === '/user-chat';
 
@@ -50,16 +51,18 @@ export default function FloatingChatWidget() {
         onOpen={handleCollapseBack}
         showTooltip={false}
         ariaLabel="이전 화면으로 돌아가기"
+        mode={mode}
       />
     );
   }
 
   return (
     <AnimatePresence>
-      {stage === STAGE.CLOSED && <FloatingIcon key="icon" onOpen={handleOpen} />}
+      {stage === STAGE.CLOSED && <FloatingIcon key="icon" onOpen={handleOpen} mode={mode} />}
       {stage === STAGE.STAGE_1 && (
         <FloatingChatStage1
           key="stage1"
+          mode={isLandingMode ? 'landing' : 'floating'}
           chat={chat}
           onClose={() => setStage(STAGE.CLOSED)}
           onExpand={handleExpand}

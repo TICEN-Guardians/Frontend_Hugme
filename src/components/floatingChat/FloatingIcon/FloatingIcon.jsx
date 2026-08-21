@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { useEffect, useState } from 'react';
 import FloatingChatGlyph from './FloatingChatGlyph.jsx';
 import styles from './FloatingIcon.module.css';
 
@@ -14,7 +14,12 @@ const TOOLTIP_MESSAGES = [
   '궁금한 조건 있으면 편하게 물어보세요',
 ];
 
-export default function FloatingIcon({ onOpen, showTooltip = true, ariaLabel = '상담 챗봇 열기' }) {
+export default function FloatingIcon({
+  onOpen,
+  showTooltip = true,
+  ariaLabel = '상담 챗봇 열기',
+  mode = 'floating',
+}) {
   const prefersReducedMotion = useReducedMotion();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [tooltipIndex, setTooltipIndex] = useState(0);
@@ -23,7 +28,7 @@ export default function FloatingIcon({ onOpen, showTooltip = true, ariaLabel = '
     if (!showTooltip) return undefined;
 
     const revealTooltip = () => {
-      setTooltipIndex((prev) => (prev + 1) % TOOLTIP_MESSAGES.length);
+      setTooltipIndex(prev => (prev + 1) % TOOLTIP_MESSAGES.length);
       setIsTooltipVisible(true);
       window.setTimeout(() => setIsTooltipVisible(false), TOOLTIP_VISIBLE_MS);
     };
@@ -32,15 +37,38 @@ export default function FloatingIcon({ onOpen, showTooltip = true, ariaLabel = '
     return () => window.clearInterval(intervalId);
   }, [showTooltip]);
 
+  if (mode === 'landing') {
+    return (
+      <div className={`${styles.wrap} ${styles.landingWrap}`}>
+        <button
+          type="button"
+          className={`${styles.button} ${styles.landingButton}`}
+          onClick={onOpen}
+          aria-label="상담 챗봇 열기"
+        >
+          <FloatingChatGlyph />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.wrap}>
       <AnimatePresence>
         {isTooltipVisible && (
           <motion.div
             className={styles.tooltip}
-            initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 8, scale: prefersReducedMotion ? 1 : 0.94 }}
+            initial={{
+              opacity: 0,
+              y: prefersReducedMotion ? 0 : 8,
+              scale: prefersReducedMotion ? 1 : 0.94,
+            }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: prefersReducedMotion ? 0 : 8, scale: prefersReducedMotion ? 1 : 0.94 }}
+            exit={{
+              opacity: 0,
+              y: prefersReducedMotion ? 0 : 8,
+              scale: prefersReducedMotion ? 1 : 0.94,
+            }}
             transition={{ duration: 0.32, ease: ENTRY_EASE }}
             onClick={onOpen}
             role="button"
