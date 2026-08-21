@@ -4,8 +4,8 @@ import FloatingChatGlyph from './FloatingChatGlyph.jsx';
 import styles from './FloatingIcon.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
-const TOOLTIP_INTERVAL_MS = 20000; // 확인용 임시값 (원래 150000 = 2분 30초)
-const TOOLTIP_VISIBLE_MS = 4000; // 확인용 임시값 (원래 5000)
+const TOOLTIP_INTERVAL_MS = 40000; // 주기
+const TOOLTIP_VISIBLE_MS = 4000; // 노출 시간
 
 const TOOLTIP_MESSAGES = [
   '보증 궁금하지않아?',
@@ -14,21 +14,23 @@ const TOOLTIP_MESSAGES = [
   '궁금한 조건 있으면 편하게 물어보세요',
 ];
 
-export default function FloatingIcon({ onOpen }) {
+export default function FloatingIcon({ onOpen, showTooltip = true, ariaLabel = '상담 챗봇 열기' }) {
   const prefersReducedMotion = useReducedMotion();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
   const [tooltipIndex, setTooltipIndex] = useState(0);
 
   useEffect(() => {
-    const showTooltip = () => {
+    if (!showTooltip) return undefined;
+
+    const revealTooltip = () => {
       setTooltipIndex((prev) => (prev + 1) % TOOLTIP_MESSAGES.length);
       setIsTooltipVisible(true);
       window.setTimeout(() => setIsTooltipVisible(false), TOOLTIP_VISIBLE_MS);
     };
 
-    const intervalId = window.setInterval(showTooltip, TOOLTIP_INTERVAL_MS);
+    const intervalId = window.setInterval(revealTooltip, TOOLTIP_INTERVAL_MS);
     return () => window.clearInterval(intervalId);
-  }, []);
+  }, [showTooltip]);
 
   return (
     <div className={styles.wrap}>
@@ -53,7 +55,7 @@ export default function FloatingIcon({ onOpen }) {
         type="button"
         className={styles.button}
         onClick={onOpen}
-        aria-label="상담 챗봇 열기"
+        aria-label={ariaLabel}
         initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0.2 : 0.5, ease: ENTRY_EASE }}

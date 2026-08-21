@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useAuth } from '../context/auth/AuthContext.jsx';
 import useGuardedNavigate from './useGuardedNavigate.js';
 import useLastRiskAnalysis from './useLastRiskAnalysis.js';
@@ -140,6 +140,43 @@ export default function useGuideChat() {
       ),
     );
   };
+
+  // 로그인 대화창 상태(sessionId/messages 등)와 비로그인 대화 목록(anonConversations)을
+  // 모두 빈 상태로 되돌린다. 로그인<->로그아웃 전환, 위젯을 다시 열 때 등 "새 세션으로
+  // 시작해야 하는" 모든 상황에서 이 함수 하나로 통일해서 쓴다.
+  const resetToNewSession = () => {
+    setSessionId(null);
+    setMessages([]);
+    setSuggestedQuestions([]);
+    setRedirect(null);
+
+    const conversation = createConversation();
+    setAnonConversations([conversation]);
+    setActiveAnonConversationId(conversation.id);
+  };
+
+  // 로그인<->로그아웃 전환 시, 이전 상태(다른 쪽 모드의 대화)가 남아있다가 다시 튀어나오지
+  // 않도록 항상 새 세션으로 초기화한다. 최초 마운트 시 auth 상태가 확정되는 것(비로그인 →
+  // 로그인 여부 조회 완료)은 "전환"으로 치지 않는다 — 실제로 로그인/로그아웃 액션이 일어났을
+  // 때만 리셋한다.
+  const hasStabilizedAuthRef = useRef(false);
+  const prevIsAuthenticatedRef = useRef(isAuthenticated);
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!hasStabilizedAuthRef.current) {
+      hasStabilizedAuthRef.current = true;
+      prevIsAuthenticatedRef.current = isAuthenticated;
+      return;
+    }
+
+    if (prevIsAuthenticatedRef.current !== isAuthenticated) {
+      prevIsAuthenticatedRef.current = isAuthenticated;
+      resetToNewSession();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAuthenticated, isAuthLoading]);
 
   const startNewChat = () => {
     if (isSending) return;
@@ -318,6 +355,7 @@ export default function useGuideChat() {
     cancelLogin,
     sendQuestion,
     startNewChat,
+    resetToNewSession,
     selectAnonConversation,
     openSession,
     removeSession,
