@@ -4,8 +4,8 @@ import FloatingChatGlyph from './FloatingChatGlyph.jsx';
 import styles from './FloatingIcon.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
-const TOOLTIP_INTERVAL_MS = 150000; // 2분 30초 주기
-const TOOLTIP_VISIBLE_MS = 5000;
+const TOOLTIP_INTERVAL_MS = 20000; // 확인용 임시값 (원래 150000 = 2분 30초)
+const TOOLTIP_VISIBLE_MS = 4000; // 확인용 임시값 (원래 5000)
 
 const TOOLTIP_MESSAGES = [
   '보증 궁금하지않아?',
