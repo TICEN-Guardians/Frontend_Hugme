@@ -17,7 +17,7 @@ export const AuthContext = createContext(null);
 
 const AUTH_CHANNEL_NAME = 'hugme-auth';
 const LAST_ACTIVITY_KEY = 'hugme:lastActivityAt';
-const IDLE_TIMEOUT_MS = 5 * 60 * 1000;
+const IDLE_TIMEOUT_MS = 60 * 60 * 1000;
 const IDLE_CHECK_INTERVAL_MS = 5 * 1000;
 export function AuthProvider({ children }) {
   const location = useLocation();
