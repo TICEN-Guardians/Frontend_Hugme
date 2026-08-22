@@ -16,7 +16,10 @@ import Modal from '../../components/common/Modal/Modal.jsx';
 import ReportAnalysis from '../../components/risk/report/ReportAnalysis/ReportAnalysis.jsx';
 import ReportHeader from '../../components/risk/report/ReportHeader/ReportHeader.jsx';
 import RiskSummaryRail from '../../components/risk/report/RiskSummaryRail/RiskSummaryRail.jsx';
-import { getDiagnosis } from '../../api/propertyRisk/propertyRiskService.js';
+import {
+  calculateDiagnosisScenario,
+  getDiagnosis,
+} from '../../api/propertyRisk/propertyRiskService.js';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
 import {
   clearAnonymousRiskSession,
@@ -203,9 +206,17 @@ export default function RiskReportPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [isRestartModalOpen, setIsRestartModalOpen] = useState(false);
+  const [scenarioState, setScenarioState] = useState({
+    data: null,
+    error: '',
+    isLoading: false,
+  });
 
   useEffect(() => {
     let active = true;
+    setData(null);
+    setError('');
+    setScenarioState({ data: null, error: '', isLoading: false });
     getDiagnosis(reportId)
       .then((result) => {
         if (!active) return;
@@ -218,6 +229,25 @@ export default function RiskReportPage() {
 
     return () => { active = false; };
   }, [reportId, user?.email]);
+
+  const handleCalculateScenario = async (payload) => {
+    setScenarioState({ data: null, error: '', isLoading: true });
+    try {
+      const result = await calculateDiagnosisScenario(reportId, payload);
+      setScenarioState({ data: result, error: '', isLoading: false });
+    } catch (requestError) {
+      setScenarioState({
+        data: null,
+        error: requestError?.response?.data?.message
+          ?? '시나리오를 계산하지 못했습니다.',
+        isLoading: false,
+      });
+    }
+  };
+
+  const handleResetScenario = () => {
+    setScenarioState({ data: null, error: '', isLoading: false });
+  };
 
   const handleRestartDiagnosis = () => {
     clearLastRiskAnalysisId(user?.email);
@@ -246,7 +276,19 @@ export default function RiskReportPage() {
           <div className={styles.summaryColumn}>
             <RiskSummaryRail summary={report} motionSet={motionSet} />
           </div>
-          <ReportAnalysis report={report} motionSet={motionSet} />
+          <ReportAnalysis
+            report={report}
+            motionSet={motionSet}
+            scenarioState={{
+              ...scenarioState,
+              result: whatIfResultViewModel(
+                scenarioState.data,
+                report.isDetailed,
+              ),
+            }}
+            onCalculateScenario={handleCalculateScenario}
+            onResetScenario={handleResetScenario}
+          />
         </div>
 
         <p className={styles.disclaimer}>
@@ -428,6 +470,13 @@ function toReportViewModel(data) {
     reliabilityHelp: TERM_HELP.valuationReliability,
     dataQuality,
     depositRecommendation,
+    whatIfDefaults: {
+      deposit,
+      isDetailed,
+      activeMaxClaimAmount: mortgage,
+      activeMaxClaimAmountLabel: money(mortgage),
+      canRemoveActiveMortgage: isDetailed && mortgage != null && mortgage > 0,
+    },
     scenarios: scenarios.map((item) => ({
       ...item,
       progressWidth: Math.max((item.rateValue / maxScenarioRate) * 100, item.rateValue > 0 ? 8 : 0),
@@ -458,6 +507,64 @@ function toReportViewModel(data) {
     riskReasons,
     reasonGroups: riskReasons,
     recommendedActions: recommendedActions(explanation.recommendedActions ?? []),
+  };
+}
+
+function whatIfResultViewModel(value, isDetailed) {
+  if (!value?.baseline?.risk || !value?.scenario?.risk) return null;
+
+  const baselineRisk = value.baseline.risk;
+  const scenarioRisk = value.scenario.risk;
+  const scoreChange = numberOrNull(value.scoreChange) ?? 0;
+  const scenarioIndicators = value.scenario.indicators ?? {};
+  const recommendation = depositRecommendationViewModel(
+    value.depositRecommendation,
+    isDetailed,
+  );
+  const activeClaim = numberOrNull(value.scenario.activeMaxClaimAmount);
+
+  return {
+    baseline: {
+      score: numberOrNull(baselineRisk.score) ?? 0,
+      gradeLabel: GRADE[baselineRisk.grade]?.label ?? baselineRisk.grade,
+    },
+    scenario: {
+      score: numberOrNull(scenarioRisk.score) ?? 0,
+      gradeLabel: GRADE[scenarioRisk.grade]?.label ?? scenarioRisk.grade,
+    },
+    scoreChangeLabel: scoreChange > 0
+      ? '+' + scoreChange + '점'
+      : scoreChange + '점',
+    changeTone: scoreChange < 0
+      ? 'improved'
+      : scoreChange > 0
+        ? 'worsened'
+        : 'unchanged',
+    registryBlockersRemain: value.registryBlockersRemain === true,
+    blockerReasons: (value.unresolvedRiskReasons ?? [])
+      .map((code) => SCORE_FLOOR_REASON[code] ?? code)
+      .filter(Boolean),
+    metrics: [
+      {
+        label: '조정 예상 매매가',
+        value: money(numberOrNull(value.scenario.valuation?.estimatedSalePrice)),
+      },
+      {
+        label: '조정 예상 전세가',
+        value: money(numberOrNull(value.scenario.valuation?.estimatedLeasePrice)),
+      },
+      {
+        label: '가정 보증금',
+        value: money(numberOrNull(value.scenario.deposit)),
+      },
+      {
+        label: isDetailed ? '반영 선순위 근저당' : '전세가율',
+        value: isDetailed
+          ? money(activeClaim)
+          : ratio(numberOrNull(scenarioIndicators.leaseToSaleRate)),
+      },
+    ],
+    recommendation,
   };
 }
 

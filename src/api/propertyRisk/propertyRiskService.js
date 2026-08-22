@@ -82,3 +82,13 @@ export const getDiagnosis = async (analysisId) => {
   const { data } = await client.get(`${prefix}/${analysisId}`, { headers });
   return data;
 };
+
+export const calculateDiagnosisScenario = async (analysisId, payload) => {
+  const { client, prefix, headers } = diagnosisAccess(analysisId);
+  const { data } = await client.post(
+    prefix + '/' + analysisId + '/scenarios',
+    payload,
+    { headers },
+  );
+  return data;
+};

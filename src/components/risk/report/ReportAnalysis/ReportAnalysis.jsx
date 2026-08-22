@@ -16,15 +16,23 @@ import {
   LuFileCheck,
   LuLandmark,
   LuShieldCheck,
+  LuSlidersHorizontal,
   LuSparkles,
   LuTriangleAlert,
   LuTrendingDown,
 } from 'react-icons/lu';
+import WhatIfSimulator from '../WhatIfSimulator/WhatIfSimulator.jsx';
 import styles from './ReportAnalysis.module.css';
 
 const VIEWPORT = { once: true, amount: 0.15 };
 
-export default function ReportAnalysis({ report, motionSet }) {
+export default function ReportAnalysis({
+  report,
+  motionSet,
+  scenarioState,
+  onCalculateScenario,
+  onResetScenario,
+}) {
   return (
     <motion.main
       className={styles.analysis}
@@ -55,21 +63,32 @@ export default function ReportAnalysis({ report, motionSet }) {
       <ReportSection index="01" icon={<LuTrendingDown />} title="가격 위험 분석" motionSet={motionSet}>
         <PriceRiskSection report={report} />
       </ReportSection>
-      <ReportSection index="02" icon={<LuChartNoAxesColumnIncreasing />} title="주변 전세 실거래 분포" motionSet={motionSet}>
+      <ReportSection index="02" icon={<LuSlidersHorizontal />} title="What-if 시뮬레이션" motionSet={motionSet}>
+        <WhatIfSimulator
+          defaults={report.whatIfDefaults}
+          result={scenarioState.result}
+          isLoading={scenarioState.isLoading}
+          error={scenarioState.error}
+          onCalculate={onCalculateScenario}
+          onReset={onResetScenario}
+        />
+      </ReportSection>
+
+      <ReportSection index="03" icon={<LuChartNoAxesColumnIncreasing />} title="주변 전세 실거래 분포" motionSet={motionSet}>
         <MarketComparableSection comparable={report.marketComparables} />
       </ReportSection>
 
-      <ReportSection index="03" icon={<LuFileCheck />} title="시세 산출 데이터 품질" motionSet={motionSet}>
+      <ReportSection index="04" icon={<LuFileCheck />} title="시세 산출 데이터 품질" motionSet={motionSet}>
         <DataQualitySection quality={report.dataQuality} />
       </ReportSection>
 
       {report.isDetailed && (
-        <ReportSection index="04" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
+        <ReportSection index="05" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
           <RecoveryRegistrySection report={report} />
         </ReportSection>
       )}
 
-      <ReportSection index={report.isDetailed ? '05' : '04'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
+      <ReportSection index={report.isDetailed ? '07' : '06'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
