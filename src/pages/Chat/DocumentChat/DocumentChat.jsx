@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
+import { FaArrowRight, FaComments, FaFileLines, FaLock } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
@@ -14,6 +14,81 @@ const DOCUMENT_CHAT_TRANSITION = {
   duration: 1.25,
   ease: [0.16, 1, 0.3, 1],
 };
+
+const ENTRY_EASE = [0.16, 1, 0.3, 1];
+
+const entryStateVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      delayChildren: 0.22,
+      staggerChildren: 0.11,
+    },
+  },
+};
+
+const entryItemVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 28,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.85, ease: ENTRY_EASE },
+  },
+};
+
+const entryTitleVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 38,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.95, ease: ENTRY_EASE },
+  },
+};
+
+const entryIconVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    scale: reducedMotion ? 1 : 0.92,
+  }),
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: { duration: 0.9, ease: ENTRY_EASE },
+  },
+};
+
+const entrySuggestionListVariants = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.09 } },
+};
+
+const entrySuggestionVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 22,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.78, ease: ENTRY_EASE },
+  },
+};
+
+const DOCUMENT_ENTRY_QUESTIONS = [
+  '이 서류는 왜 필요한가요?',
+  '이 서류는 어떻게 발급받나요?',
+  '인터넷으로 발급할 수 있나요?',
+  '방문해서 발급받을 수 있나요?',
+  '이 서류 발급하려면 뭘 가져가야 하나요?',
+  '발급 비용이 얼마인가요?',
+];
 
 function normalizeSectionName(sectionCode, sectionName) {
   if (sectionName) return sectionName;
@@ -198,25 +273,65 @@ export default function DocumentChat() {
           )}
           {!isLoading && !isChecklistLoading && !isLocked && messages.length === 0 && (
             <motion.div
-              className={`${styles.guideBox} ${styles.chatContent}`}
-              initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 18 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={prefersReducedMotion ? { duration: 0 } : DOCUMENT_CHAT_TRANSITION}
+              className={styles.entryEmpty}
+              custom={prefersReducedMotion}
+              initial="hidden"
+              animate="visible"
+              variants={entryStateVariants}
             >
-              <div className={styles.guideIcon}>
-                <FaRegMessage aria-hidden="true" />
-              </div>
-              <div className={styles.guideText}>
-                <p className={styles.guideTitle}>상담할 서류를 고른 뒤 질문을 입력해 주세요</p>
-                <p className={styles.guideDescription}>
-                  오른쪽 서류 목록에서 궁금한 서류를 선택하고, 입력창에 직접 질문하면 해당 서류 기준으로 안내해 드립니다.
-                </p>
-                <div className={styles.guideExamples} aria-label="질문 예시">
-                  <span>이 서류는 어떻게 준비해야 하나요?</span>
-                  <span>어디서 발급받을 수 있나요?</span>
-                  <span>제출할 때 주의할 점이 있나요?</span>
-                </div>
-              </div>
+              <motion.div
+                className={styles.entryIcon}
+                custom={prefersReducedMotion}
+                variants={entryIconVariants}
+              >
+                <FaComments aria-hidden="true" />
+              </motion.div>
+              <motion.h2
+                className={styles.entryTitle}
+                custom={prefersReducedMotion}
+                variants={entryTitleVariants}
+              >
+                어떤 서류가 궁금하세요?
+              </motion.h2>
+              <motion.p
+                className={styles.entryDescription}
+                custom={prefersReducedMotion}
+                variants={entryItemVariants}
+              >
+                오른쪽 목록에서 궁금한 서류를 먼저 선택해 주세요.
+                <br />
+                아래 추천 질문을 누르면 선택한 서류에 대한 상담이 시작돼요.
+              </motion.p>
+              <motion.div
+                className={styles.entrySuggestions}
+                aria-label="추천 질문"
+                variants={entrySuggestionListVariants}
+              >
+                {DOCUMENT_ENTRY_QUESTIONS.map((question) => (
+                  <motion.button
+                    key={question}
+                    type="button"
+                    className={styles.entrySuggestionCard}
+                    onClick={() => handleSend(question)}
+                    disabled={isSending || !selectedDocument}
+                    custom={prefersReducedMotion}
+                    variants={entrySuggestionVariants}
+                    whileHover={
+                      prefersReducedMotion || isSending || !selectedDocument
+                        ? undefined
+                        : { y: -2 }
+                    }
+                    whileTap={
+                      prefersReducedMotion || isSending || !selectedDocument
+                        ? undefined
+                        : { scale: 0.99 }
+                    }
+                    transition={{ duration: 0.22, ease: 'easeOut' }}
+                  >
+                    {question}
+                  </motion.button>
+                ))}
+              </motion.div>
             </motion.div>
           )}
           {isLoading && (
@@ -281,7 +396,11 @@ export default function DocumentChat() {
               onSend={handleSend}
               disabled={isLocked || isSending}
               placeholder={
-                isLocked ? '체크리스트 완료 후 상담이 활성화됩니다' : '서류를 선택한 뒤 궁금한 점을 입력하세요'
+                isLocked
+                  ? '체크리스트 완료 후 상담이 활성화됩니다'
+                    : selectedDocument
+                      ? '선택한 서류에 대해 궁금한 점을 입력하세요'
+                    : '오른쪽 목록에서 상담할 서류를 먼저 선택하세요'
               }
             />
           </motion.div>

@@ -161,6 +161,83 @@
   font-weight: 700;
 }
 
+.entryEmpty {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  max-width: 108rem;
+  margin: 0 auto;
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+  transform: translateY(-2rem);
+}
+
+.entryIcon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-16);
+  height: var(--space-16);
+  margin-bottom: var(--space-6);
+  border-radius: var(--radius-pill);
+  background: linear-gradient(135deg, var(--blue-tint-50) 0%, var(--green-tint-50) 100%);
+  color: var(--brand-blue);
+  font-size: var(--text-2xl);
+}
+
+.entryTitle {
+  margin: 0 0 var(--space-4);
+  color: var(--text-primary);
+  font-size: var(--text-2xl);
+  font-weight: 800;
+}
+
+.entryDescription {
+  margin: 0 0 var(--space-8);
+  max-width: 76rem;
+  color: var(--text-disabled);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.entrySuggestions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+  width: min(100%, 128rem);
+  max-width: 100%;
+}
+
+.entrySuggestionCard {
+  min-height: 6.2rem;
+  padding: var(--space-4) var(--space-5);
+  border: 0.1rem solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--on-accent);
+  color: var(--text-primary);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  line-height: 1.45;
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.18s ease,
+    background-color 0.18s ease;
+}
+
+.entrySuggestionCard:hover {
+  border-color: var(--accent);
+  background: rgba(15, 117, 189, 0.04);
+}
+
+.entrySuggestionCard:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .typingDots {
   display: inline-flex;
   align-items: center;
@@ -386,6 +463,15 @@
   .guideExamples span {
     width: 100%;
     box-sizing: border-box;
+  }
+
+  .entryEmpty {
+    padding: var(--space-8) var(--space-4);
+    transform: translateY(-1.2rem);
+  }
+
+  .entrySuggestions {
+    grid-template-columns: 1fr;
   }
 
   .selectionContent {
