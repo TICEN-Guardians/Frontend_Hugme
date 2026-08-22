@@ -45,6 +45,11 @@
   background: var(--accent-tint-50);
 }
 
+.checklistEntryPanel {
+  width: 100%;
+  margin-bottom: var(--space-6);
+}
+
 .analysisPanel > :first-child {
   margin: 0;
 }

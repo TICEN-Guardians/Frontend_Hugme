@@ -232,7 +232,7 @@ function ContractAnalysisPanel({
   if (!isDone) {
     return (
       <motion.section
-        className={styles.analysisPanel}
+        className={styles.checklistEntryPanel}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: PANEL_EASE }}
@@ -805,57 +805,16 @@ export default function ProductChecklistPage() {
 
       ) : (
         status === 'success' && !isRestoring && (
-          <>
-            <ContractAnalysisPanel
-              isDone={false}
-              onUpload={startUpload}
-              onBeforeUpload={prepareUpload}
-              isPreparingUpload={isPreparingUpload}
-              uploadError={uploadError}
-              onPrepareTest={handlePrepareStart}
-              isPreparingTest={prepareChecklist.isStarting}
-              prepareError={prepareChecklist.error}
-            />
-            <motion.section
-              className={styles.board}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: PANEL_EASE }}
-            >
-              <div className={styles.boardHeader}>
-                <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={handleSectionChange} />
-
-              </div>
-
-
-              <div className={styles.itemArea}>
-                {isSectionLoading ? (
-                  <p className={styles.status}>불러오는 중...</p>
-                ) : items.length === 0 ? (
-                  <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
-                ) : (
-                  <div className={styles.checklistLayout}>
-                    <DocumentSelector
-                      items={items}
-                      selectedItemId={selectedItemId}
-                      onSelect={handleItemClick}
-                      groupTabs={groupTabs}
-                      activeGroupId={activeGroupId}
-                      onGroupChange={handleGroupChange}
-                    />
-                    <DocumentDetail
-                      selectedItem={selectedItem}
-                      entries={modalDocumentEntries}
-                      isLoading={isDocumentsLoading}
-                      expandedGroupIds={expandedDocumentGroupIds}
-                      onToggleGroup={toggleDocumentGroup}
-                    />
-                  </div>
-                )}
-              </div>
-
-            </motion.section>
-          </>
+          <ContractAnalysisPanel
+            isDone={false}
+            onUpload={startUpload}
+            onBeforeUpload={prepareUpload}
+            isPreparingUpload={isPreparingUpload}
+            uploadError={uploadError}
+            onPrepareTest={handlePrepareStart}
+            isPreparingTest={prepareChecklist.isStarting}
+            prepareError={prepareChecklist.error}
+          />
         )
       )}
 
