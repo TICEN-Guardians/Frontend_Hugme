@@ -2,7 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaComments } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
-import useGuideChat from '../../../hooks/useGuideChat.js';
+import { useGuideChatContext } from '../../../context/guideChat/GuideChatContext.jsx';
 import styles from './ConditionChat.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
@@ -156,7 +156,7 @@ export default function ConditionChat() {
     cancelLogin,
     sendQuestion,
     handleRedirect,
-  } = useGuideChat();
+  } = useGuideChatContext();
   const prefersReducedMotion = useReducedMotion();
 
   const followUpQuestions = currentSuggestedQuestions;

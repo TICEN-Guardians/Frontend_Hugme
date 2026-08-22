@@ -46,7 +46,6 @@ export default function StoryCharacters() {
         whileDrag={prefersReducedMotion ? undefined : { scale: 1.025 }}
       >
         <div className={styles.assistantMount}><FloatingChatWidget mode="landing" /></div>
-        <p className={styles.caption}>HUGME 도우미</p>
       </motion.aside>
     </div>
   );

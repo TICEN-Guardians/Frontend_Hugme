@@ -25,7 +25,7 @@
 .journey { box-sizing: border-box; width: min(100%, 180rem); min-height: 100dvh; margin: 0 auto; padding: clamp(8.2rem, 9.5vh, 10rem) 1.6rem 2rem; will-change: transform, opacity; }
 .titleGroup { position: relative; z-index: 20; text-align: center; }
 .eyebrow { margin: 0 0 0.7rem; color: var(--brand-blue); font-size: 1.25rem; font-weight: 850; letter-spacing: 0.12em; }
-.titleGroup h1 { margin: 0; color: #172332; font-size: clamp(2.6rem, 2.55vw, 4.1rem); font-weight: 850; letter-spacing: -0.045em; }
+.titleGroup h1 { margin: 0; color: #172332; font-size: clamp(2.6rem, 2.55vw, 4.1rem); font-weight: 850; letter-spacing: -0.045em; white-space: nowrap; }
 
 .journeyCanvas { position: relative; width: min(100%, 176rem); height: clamp(50rem, calc(100dvh - 25rem), 64rem); margin: 9rem auto 0; }
 .route { position: absolute; inset: 0; z-index: 2; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
@@ -118,7 +118,7 @@
   .root { overflow: hidden; }
   .topbar { width: calc(100% - 3.2rem); }
   .journey { min-height: auto; padding: 9rem 2.4rem 7rem; }
-  .titleGroup h1 { font-size: clamp(2.8rem, 4vw, 3.6rem); }
+  .titleGroup h1 { font-size: clamp(2rem, 3.1vw, 3.2rem); }
   .journeyCanvas { display: flex; box-sizing: border-box; width: min(100%, 92rem); height: auto; min-height: 230rem; flex-direction: column; gap: 22rem; margin-top: 5rem; padding: 7rem 0 10rem; }
   .featurePosition { position: relative; inset: auto; box-sizing: border-box; transform: none; }
   .featurePosition { display: flex; width: 50%; height: 20rem; }
@@ -174,7 +174,7 @@
   .signupLink { height: 3.6rem; padding: 0 1.3rem; }
   .journey { min-height: auto; padding: 7.8rem 1.2rem 5rem; }
   .eyebrow { font-size: 1.08rem; }
-  .titleGroup h1 { font-size: clamp(2.35rem, 7vw, 3.15rem); line-height: 1.22; }
+  .titleGroup h1 { font-size: clamp(1.2rem, 3.85vw, 2rem); line-height: 1.22; }
   .journeyCanvas { display: none; }
   .featurePosition { position: relative; inset: auto; box-sizing: border-box; transform: none; }
   .featurePosition { display: flex; width: 100%; height: min(22rem, 67vw); justify-content: center; }

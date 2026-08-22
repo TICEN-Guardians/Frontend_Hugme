@@ -617,7 +617,7 @@ export default function LandingPage() {
           <motion.section key="landing-journey" className={styles.journey} aria-labelledby="landing-title" initial={{ x: prefersReducedMotion ? 0 : '105%', opacity: prefersReducedMotion ? 0 : 1 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: prefersReducedMotion ? 0.2 : 1.05, ease: SCENE_EASE }}>
             <div className={styles.titleGroup}>
               <p className={styles.eyebrow}>나의 안전한 전세 여정</p>
-              <h1 id="landing-title">계약부터 보증보험 서류 준비까지</h1>
+              <h1 id="landing-title">전세위험진단부터 보증보험 서류 준비까지</h1>
             </div>
             <Xwrapper>
               <div ref={canvasRef} className={styles.journeyCanvas}>

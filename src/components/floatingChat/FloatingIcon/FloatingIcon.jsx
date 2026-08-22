@@ -19,6 +19,8 @@ export default function FloatingIcon({
   showTooltip = true,
   ariaLabel = '상담 챗봇 열기',
   mode = 'floating',
+  buttonRef,
+  dragHandlers,
 }) {
   const prefersReducedMotion = useReducedMotion();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -53,7 +55,7 @@ export default function FloatingIcon({
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${mode === 'docked' ? styles.dockedWrap : ''}`}>
       <AnimatePresence>
         {isTooltipVisible && (
           <motion.div
@@ -80,10 +82,12 @@ export default function FloatingIcon({
       </AnimatePresence>
 
       <motion.button
+        ref={buttonRef}
         type="button"
         className={styles.button}
         onClick={onOpen}
         aria-label={ariaLabel}
+        {...dragHandlers}
         initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0.2 : 0.5, ease: ENTRY_EASE }}
