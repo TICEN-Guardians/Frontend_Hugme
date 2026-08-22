@@ -1,5 +1,6 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { FaArrowUpFromBracket, FaDownload, FaEye, FaTrash } from 'react-icons/fa6';
+import Modal from '../../../../components/common/Modal/Modal.jsx';
 import styles from './DocumentUploadActions.module.css';
 
 const ACCEPT = 'application/pdf,image/jpeg,image/png';
@@ -16,6 +17,7 @@ export default function DocumentUploadActions({
   onDelete,
 }) {
   const inputRef = useRef(null);
+  const [deleteTarget, setDeleteTarget] = useState(null);
   const latestUpload = uploads[0] ?? null;
   const isBusy = latestUpload != null && busyUploadId === latestUpload.uploadId;
 
@@ -88,11 +90,7 @@ export default function DocumentUploadActions({
           <button
             type="button"
             className={`${styles.iconButton} ${styles.deleteButton}`}
-            onClick={() => {
-              if (window.confirm(`‘${latestUpload.userFileName}’ 파일을 삭제할까요?`)) {
-                onDelete(latestUpload.uploadId);
-              }
-            }}
+            onClick={() => setDeleteTarget(latestUpload)}
             disabled={isBusy}
             aria-label={`${latestUpload.userFileName} 삭제`}
             title="삭제"
@@ -101,6 +99,41 @@ export default function DocumentUploadActions({
           </button>
         </>
       )}
+
+      <Modal
+        isOpen={Boolean(deleteTarget)}
+        onClose={() => {
+          if (!isBusy) setDeleteTarget(null);
+        }}
+        panelClassName={styles.deleteModal}
+      >
+        <div className={styles.deleteModalIcon} aria-hidden="true"><FaTrash /></div>
+        <h2 className={styles.deleteModalTitle}>업로드한 서류를 삭제할까요?</h2>
+        <p className={styles.deleteModalDescription}>삭제한 파일은 복구할 수 없습니다.</p>
+        <p className={styles.deleteFileName}>{deleteTarget?.userFileName}</p>
+        <div className={styles.deleteModalActions}>
+          <button
+            type="button"
+            className={styles.cancelAction}
+            onClick={() => setDeleteTarget(null)}
+            disabled={isBusy}
+          >
+            취소
+          </button>
+          <button
+            type="button"
+            className={styles.confirmDeleteAction}
+            onClick={async () => {
+              if (!deleteTarget) return;
+              await onDelete(deleteTarget.uploadId);
+              setDeleteTarget(null);
+            }}
+            disabled={isBusy}
+          >
+            {isBusy ? '삭제 중...' : '삭제'}
+          </button>
+        </div>
+      </Modal>
     </div>
   );
 }
