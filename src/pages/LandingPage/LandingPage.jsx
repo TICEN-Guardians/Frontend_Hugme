@@ -569,7 +569,10 @@ function JourneyConnections({
       animateDrawing={showImmediately ? false : (isTabletLayout ? connection.tabletDuration : connection.duration)}
       zIndex={2}
       arrowBodyProps={{ strokeLinecap: 'round', strokeLinejoin: 'round', 'data-journey-route': getRouteKey(connection) }}
-      divContainerStyle={{ pointerEvents: 'none', opacity: index < readyCount ? 1 : 0 }}
+      divContainerStyle={{
+        pointerEvents: 'none',
+        opacity: showImmediately || index < readyCount ? 1 : 0,
+      }}
       SVGcanvasStyle={{ maxWidth: 'none', overflow: 'visible' }}
     />
   ));
