@@ -82,9 +82,9 @@ export default function FloatingChatStage1({
             <div className={styles.emptyIcon}>
               <FaComments aria-hidden="true" />
             </div>
-            <p className={styles.emptyTitle}>어떤 가입조건이 궁금하세요?</p>
+            <p className={styles.emptyTitle}>무엇이든 물어보세요</p>
             <p className={styles.emptyDescription}>
-              HUG 전세보증금반환보증 가입조건을 하나씩 확인해 드려요.
+              HUG 보증상품부터 전세사기 예방까지 무엇이든 물어보세요.
             </p>
             <div className={styles.emptySuggestions}>
               {isEntryLoading && <div className={`${styles.suggestionChip} ${styles.suggestionNotice}`}>추천 질문을 불러오는 중입니다.</div>}
@@ -161,7 +161,7 @@ export default function FloatingChatStage1({
         <ChatInput
           onSend={sendQuestion}
           disabled={isSending}
-          placeholder={currentMessages.length === 0 ? '가입조건을 선택하거나 직접 입력하세요' : '추천 질문을 선택하거나 직접 입력하세요'}
+          placeholder={currentMessages.length === 0 ? '궁금한 걸 선택하거나 직접 입력하세요' : '추천 질문을 선택하거나 직접 입력하세요'}
         />
       </div>
     </motion.div>
