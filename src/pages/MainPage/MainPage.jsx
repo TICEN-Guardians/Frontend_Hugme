@@ -1,3 +1,4 @@
+import { useLayoutEffect } from 'react';
 import { FaArrowRightLong } from 'react-icons/fa6';
 import { motion, useReducedMotion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -78,6 +79,10 @@ export default function MainPage() {
     ? `안녕하세요, ${user?.name ?? '사용자'}님`
     : '안녕하세요, HUGME입니다';
   const motionState = prefersReducedMotion ? 'visible' : undefined;
+
+  useLayoutEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   return (
     <div className={styles.root}>
