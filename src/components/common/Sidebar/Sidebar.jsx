@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import {
   FaArrowRightFromBracket,
   FaClockRotateLeft,
@@ -17,7 +16,6 @@ import styles from './Sidebar.module.css';
 const LOGO_SRC = '/images/Logo.png';
 
 export default function Sidebar({ showHistory = true }) {
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const { user, isAuthenticated, isAuthLoading, logout } = useAuth();
   const { pathname } = useLocation();
   const navigate = useNavigate();
@@ -56,12 +54,8 @@ export default function Sidebar({ showHistory = true }) {
         </Link>
 
         <div className={styles.profileArea}>
-          <button
-            type="button"
+          <div
             className={styles.profile}
-            aria-expanded={isProfileOpen}
-            aria-controls="sidebar-account-menu"
-            onClick={() => setIsProfileOpen((isOpen) => !isOpen)}
           >
             <span className={styles.avatar} aria-hidden="true">
               <FaUser />
@@ -75,24 +69,7 @@ export default function Sidebar({ showHistory = true }) {
                     : '게스트'}
               </strong>
             </div>
-          </button>
-
-          {isAuthenticated && (
-            <div
-              id="sidebar-account-menu"
-              className={styles.profileMenu}
-              data-open={isProfileOpen}
-              aria-hidden={!isProfileOpen}
-            >
-              <button
-                type="button"
-                className={styles.withdrawButton}
-                tabIndex={isProfileOpen ? 0 : -1}
-              >
-                탈퇴하기
-              </button>
-            </div>
-          )}
+          </div>
         </div>
       </div>
 
