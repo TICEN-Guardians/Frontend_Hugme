@@ -12,6 +12,7 @@ import {
 } from 'recharts';
 import {
   LuChartNoAxesColumnIncreasing,
+  LuFileCheck,
   LuLandmark,
   LuShieldCheck,
   LuSparkles,
@@ -144,57 +145,100 @@ function PriceRiskSection({ report }) {
 
 function RecoveryRegistrySection({ report }) {
   return (
-    <div className={styles.collateralRegistryGrid}>
-      <div>
-        <div className={styles.subHeader}>
-          <h3>보증금 회수 분석</h3>
-          <span className={styles.reliabilityBadge}>담보부담률 {report.collateral.burdenRateLabel}</span>
+    <>
+      <div className={styles.collateralRegistryGrid}>
+        <div>
+          <div className={styles.subHeader}>
+            <h3>보증금 회수 분석</h3>
+            <span className={styles.reliabilityBadge}>담보부담률 {report.collateral.burdenRateLabel}</span>
+          </div>
+
+          <div className={styles.recoveryValue}>
+            <span>회수 가능 기준액</span>
+            <strong>{report.collateral.recoverableLabel}</strong>
+          </div>
+
+          <div className={styles.recoveryCompare}>
+            <TrackRow label="회수 가능액" value={report.collateral.recoverableLabel} width={report.collateral.recoverableWidth} />
+            <TrackRow label="계약 보증금" value={report.collateral.depositLabel} width={report.collateral.depositBaseWidth} excessWidth={report.collateral.excessWidth} />
+            {report.collateral.shortfallLabel && (
+              <p className={styles.shortfallNote}>
+                <LuTriangleAlert aria-hidden="true" />
+                {report.collateral.shortfallLabel}
+              </p>
+            )}
+          </div>
+
+          <dl className={styles.recoveryRows}>
+            {report.collateral.rows.map((row) => (
+              <div key={row.label} className={styles.recoveryRow}>
+                <dt>{row.label}</dt>
+                <dd className={row.tone === 'danger' ? styles.dangerText : ''}>{row.value}</dd>
+              </div>
+            ))}
+          </dl>
         </div>
 
-        <div className={styles.recoveryValue}>
-          <span>회수 가능 기준액</span>
-          <strong>{report.collateral.recoverableLabel}</strong>
+        <div className={styles.registryArea}>
+          <div className={styles.subHeader}>
+            <h3>등기 권리관계</h3>
+            <span className={`${styles.registrySummary} ${styles[report.registrySummaryTone]}`}>{report.registrySummary}</span>
+          </div>
+          <div className={styles.registryRows}>
+            {report.registryChecks.map((item) => (
+              <div key={item.key} className={styles.registryRow}>
+                <span className={styles.registryLabel}>
+                  <LuLandmark aria-hidden="true" />
+                  {item.label}
+                </span>
+                <span className={styles.registryDetail}>{item.detail}</span>
+                <span className={`${styles.registryBadge} ${styles[item.state]}`}>{item.statusIcon} {item.statusLabel}</span>
+              </div>
+            ))}
+          </div>
         </div>
-
-        <div className={styles.recoveryCompare}>
-          <TrackRow label="회수 가능액" value={report.collateral.recoverableLabel} width={report.collateral.recoverableWidth} />
-          <TrackRow label="계약 보증금" value={report.collateral.depositLabel} width={report.collateral.depositBaseWidth} excessWidth={report.collateral.excessWidth} />
-          {report.collateral.shortfallLabel && (
-            <p className={styles.shortfallNote}>
-              <LuTriangleAlert aria-hidden="true" />
-              {report.collateral.shortfallLabel}
-            </p>
-          )}
-        </div>
-
-        <dl className={styles.recoveryRows}>
-          {report.collateral.rows.map((row) => (
-            <div key={row.label} className={styles.recoveryRow}>
-              <dt>{row.label}</dt>
-              <dd className={row.tone === 'danger' ? styles.dangerText : ''}>{row.value}</dd>
-            </div>
-          ))}
-        </dl>
       </div>
+      <RegistryVerificationDetails verification={report.registryVerification} />
+    </>
+  );
+}
 
-      <div className={styles.registryArea}>
-        <div className={styles.subHeader}>
-          <h3>등기 권리관계</h3>
-          <span className={`${styles.registrySummary} ${styles[report.registrySummaryTone]}`}>{report.registrySummary}</span>
-        </div>
-        <div className={styles.registryRows}>
-          {report.registryChecks.map((item) => (
-            <div key={item.key} className={styles.registryRow}>
-              <span className={styles.registryLabel}>
-                <LuLandmark aria-hidden="true" />
-                {item.label}
-              </span>
-              <span className={styles.registryDetail}>{item.detail}</span>
-              <span className={`${styles.registryBadge} ${styles[item.state]}`}>{item.statusIcon} {item.statusLabel}</span>
-            </div>
-          ))}
-        </div>
+function RegistryVerificationDetails({ verification }) {
+  if (!verification) return null;
+
+  return (
+    <div className={styles.verificationPanel}>
+      <div className={styles.verificationHeader}>
+        <span>
+          <LuFileCheck aria-hidden="true" />
+          등기 검증 정보
+        </span>
+        <strong>저장된 등기 원문 기준</strong>
       </div>
+      <dl className={styles.verificationGrid}>
+        {verification.rows.map((row) => (
+          <div key={row.label}>
+            <dt>{row.label}</dt>
+            <dd>{row.value}</dd>
+          </div>
+        ))}
+      </dl>
+      {verification.evidence.length > 0 && (
+        <div className={styles.evidenceArea}>
+          <h4>권리 판단 근거 위치</h4>
+          <div className={styles.evidenceRows}>
+            {verification.evidence.map((item) => (
+              <div key={item.key} className={styles.evidenceRow}>
+                <div>
+                  <strong>{item.title}</strong>
+                  <span>{item.detail}</span>
+                </div>
+                <em>{item.sources}</em>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

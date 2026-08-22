@@ -404,6 +404,121 @@
   white-space: nowrap;
 }
 
+.verificationPanel {
+  display: grid;
+  gap: 2.2rem;
+  margin-top: 3.2rem;
+  padding: 2.4rem;
+  border: 0.1rem solid #e4eaf0;
+  border-radius: 1.4rem;
+  background: #f9fbfc;
+}
+
+.verificationHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.6rem;
+}
+
+.verificationHeader span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: var(--text-primary);
+  font-size: 1.7rem;
+  font-weight: 800;
+}
+
+.verificationHeader svg {
+  color: var(--brand-blue);
+}
+
+.verificationHeader strong {
+  color: #748190;
+  font-size: 1.2rem;
+}
+
+.verificationGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0;
+  margin: 0;
+  border-top: 0.1rem solid #e4eaf0;
+}
+
+.verificationGrid div {
+  display: grid;
+  grid-template-columns: minmax(11rem, 0.42fr) minmax(0, 1fr);
+  gap: 1.2rem;
+  padding: 1.4rem 1.2rem;
+  border-bottom: 0.1rem solid #e4eaf0;
+}
+
+.verificationGrid dt {
+  color: #748190;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.verificationGrid dd {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.35rem;
+  font-weight: 650;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.evidenceArea {
+  display: grid;
+  gap: 1.2rem;
+}
+
+.evidenceArea h4 {
+  margin: 0;
+  color: var(--text-primary);
+  font-size: 1.5rem;
+}
+
+.evidenceRows {
+  display: grid;
+  gap: 0.8rem;
+}
+
+.evidenceRow {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(18rem, auto);
+  gap: 1.6rem;
+  align-items: center;
+  padding: 1.2rem 1.4rem;
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.evidenceRow div {
+  display: grid;
+  gap: 0.35rem;
+}
+
+.evidenceRow strong {
+  color: var(--text-primary);
+  font-size: 1.35rem;
+}
+
+.evidenceRow span,
+.evidenceRow em {
+  color: #697788;
+  font-size: 1.2rem;
+  font-style: normal;
+  line-height: 1.5;
+}
+
+.evidenceRow em {
+  text-align: right;
+  overflow-wrap: anywhere;
+}
+
 .sectionLead {
   margin: 0 0 2rem;
   color: var(--text-secondary);
@@ -541,6 +656,24 @@
 }
 
 @media (max-width: 640px) {
+  .verificationHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .verificationGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .verificationGrid div,
+  .evidenceRow {
+    grid-template-columns: 1fr;
+  }
+
+  .evidenceRow em {
+    text-align: left;
+  }
+
   .sectionTitle {
     font-size: 2rem;
   }

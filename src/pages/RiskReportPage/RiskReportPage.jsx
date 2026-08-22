@@ -70,6 +70,67 @@ const REGISTRY_FLAGS = [
   { key: 'leaseholdRegistration', label: '임차권등기' },
 ];
 
+const REGISTRY_PARSE_STATUS = {
+  SUCCESS: '정상 판독',
+  PARTIAL: '일부 판독',
+  NEEDS_REVIEW: '재확인 필요',
+  FAILED: '판독 실패',
+};
+
+const REGISTRY_CONFIDENCE = {
+  HIGH: '높음',
+  MEDIUM: '보통',
+  LOW: '낮음',
+  UNKNOWN: '확인 불가',
+};
+
+const REGISTRY_ADDRESS_MATCH = {
+  MATCH: '일치',
+  PARTIAL_MATCH_REVIEW_REQUIRED: '부분 일치',
+  MISMATCH: '불일치',
+  UNREADABLE: '판독 불가',
+  PENDING_ADDRESS_CONFIRMATION: '주소 확정 대기',
+};
+
+const REGISTRY_OWNER_MATCH = {
+  TRUE: '일치',
+  FALSE: '불일치',
+  UNKNOWN: '확인 불가',
+};
+
+const REGISTRY_RIGHT_TYPE = {
+  OWNERSHIP: '소유권',
+  MORTGAGE: '근저당권',
+  MORTGAGE_AMEND: '근저당권 변경',
+  MORTGAGE_TRANSFER: '근저당권 이전',
+  SEIZURE: '압류',
+  PROVISIONAL_SEIZURE: '가압류',
+  PROVISIONAL_DISPOSITION: '가처분',
+  AUCTION: '경매개시',
+  TRUST: '신탁등기',
+  JEONSE_RIGHT: '전세권',
+  LEASEHOLD_REGISTRATION: '임차권등기',
+  CANCELLATION: '말소',
+  OTHER: '기타 권리',
+};
+const REGISTRY_SECTION = {
+  GAP: '갑구',
+  EUL: '을구',
+};
+
+const WATCHLIST_MATCH_STATUS = {
+  MATCH_HIGH: '명단 일치',
+  MATCH_NAME_ONLY: '이름 일치 · 추가 확인 필요',
+  NO_MATCH: '일치 없음',
+  UNKNOWN: '확인 불가',
+};
+
+const WATCHLIST_MATCH_TYPE = {
+  EXACT: '정확 일치',
+  MANUAL_REVIEW: '수동 확인 필요',
+};
+
+
 export default function RiskReportPage() {
   const { reportId } = useParams();
   const navigate = useNavigate();
@@ -198,6 +259,7 @@ function toReportViewModel(data) {
   const property = data.property ?? {};
   const indicators = data.indicators ?? {};
   const registry = data.registry ?? null;
+  const registryVerification = registryVerificationViewModel(data.registryVerification);
   const isDetailed = data.mode === 'DETAILED';
   const reportDetail = data.reportDetail ?? {};
   const explanation = reportDetail.explanation ?? {};
@@ -312,6 +374,7 @@ function toReportViewModel(data) {
     registrySummary: registrySummary(registryChecks(registry)).label,
     registrySummaryTone: registrySummary(registryChecks(registry)).tone,
     registryChecks: registryChecks(registry),
+    registryVerification,
     contribution,
     hasScoreAdjustments: contribution.some((item) => item.isAdjustment),
     riskReasons,
@@ -635,6 +698,112 @@ function registrySummary(items) {
   const unknownCount = items.filter((item) => item.state === 'unknown').length;
   if (riskCount === 0 && unknownCount === 0) return { label: `${items.length}개 항목 모두 안전`, tone: 'safe' };
   return { label: `위험 ${riskCount} · 확인 필요 ${unknownCount}`, tone: riskCount > 0 ? 'risk' : 'unknown' };
+}
+
+function registryVerificationViewModel(value) {
+  if (!value) return null;
+
+  const owners = (value.currentOwners ?? []).map((owner) => (
+    owner.share ? `${owner.name} (지분 ${owner.share})` : owner.name
+  ));
+  const addressMatch = REGISTRY_ADDRESS_MATCH[value.addressMatchStatus] ?? '확인 불가';
+  const ownerMatch = REGISTRY_OWNER_MATCH[value.ownerMatchStatus] ?? '확인 불가';
+  const watchlist = value.badLandlordMatched === true
+    ? '명단 일치'
+    : value.badLandlordMatched === false
+      ? '조회 완료 · 일치 없음'
+      : value.watchlistCheckStatus === 'ERROR'
+        ? '조회 오류'
+        : '확인 불가';
+  const ownerChecks = (value.watchlistChecks ?? []).map((check) => {
+    const target = check.ownerName || '소유자 미확인';
+    const status = check.checkStatus === 'ERROR'
+      ? '조회 오류'
+      : check.checkStatus === 'NOT_CHECKED'
+        ? '조회하지 못함'
+        : WATCHLIST_MATCH_STATUS[check.matchStatus]
+          ?? (check.matched === true ? '명단 일치' : check.matched === false ? '일치 없음' : '확인 불가');
+    const matchType = WATCHLIST_MATCH_TYPE[check.matchType] ?? null;
+    const checkedAt = check.checkStatus === 'NOT_CHECKED'
+      ? null
+      : registryCheckedAt(check.checkedAt);
+    return [`${target}: ${status}`, matchType, checkedAt ? `${checkedAt} 조회` : null]
+      .filter(Boolean)
+      .join(' · ');
+  });
+
+  return {
+    rows: [
+      { label: '등기 문서 발급일', value: registryIssueDate(value.issueDate) },
+      {
+        label: '문서 판독',
+        value: `${REGISTRY_PARSE_STATUS[value.parseStatus] ?? '확인 불가'} · 신뢰도 ${REGISTRY_CONFIDENCE[value.parseConfidence] ?? '확인 불가'}`,
+      },
+      { label: '등기부 주소', value: value.registryAddress || '판독 불가' },
+      {
+        label: '주소 일치',
+        value: value.addressMatchReviewConfirmed
+          ? `${addressMatch} · 사용자 확인 완료`
+          : addressMatch,
+      },
+      { label: '현재 소유자', value: owners.length ? owners.join(', ') : '확인 불가' },
+      {
+        label: '계약 상대방과 소유자',
+        value: `${value.contractPartyName || '계약 상대방 미입력'} · ${ownerMatch}`,
+      },
+      { label: '악성임대인 조회', value: watchlist },
+      {
+        label: '소유자별 조회',
+        value: ownerChecks.length ? ownerChecks.join(', ') : '조회 내역 없음',
+      },
+    ],
+    evidence: (value.rightEvidence ?? []).map((item, index) => ({
+      key: `${item.section}-${item.rankNo}-${item.rightType}-${index}`,
+      title: [
+        REGISTRY_SECTION[item.section] ?? item.section,
+        REGISTRY_RIGHT_TYPE[item.rightType] ?? item.rightType,
+        item.rankNo ? `${item.rankNo}번` : null,
+      ].filter(Boolean).join(' · '),
+      detail: [
+        registryRightStatus(item),
+        item.holder ? `권리자 ${item.holder}` : null,
+        item.debtor ? `채무자 ${item.debtor}` : null,
+        item.amount == null ? null : money(item.amount),
+      ].filter(Boolean).join(' · '),
+      sources: (item.sources ?? []).map((source) => (
+        `${source.fileName ? `${source.fileName} · ` : ''}${source.page}페이지`
+      )).join(', ') || '근거 위치 확인 필요',
+    })),
+  };
+}
+
+function registryRightStatus(item) {
+  if (item.rightType === 'CANCELLATION') return '말소 처리 이력';
+  if (item.rightType === 'MORTGAGE_AMEND') return '근저당 변경 이력';
+  if (item.rightType === 'MORTGAGE_TRANSFER') return '근저당 이전 이력';
+  return item.status === 'CANCELLED' ? '말소됨' : '현재 유효';
+}
+
+function registryIssueDate(value) {
+  if (!value) return '확인 불가';
+  const [year, month, day] = String(value).split('-');
+  return year && month && day
+    ? `${year}. ${month}. ${day}.`
+    : String(value);
+}
+
+function registryCheckedAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
 }
 
 function findMetric(data, sectionKey, metricKey) {
