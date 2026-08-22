@@ -13,7 +13,8 @@ export default function ReportHeader({ report, onRestart, motionSet }) {
     >
       <div className={styles.headerText}>
         <div className={styles.titleRow}>
-          <h1 className={styles.reportTitle}>전세 위험도 진단 결과</h1>
+          <h1 className={styles.reportTitle}>{report.reportTitle}</h1>
+          <span className={styles.scopeBadge}>{report.scopeLabel}</span>
           <span className={`${styles.gradeBadge} ${styles[report.badgeTone]}`}>{report.badgeLabel}</span>
         </div>
         <div className={styles.metaRow}>

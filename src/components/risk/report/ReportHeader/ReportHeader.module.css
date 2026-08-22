@@ -28,6 +28,7 @@
   line-height: 1.3;
 }
 
+.scopeBadge,
 .gradeBadge {
   display: inline-flex;
   align-items: center;
@@ -36,6 +37,12 @@
   border-radius: 999rem;
   font-size: 1.3rem;
   font-weight: 800;
+}
+
+.scopeBadge {
+  border: 0.1rem solid #d7e2ec;
+  background: #f7fafc;
+  color: #536579;
 }
 
 .success {

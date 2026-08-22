@@ -1,7 +1,7 @@
 .root {
   box-sizing: border-box;
   padding: 4rem 0 8rem;
-  background: #fff;
+  background: #f4f7fa;
 }
 
 .reportContainer {
@@ -31,14 +31,43 @@
 }
 
 .stateCard {
+  display: grid;
+  justify-items: center;
+  gap: 1.2rem;
   box-sizing: border-box;
   padding: 4.8rem 2.4rem;
-  border: 0.1rem solid #e5e7eb;
+  border: 0.1rem solid #e0e6ec;
   border-radius: 1.8rem;
   background: #fff;
   color: var(--text-secondary);
-  font-size: 1.5rem;
   text-align: center;
+  box-shadow: 0 1.2rem 3.6rem rgba(15, 23, 42, 0.05);
+}
+
+.stateCard strong {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+}
+
+.stateCard p {
+  margin: 0;
+  font-size: 1.4rem;
+  line-height: 1.65;
+}
+
+.stateCard button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.8rem;
+  padding: 1rem 1.4rem;
+  border: 0.1rem solid var(--brand-blue);
+  border-radius: 0.9rem;
+  background: #fff;
+  color: var(--brand-blue);
+  font-size: 1.3rem;
+  font-weight: 800;
+  cursor: pointer;
 }
 
 .restartModal {

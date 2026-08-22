@@ -162,7 +162,7 @@ const DATA_WARNING = {
   PROPERTY_REFERENCE_AMBIGUOUS: '입력한 건물과 일치하는 학습 참조 대상을 하나로 확정하지 못했습니다.',
   PROPERTY_REFERENCE_NOT_FOUND: '입력한 건물과 일치하는 학습 참조 대상을 찾지 못했습니다.',
   UNSEEN_PROPERTY_NAME: '학습 데이터에 없는 건물명으로 확인됐습니다.',
-  PROPERTY_NAME_FALLBACK: '건물명 Feature에 대체값을 사용했습니다.',
+  PROPERTY_NAME_FALLBACK: '건물명 예측 항목에 대체값을 사용했습니다.',
   RONE_DATA_NOT_FOUND: '한국부동산원 가격지수를 확인하지 못했습니다.',
   RONE_DATA_STALE: '최신 한국부동산원 가격지수가 없어 이전 시점 자료를 사용했습니다.',
   RONE_REGION_FALLBACK: '해당 지역 가격지수가 없어 더 넓은 지역 자료를 사용했습니다.',
@@ -206,6 +206,7 @@ export default function RiskReportPage() {
   const [data, setData] = useState(null);
   const [error, setError] = useState('');
   const [isRestartModalOpen, setIsRestartModalOpen] = useState(false);
+  const [reloadVersion, setReloadVersion] = useState(0);
   const [scenarioState, setScenarioState] = useState({
     data: null,
     error: '',
@@ -228,7 +229,7 @@ export default function RiskReportPage() {
       ));
 
     return () => { active = false; };
-  }, [reportId, user?.email]);
+  }, [reportId, user?.email, reloadVersion]);
 
   const handleCalculateScenario = async (payload) => {
     setScenarioState({ data: null, error: '', isLoading: true });
@@ -256,7 +257,14 @@ export default function RiskReportPage() {
     navigate('/risk/new');
   };
 
-  if (error) return <ReportState message={error} />;
+  if (error) {
+    return (
+      <ReportState
+        message={error}
+        onRetry={() => setReloadVersion((value) => value + 1)}
+      />
+    );
+  }
   if (!data) return <ReportState message="진단 결과를 불러오고 있습니다." />;
 
   const report = toReportViewModel(data);
@@ -348,11 +356,20 @@ function createMotionSet(shouldReduceMotion) {
   };
 }
 
-function ReportState({ message }) {
+function ReportState({ message, onRetry }) {
   return (
     <div className={styles.root}>
       <div className={styles.reportContainer}>
-        <div className={styles.stateCard}>{message}</div>
+        <div className={styles.stateCard}>
+          <strong>{onRetry ? '리포트를 불러오지 못했습니다.' : '리포트를 준비하고 있습니다.'}</strong>
+          <p>{message}</p>
+          {onRetry && (
+            <button type="button" onClick={onRetry}>
+              <LuRotateCcw aria-hidden="true" />
+              다시 불러오기
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );
@@ -372,6 +389,12 @@ function toReportViewModel(data) {
   const weights = risk.weights ?? {};
 
   const grade = GRADE[risk.grade] ?? GRADE.MEDIUM;
+  const blockingReasons = [...new Set(data.forcedWarnings ?? [])]
+    .map((code) => SCORE_FLOOR_REASON[code] ?? code)
+    .filter(Boolean);
+  const scoreFloor = numberOrNull(risk.scoreFloor);
+  const totalScore = numberOrNull(risk.score);
+  const scorePosition = Math.min(Math.max(totalScore ?? 0, 1), 99);
   const sale = numberOrNull(valuation.estimatedSalePrice);
   const lease = numberOrNull(valuation.estimatedLeasePrice);
   const deposit = numberOrNull(
@@ -435,6 +458,12 @@ function toReportViewModel(data) {
     mode: data.mode,
     isDetailed,
     scoreEyebrow: isDetailed ? '종합 위험도' : '간편 위험도',
+    reportTitle: isDetailed
+      ? '정밀 전세 위험도 진단 결과'
+      : '간편 전세 위험도 진단 결과',
+    scopeLabel: isDetailed
+      ? '등기 반영 · 종합진단'
+      : '등기 미반영 · 참고용',
     title: reportDetail.title,
     badgeLabel: `위험도 ${grade.label}`,
     badgeTone: grade.tone,
@@ -443,9 +472,16 @@ function toReportViewModel(data) {
     analyzedAt: dateTime(data.analyzedAt),
     totalScore: risk.score,
     maxScore: weights.total ?? 100,
+    scorePosition,
+    scoreScaleLabel: `현재 ${totalScore ?? '확인 필요'}점 · ${grade.label}`,
     summary: explanation.summary,
-    conclusionHeadline: `전세 위험도가 ${grade.label}으로 평가되었습니다.`,
-    conclusionDescription: explanation.summary,
+    conclusionHeadline: blockingReasons.length
+      ? '가격 조건과 별개인 중대 등기 위험이 확인되었습니다.'
+      : `전세 위험도가 ${grade.label}으로 평가되었습니다.`,
+    conclusionDescription: blockingReasons.length
+      ? `${blockingReasons.join(', ')} 때문에 ${scoreFloor == null ? '최종 위험점수 하한이 적용되었습니다.' : `최종 위험점수에 ${scoreFloor}점 하한이 적용되었습니다.`}`
+      : explanation.summary,
+    blockingReasons,
     saleLabel: money(sale),
     leaseLabel: money(lease),
     depositLabel: money(deposit),
@@ -623,7 +659,7 @@ function dataQualityViewModel(reliability, warnings = [], fallbackFeatures = [])
   const summary = reliability === 'HIGH'
     ? '이번 분석에는 확인된 입력 누락이나 대체값 사용 기록이 없습니다.'
     : reliability === 'LOW'
-      ? '예측 Feature에 대체값이 사용되어 AI 시세 오차가 커질 수 있습니다.'
+      ? '예측 항목에 대체값이 사용되어 AI 시세 오차가 커질 수 있습니다.'
       : '일부 원천 데이터가 누락되거나 최신값이 아니어서 추정치를 보조자료로 확인해야 합니다.';
 
   return {

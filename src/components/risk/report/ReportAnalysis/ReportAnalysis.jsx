@@ -49,6 +49,15 @@ export default function ReportAnalysis({
         {report.conclusionDescription && (
           <p className={styles.conclusionDescription}>{report.conclusionDescription}</p>
         )}
+        {report.blockingReasons.length > 0 && (
+          <div className={styles.blockingDecision}>
+            <strong>계약 진행 보류 권고</strong>
+            <span>아래 항목이 해소되기 전에는 점수와 관계없이 계약 진행을 보류하고 확인해야 합니다.</span>
+            <div>
+              {report.blockingReasons.map((reason) => <em key={reason}>{reason}</em>)}
+            </div>
+          </div>
+        )}
         <div className={styles.metricChips}>
           {report.metricChips.map((chip) => (
             <span key={chip.label} className={styles.metricChip}>
@@ -88,7 +97,7 @@ export default function ReportAnalysis({
         </ReportSection>
       )}
 
-      <ReportSection index={report.isDetailed ? '07' : '06'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
+      <ReportSection index={report.isDetailed ? '06' : '05'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
@@ -345,7 +354,7 @@ function DataQualitySection({ quality }) {
           )}
           {quality.fallbackItems.length > 0 && (
             <div>
-              <h3>대체값을 사용한 예측 Feature</h3>
+              <h3>대체값을 사용한 예측 항목</h3>
               <ul>
                 {quality.fallbackItems.map((item) => <li key={item}>{item}</li>)}
               </ul>
@@ -540,7 +549,7 @@ function BottomAnalysis({ report, motionSet }) {
       variants={motionSet.section}
     >
       <InsightSection
-        index={report.isDetailed ? '06' : '05'}
+        index={report.isDetailed ? '07' : '06'}
         evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
         cautions={report.reasonGroups?.cautions ?? []}
       />

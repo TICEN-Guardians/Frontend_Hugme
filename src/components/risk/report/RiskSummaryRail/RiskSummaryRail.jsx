@@ -20,6 +20,23 @@ export default function RiskSummaryRail({ summary, motionSet }) {
           <span className={styles.maxScore}>/ {summary.maxScore ?? 100}</span>
         </div>
         <span className={`${styles.gradeBadge} ${styles[summary.badgeTone]}`}>{summary.badgeLabel}</span>
+        <div
+          className={styles.scoreScale}
+          role="img"
+          aria-label={summary.scoreScaleLabel}
+        >
+          <span className={styles.lowSegment} />
+          <span className={styles.mediumSegment} />
+          <span className={styles.highSegment} />
+          <span className={styles.criticalSegment} />
+          <i style={{ left: `${summary.scorePosition}%` }} />
+        </div>
+        <div className={styles.scoreLegend} aria-hidden="true">
+          <span>낮음</span>
+          <span>보통</span>
+          <span>주의</span>
+          <span>위험</span>
+        </div>
       </div>
 
       <div className={styles.divider} />

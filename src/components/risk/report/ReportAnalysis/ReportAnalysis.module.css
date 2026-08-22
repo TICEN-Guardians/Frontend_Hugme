@@ -1,5 +1,10 @@
 .analysis {
   min-width: 0;
+  padding: 3.2rem 3.6rem 4rem;
+  border: 0.1rem solid #e0e6ec;
+  border-radius: 2rem;
+  background: #fff;
+  box-shadow: 0 0.8rem 2.8rem rgba(15, 23, 42, 0.045);
 }
 
 .conclusion {
@@ -39,6 +44,46 @@
   font-size: 1.6rem;
   font-weight: 500;
   line-height: 1.65;
+}
+
+.blockingDecision {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.7rem 1.4rem;
+  align-items: center;
+  margin-top: 2rem;
+  padding: 1.6rem 1.8rem;
+  border: 0.1rem solid rgba(217, 72, 65, 0.26);
+  border-radius: 1.2rem;
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.blockingDecision strong {
+  color: #b42318;
+  font-size: 1.45rem;
+}
+
+.blockingDecision > span {
+  color: #5f6d7d;
+  font-size: 1.3rem;
+  line-height: 1.55;
+}
+
+.blockingDecision div {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.blockingDecision em {
+  padding: 0.55rem 0.8rem;
+  border-radius: 0.7rem;
+  background: rgba(217, 72, 65, 0.1);
+  color: #9f2d27;
+  font-size: 1.2rem;
+  font-style: normal;
+  font-weight: 750;
 }
 
 .metricChips {
@@ -1062,6 +1107,10 @@
 }
 
 @media (max-width: 900px) {
+  .analysis {
+    padding: 2.8rem 2.4rem 3.2rem;
+  }
+
   .comparableContent,
   .dataQualityPanel,
   .depositRecommendationBody {
@@ -1070,6 +1119,19 @@
 }
 
 @media (max-width: 640px) {
+  .analysis {
+    padding: 2.2rem 1.6rem 2.8rem;
+    border-radius: 1.4rem;
+  }
+
+  .blockingDecision {
+    grid-template-columns: 1fr;
+  }
+
+  .blockingDecision div {
+    grid-column: auto;
+  }
+
   .comparablePanel {
     padding: 2rem 1.6rem;
   }
