@@ -2,14 +2,16 @@ import axiosInstance from '../axiosInstance.js';
 
 const DOCUMENT_CHAT_BASE_URL = '/api/chatbot/documents';
 
-export async function getDocumentPreparation() {
-  const response = await axiosInstance.get(`${DOCUMENT_CHAT_BASE_URL}/preparation`);
+export async function getDocumentPreparation(applicationId) {
+  const response = await axiosInstance.get(
+    `/api/applications/${applicationId}/documents/preparation`,
+  );
   return response.data;
 }
 
-export async function updateDocumentPreparation(documentId, prepared) {
+export async function updateDocumentPreparation(applicationId, documentId, prepared) {
   const response = await axiosInstance.put(
-    `${DOCUMENT_CHAT_BASE_URL}/preparation/${documentId}`,
+    `/api/applications/${applicationId}/documents/${documentId}/preparation`,
     { prepared },
   );
 
