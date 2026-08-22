@@ -3,9 +3,8 @@ import {
   getDocumentPreparation,
   updateDocumentPreparation,
 } from '../api/docChat/docChatService.js';
-import { getChecklistCompletion } from '../api/checklist/checklistService.js';
 
-export function useDocumentPreparation() {
+export function useDocumentPreparation(applicationId) {
   const [preparation, setPreparation] = useState(null);
   const [checklistCompleted, setChecklistCompleted] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,15 +16,14 @@ export function useDocumentPreparation() {
     setError(null);
 
     try {
-      const completed = await getChecklistCompletion();
-      setChecklistCompleted(completed);
-
-      if (!completed) {
+      if (!applicationId) {
+        setChecklistCompleted(false);
         setPreparation(null);
         return;
       }
 
-      const result = await getDocumentPreparation();
+      const result = await getDocumentPreparation(applicationId);
+      setChecklistCompleted(true);
       setPreparation(result);
     } catch (requestError) {
       setChecklistCompleted(false);
@@ -34,7 +32,7 @@ export function useDocumentPreparation() {
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [applicationId]);
 
   useEffect(() => {
     loadPreparation();
@@ -46,7 +44,13 @@ export function useDocumentPreparation() {
       setError(null);
 
       try {
-        const result = await updateDocumentPreparation(documentId, prepared);
+        if (!applicationId) return;
+
+        const result = await updateDocumentPreparation(
+          applicationId,
+          documentId,
+          prepared,
+        );
         setPreparation(result);
       } catch (requestError) {
         setError(requestError);
@@ -54,7 +58,7 @@ export function useDocumentPreparation() {
         setIsUpdating(false);
       }
     },
-    [],
+    [applicationId],
   );
 
   return {

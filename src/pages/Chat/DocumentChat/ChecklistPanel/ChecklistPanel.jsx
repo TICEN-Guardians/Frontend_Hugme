@@ -1,6 +1,9 @@
+import { useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaCheck, FaChevronDown, FaChevronUp } from 'react-icons/fa6';
 import TabBar from '../../../../components/common/TabBar/TabBar.jsx';
+import DocumentUploadActions from './DocumentUploadActions.jsx';
+import DocumentPreviewModal from './DocumentPreviewModal.jsx';
 import styles from './ChecklistPanel.module.css';
 
 const DOCUMENT_CHAT_TRANSITION = {
@@ -30,8 +33,10 @@ export default function ChecklistPanel({
   onSelectVariant,
   onSelectDocument,
   isUpdating,
+  uploadState,
 }) {
   const prefersReducedMotion = useReducedMotion();
+  const [previewFile, setPreviewFile] = useState(null);
   const resolvedTotalDocumentCount = totalDocumentCount ?? documents.length;
   const resolvedPreparedDocumentCount =
     preparedDocumentCount ?? documents.filter((document) => document.prepared).length;
@@ -43,6 +48,16 @@ export default function ChecklistPanel({
       documents.filter((document) => document.sectionCode === section.sectionCode).length,
   }));
   const visibleDocuments = documents.filter((document) => document.sectionCode === activeSectionCode);
+
+  const handlePreview = async (upload) => {
+    const access = await uploadState.preview(upload.uploadId);
+    if (!access?.url) return;
+    setPreviewFile({
+      url: access.url,
+      fileName: upload.userFileName,
+      mimeType: upload.mimeType,
+    });
+  };
 
   return (
     <motion.div
@@ -69,6 +84,9 @@ export default function ChecklistPanel({
       <div className={styles.tabBarWrapper}>
         <TabBar tabs={tabs} activeKey={activeSectionCode} onChange={onChangeSection} />
       </div>
+
+      {uploadState?.error && <p className={styles.uploadError}>{uploadState.error}</p>}
+      {uploadState?.isLoading && <p className={styles.uploadStatus}>업로드한 서류를 불러오는 중...</p>}
 
       <AnimatePresence mode="wait" initial={false}>
         <motion.div
@@ -142,6 +160,29 @@ export default function ChecklistPanel({
                       </button>
                     )}
                   </div>
+                  {uploadState && (
+                    <DocumentUploadActions
+                      document={document}
+                      uploads={uploadState.uploads.filter(
+                        (upload) => upload.documentId === document.documentId,
+                      )}
+                      isUploading={uploadState.busyDocumentId === document.documentId}
+                      busyUploadId={uploadState.busyUploadId}
+                      onUpload={async (documentId, file) => {
+                        const uploaded = await uploadState.upload(documentId, file);
+                        if (!document.prepared) {
+                          await onTogglePrepared(document);
+                        }
+                        return uploaded;
+                      }}
+                      onPreview={(uploadId) => {
+                        const upload = uploadState.uploads.find((item) => item.uploadId === uploadId);
+                        if (upload) handlePreview(upload);
+                      }}
+                      onDownload={uploadState.download}
+                      onDelete={uploadState.remove}
+                    />
+                  )}
                   <AnimatePresence initial={false}>
                     {isExpanded && hasVariants && (
                       <motion.div
@@ -199,6 +240,7 @@ export default function ChecklistPanel({
           )}
         </motion.div>
       </AnimatePresence>
+      <DocumentPreviewModal preview={previewFile} onClose={() => setPreviewFile(null)} />
     </motion.div>
   );
 }

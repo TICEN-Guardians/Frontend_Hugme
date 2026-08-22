@@ -71,6 +71,25 @@
   white-space: nowrap;
 }
 
+.uploadError,
+.uploadStatus {
+  flex-shrink: 0;
+  margin: var(--space-3) 0 0;
+  border-radius: var(--radius-md);
+  padding: var(--space-3);
+  font-size: var(--text-xs);
+}
+
+.uploadError {
+  background: #fff0f0;
+  color: #b62e2e;
+}
+
+.uploadStatus {
+  background: #f2f6ff;
+  color: #315fd6;
+}
+
 .list {
   flex: 1;
   min-height: 0;
