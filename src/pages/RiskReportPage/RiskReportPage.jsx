@@ -576,6 +576,7 @@ function whatIfResultViewModel(value, isDetailed) {
       : scoreChange > 0
         ? 'worsened'
         : 'unchanged',
+    gradeChanged: value.gradeChanged === true,
     registryBlockersRemain: value.registryBlockersRemain === true,
     blockerReasons: (value.unresolvedRiskReasons ?? [])
       .map((code) => SCORE_FLOOR_REASON[code] ?? code)
@@ -622,13 +623,9 @@ function depositRecommendationViewModel(value, isDetailed) {
     : `가격 위험점수 ${targetScore}점 이하 · 낮음 구간`;
 
   return {
-    recommendedLimit,
     recommendedLimitLabel: money(recommendedLimit),
     currentDepositLabel: money(currentDeposit),
-    reductionRequiredLabel: money(reductionRequired),
     withinLimit,
-    targetLabel,
-    registryReflected: value.registryReflected === true,
     provisional: value.provisional === true,
     adjustmentCanResolveFinalRisk: value.adjustmentCanResolveFinalRisk !== false,
     unresolvedReasons,

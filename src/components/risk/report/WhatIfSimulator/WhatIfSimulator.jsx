@@ -169,6 +169,7 @@ function ScenarioResult({ result }) {
         <div className={styles.scoreDelta + ' ' + styles[result.changeTone]}>
           <span>점수 변화</span>
           <strong>{result.scoreChangeLabel}</strong>
+          <em>{result.gradeChanged ? '등급 변경' : '등급 유지'}</em>
         </div>
         <ScoreCard label="조정 시나리오" value={result.scenario} emphasis />
       </div>

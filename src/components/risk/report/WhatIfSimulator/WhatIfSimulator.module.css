@@ -271,6 +271,13 @@
   font-size: 1.7rem;
 }
 
+.scoreDelta em {
+  color: #718096;
+  font-size: 1.1rem;
+  font-style: normal;
+  font-weight: 750;
+}
+
 .scoreDelta.improved strong {
   color: var(--brand-green);
 }
