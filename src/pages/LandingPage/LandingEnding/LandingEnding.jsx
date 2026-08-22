@@ -24,7 +24,7 @@ export default function LandingEnding() {
           <br />
           HUGME가 안전한 계약의 과정을 함께할게요.
         </p>
-        <Link className={styles.startButton} to="/auth/login">
+        <Link className={styles.startButton} to="/main">
           HUGME 시작하기
         </Link>
       </motion.div>

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
 import SuccessModal from '../../components/common/Modal/SuccessModal.jsx';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
@@ -67,6 +67,7 @@ function validate(email, password) {
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
 
   const [email, setEmail] = useState('');
@@ -86,7 +87,16 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      navigate('/main', { replace: true });
+      const from = location.state?.from;
+      const returnTo = typeof from === 'string'
+        ? from
+        : from?.pathname
+          ? `${from.pathname}${from.search ?? ''}${from.hash ?? ''}`
+          : '/main';
+      const safeReturnTo = returnTo.startsWith('/') && !returnTo.startsWith('//')
+        ? returnTo
+        : '/main';
+      navigate(safeReturnTo, { replace: true });
     } catch (error) {
       setErrorModal({
         isOpen: true,
