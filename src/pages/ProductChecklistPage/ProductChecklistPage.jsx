@@ -8,8 +8,13 @@ import QuestionModal from '../../components/checklist/QuestionModal/QuestionModa
 import Button from '../../components/common/Button/Button.jsx';
 import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
+import {
+  getPrepareQuestions,
+  submitPrepareAnswers,
+} from '../../api/checklist/prepareChecklistService.js';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
+import { usePrepareChecklist } from '../../hooks/usePrepareChecklist.js';
 import { useProductChecklist } from '../../hooks/useProductChecklist.js';
 import { useQuestionFlow } from '../../hooks/useQuestionFlow.js';
 import ErrorPage from '../ErrorPage/ErrorPage.jsx';
@@ -189,6 +194,9 @@ function ContractAnalysisPanel({
   onBeforeUpload,
   isPreparingUpload,
   uploadError,
+  onPrepareTest,
+  isPreparingTest,
+  prepareError,
   onReset,
   onChat,
 }) {
@@ -233,9 +241,14 @@ function ContractAnalysisPanel({
           onFileSelected={onUpload}
           onBeforeUpload={onBeforeUpload}
           isPreparingUpload={isPreparingUpload}
+          onPrepareTest={onPrepareTest}
+          isPreparingTest={isPreparingTest}
         />
         {uploadError && (
           <p className={styles.uploadError}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
+        )}
+        {prepareError && (
+          <p className={styles.uploadError}>모의테스트를 시작하지 못했습니다. 다시 시도해주세요.</p>
         )}
       </motion.section>
     );
@@ -295,6 +308,34 @@ function ContractAnalysisPanel({
         onClose={() => setIsReanalysisConfirmOpen(false)}
         onConfirm={handleConfirmReanalysis}
       />
+    </motion.section>
+  );
+}
+
+function PrepareResultPanel({ onRestart }) {
+  return (
+    <motion.section
+      className={styles.analysisPanel}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: PANEL_EASE }}
+    >
+      <div className={styles.analysisHeader}>
+        <div>
+          <p className={styles.doneBannerTitle}>
+            <FaCircleCheck aria-hidden="true" /> 모의테스트 완료
+          </p>
+          <h2 className={styles.analysisTitle}>예상 준비서류</h2>
+        </div>
+        <div className={styles.analysisActions}>
+          <Button type="button" variant="secondary" onClick={onRestart}>
+            다시 테스트
+          </Button>
+        </div>
+      </div>
+      <p className={styles.reanalysisDescription}>
+        선택한 조건을 기준으로 계산한 결과이며 실제 신청 내역에는 저장되지 않아요.
+      </p>
     </motion.section>
   );
 }
@@ -525,6 +566,11 @@ export default function ProductChecklistPage() {
   } = useContractUpload(productCode);
 
   const questionFlow = useQuestionFlow(applicationId);
+  const prepareChecklist = usePrepareChecklist(productCode);
+  const prepareQuestionFlow = useQuestionFlow(prepareChecklist.applicationId, {
+    getQuestionsRequest: getPrepareQuestions,
+    submitAnswersRequest: submitPrepareAnswers,
+  });
 
   // OCR 확정이 끝나 'questions' 단계로 넘어오면, 최초 1회 STEP1 질문을 불러온다.
   useEffect(() => {
@@ -532,7 +578,8 @@ export default function ProductChecklistPage() {
       step === 'questions' &&
       questionFlow.questionStep == null &&
       questionFlow.visitedSteps.length === 0 &&
-      !questionFlow.isLoading
+      !questionFlow.isLoading &&
+      !questionFlow.error
     ) {
       questionFlow.start();
     }
@@ -541,7 +588,28 @@ export default function ProductChecklistPage() {
     questionFlow.questionStep,
     questionFlow.visitedSteps.length,
     questionFlow.isLoading,
+    questionFlow.error,
     questionFlow.start,
+  ]);
+
+  // 모의 계약정보가 확정되면 prepare 전용 API로 STEP1 질문을 불러온다.
+  useEffect(() => {
+    if (
+      prepareChecklist.step === 'questions' &&
+      prepareQuestionFlow.questionStep == null &&
+      prepareQuestionFlow.visitedSteps.length === 0 &&
+      !prepareQuestionFlow.isLoading &&
+      !prepareQuestionFlow.error
+    ) {
+      prepareQuestionFlow.start();
+    }
+  }, [
+    prepareChecklist.step,
+    prepareQuestionFlow.questionStep,
+    prepareQuestionFlow.visitedSteps.length,
+    prepareQuestionFlow.isLoading,
+    prepareQuestionFlow.error,
+    prepareQuestionFlow.start,
   ]);
 
   const handleSubmitStep = async (selectedOptionIds) => {
@@ -568,6 +636,40 @@ export default function ProductChecklistPage() {
     closeOcrConfirm();
   };
 
+  const handlePrepareStart = async () => {
+    prepareQuestionFlow.reset();
+    await prepareChecklist.start();
+  };
+
+  const handlePrepareSubmitStep = async (selectedOptionIds) => {
+    const done = await prepareQuestionFlow.submitStep(selectedOptionIds);
+    if (done) {
+      await prepareChecklist.finishQuestions();
+    }
+  };
+
+  const handlePrepareQuestionBack = () => {
+    if (prepareQuestionFlow.canGoBack) {
+      prepareQuestionFlow.goBack();
+      return;
+    }
+
+    prepareQuestionFlow.reset();
+    prepareChecklist.reopenInfo();
+  };
+
+  const handlePrepareClose = () => {
+    if (prepareQuestionFlow.isSubmitting || prepareChecklist.isConfirming) return;
+
+    prepareQuestionFlow.reset();
+    prepareChecklist.reset();
+  };
+
+  const handlePrepareRestart = () => {
+    prepareQuestionFlow.reset();
+    prepareChecklist.reset();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -583,6 +685,8 @@ export default function ProductChecklistPage() {
     label: group.groupName,
   }));
   const hasAnalysisResult = step === 'done' && Boolean(ocrInfo);
+  const hasPrepareResult =
+    prepareChecklist.step === 'done' && Boolean(prepareChecklist.finalDocuments);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -641,7 +745,12 @@ export default function ProductChecklistPage() {
         <p className={styles.status}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
       )}
 
-      {hasAnalysisResult ? (
+      {hasPrepareResult ? (
+        <>
+          <PrepareResultPanel onRestart={handlePrepareRestart} />
+          <FinalDocumentList result={prepareChecklist.finalDocuments} />
+        </>
+      ) : hasAnalysisResult ? (
         <>
           <ContractAnalysisPanel
             isDone
@@ -703,6 +812,9 @@ export default function ProductChecklistPage() {
               onBeforeUpload={prepareUpload}
               isPreparingUpload={isPreparingUpload}
               uploadError={uploadError}
+              onPrepareTest={handlePrepareStart}
+              isPreparingTest={prepareChecklist.isStarting}
+              prepareError={prepareChecklist.error}
             />
             <motion.section
               className={styles.board}
@@ -780,6 +892,33 @@ export default function ProductChecklistPage() {
         onClose={handleQuestionClose}
         onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
+      />
+
+      <OcrConfirmModal
+        isOpen={prepareChecklist.step === 'infoConfirm'}
+        onClose={handlePrepareClose}
+        initialInfo={prepareChecklist.info}
+        onConfirm={prepareChecklist.confirmInfo}
+        isSubmitting={prepareChecklist.isConfirming}
+        mode="prepare"
+      />
+
+      <QuestionModal
+        isOpen={prepareChecklist.step === 'questions'}
+        questionStep={prepareQuestionFlow.questionStep}
+        questions={prepareQuestionFlow.questions}
+        isFinalStep={prepareQuestionFlow.isFinalStep}
+        visitedSteps={prepareQuestionFlow.visitedSteps}
+        initialAnswerIds={prepareQuestionFlow.currentAnswerIds}
+        isLoading={
+          prepareQuestionFlow.isLoading ||
+          prepareQuestionFlow.isSubmitting ||
+          prepareQuestionFlow.questionStep == null
+        }
+        isSubmitting={prepareQuestionFlow.isSubmitting}
+        onClose={handlePrepareClose}
+        onBack={handlePrepareQuestionBack}
+        onSubmitStep={handlePrepareSubmitStep}
       />
     </motion.div>
   );
