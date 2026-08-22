@@ -1,0 +1,63 @@
+.root {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.2rem;
+  margin-top: var(--space-3);
+  padding-top: var(--space-2);
+  border-top: 0.1rem solid rgba(0, 0, 0, 0.045);
+}
+
+.fileInput {
+  display: none;
+}
+
+.iconButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.6rem;
+  height: 2.6rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-pill);
+  background: transparent;
+  color: var(--text-disabled);
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: color 0.2s ease, border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.iconButton:hover:not(:disabled) {
+  background: rgba(15, 117, 189, 0.08);
+  color: #0f75bd;
+}
+
+.iconButton:disabled {
+  cursor: wait;
+  opacity: 0.5;
+}
+
+.deleteButton:hover:not(:disabled) {
+  background: rgba(190, 48, 48, 0.08);
+  color: #be3030;
+}
+
+.uploadButton {
+  background: rgba(15, 117, 189, 0.07);
+  color: #0f75bd;
+}
+
+.statusDot {
+  width: 0.8rem;
+  height: 0.8rem;
+  margin: 0 0.45rem 0 0.2rem;
+  border-radius: 50%;
+  background: #8a9099;
+}
+
+.statusDot[data-status='VALID'] { background: #1b9a63; }
+.statusDot[data-status='PROCESSING'] { background: #3e74dc; }
+.statusDot[data-status='INVALID'],
+.statusDot[data-status='FAILED'] { background: #cf4040; }
+.statusDot[data-status='REVIEW_REQUIRED'] { background: #d39516; }

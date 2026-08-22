@@ -5,6 +5,7 @@ import { FaArrowRight, FaComments, FaFileLines, FaLock } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
+import { useApplicationDocumentUploads } from '../../../hooks/useApplicationDocumentUploads.js';
 import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
 import { sendDocumentMessage } from '../../../api/docChat/docChatService.js';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
@@ -172,6 +173,7 @@ export default function DocumentChat() {
     error,
     changePrepared,
   } = useDocumentPreparation(applicationId);
+  const uploadState = useApplicationDocumentUploads(applicationId);
 
   const sections = useMemo(
     () =>
@@ -572,6 +574,7 @@ export default function DocumentChat() {
             onSelectVariant={handleSelectVariant}
             onSelectDocument={handleSelectDocument}
             isUpdating={isUpdating}
+            uploadState={uploadState}
           />
         )}
       </div>
