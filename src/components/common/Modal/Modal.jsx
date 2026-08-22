@@ -8,7 +8,13 @@ let openModalCount = 0;
 let previousBodyOverflow = '';
 let previousBodyPaddingRight = '';
 
-export default function Modal({ isOpen, onClose, children, panelClassName = '' }) {
+export default function Modal({
+  isOpen,
+  onClose,
+  children,
+  panelClassName = '',
+  showCloseButton = true,
+}) {
   useEffect(() => {
     if (!isOpen) return undefined;
 
@@ -61,9 +67,11 @@ export default function Modal({ isOpen, onClose, children, panelClassName = '' }
             exit={{ opacity: 0, y: 12 }}
             transition={{ duration: 0.24, ease: MODAL_EASE }}
           >
-            <button type="button" className={styles.close} onClick={onClose} aria-label="닫기">
-              ×
-            </button>
+            {showCloseButton && (
+              <button type="button" className={styles.close} onClick={onClose} aria-label="닫기">
+                ×
+              </button>
+            )}
             {children}
           </motion.div>
         </motion.div>
