@@ -78,7 +78,7 @@ export function useQuestionFlow(applicationId) {
             applicationId,
             SECOND_STEP,
           );
-        
+
           // STEP2 질문이 있으면 일반·특례 갱신 흐름으로 진행
           if (step2Data.questions?.length > 0) {
             setSelectedOptionIds(accumulatedOptionIds);
@@ -88,10 +88,10 @@ export function useQuestionFlow(applicationId) {
             setQuestions(step2Data.questions);
             setIsFinalStep(false);
             setVisitedSteps((prev) => [...prev, SECOND_STEP]);
-        
+
             return false;
           }
-        
+
           /*
            * STEP2 질문이 없으면 특례 신규계약이다.
            * STEP1 답변을 최종 제출하면 서버가 다음 중 하나를 반환한다.
@@ -105,13 +105,13 @@ export function useQuestionFlow(applicationId) {
             accumulatedOptionIds,
             true,
           );
-        
+
           // 추가 질문 없이 바로 완료
           if (result.done) {
             setSelectedOptionIds(accumulatedOptionIds);
             return true;
           }
-        
+
           // 추가 질문이 있으면 STEP3으로 이동
           if (
             result.questionStep === THIRD_STEP &&
@@ -124,10 +124,10 @@ export function useQuestionFlow(applicationId) {
             setQuestions(result.questions);
             setIsFinalStep(true);
             setVisitedSteps((prev) => [...prev, THIRD_STEP]);
-        
+
             return false;
           }
-        
+
           setError(new Error('특례 신규계약의 다음 질문 데이터가 없습니다.'));
           return false;
         }
@@ -197,7 +197,7 @@ setVisitedSteps((prev) => [...prev, result.questionStep]);
 
 return false;
 
-       
+
       } catch (err) {
         setError(err);
         return false;

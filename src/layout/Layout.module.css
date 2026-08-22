@@ -4,6 +4,16 @@
   min-height: 100vh;
 }
 
+.fullWidthPageWrapper {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.fullWidthPageWrapper > .main {
+  width: 100%;
+}
+
 .chatPageWrapper {
   height: 100vh;
   height: 100dvh;
