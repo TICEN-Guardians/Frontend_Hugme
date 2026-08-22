@@ -150,10 +150,10 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.reanalysisModal}>
       <div className={styles.reanalysisContent}>
-        <p className={styles.reanalysisEyebrow}>다시 분석</p>
-        <h2 className={styles.reanalysisTitle}>계약서를 다시 분석할까요?</h2>
+        <p className={styles.reanalysisEyebrow}>새 계약서 분석</p>
+        <h2 className={styles.reanalysisTitle}>새 계약서를 분석할까요?</h2>
         <p className={styles.reanalysisDescription}>
-          다시 분석하면 이전 OCR 분석 결과와 확정된 준비서류가 새 계약서 기준으로 바뀝니다.
+          새 계약서를 분석하면 이전 OCR 분석 결과와 확정된 준비서류가 새 계약서 기준으로 바뀝니다.
           서류안내 챗봇에 연결된 서류 목록도 다시 생성됩니다.
         </p>
         <div className={styles.reanalysisActions}>
@@ -161,7 +161,7 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
             취소
           </Button>
           <Button type="button" onClick={onConfirm}>
-            다시 분석하기
+            새 계약서 분석하기
           </Button>
         </div>
       </div>
@@ -204,8 +204,8 @@ function ContractAnalysisPanel({
   isPreparingTest,
   prepareError,
   onReset,
-  onChat,
   onKakaoNotification,
+  onStartPreparation,
 }) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
   const fileInputRef = useRef(null);
@@ -284,7 +284,7 @@ function ContractAnalysisPanel({
             className={styles.hiddenInput}
           />
           <Button type="button" variant="secondary" onClick={() => setIsReanalysisConfirmOpen(true)}>
-            다시 분석
+            새 계약서 분석
           </Button>
           <Button
             type="button"
@@ -293,9 +293,6 @@ function ContractAnalysisPanel({
             onClick={onKakaoNotification}
           >
             카카오 알림 보내기
-          </Button>
-          <Button type="button" onClick={onChat}>
-            서류안내 챗봇
           </Button>
         </div>
       </div>
@@ -313,6 +310,22 @@ function ContractAnalysisPanel({
           ))}
         </div>
       )}
+      <div className={styles.preparationBanner}>
+        <div className={styles.preparationBannerContent}>
+          <span className={styles.preparationBannerIcon} aria-hidden="true">
+            <FaFileLines />
+          </span>
+          <div>
+            <h2 className={styles.preparationBannerTitle}>서류 준비를 시작해볼까요?</h2>
+            <p className={styles.preparationBannerDescription}>
+              필요한 서류를 하나씩 확인하고 준비 상태를 관리할 수 있어요.
+            </p>
+          </div>
+        </div>
+        <Button type="button" className={styles.preparationBannerButton} onClick={onStartPreparation}>
+          서류 준비 시작하기
+        </Button>
+      </div>
       {(fileError || uploadError) && (
         <p className={styles.uploadError}>
           {fileError || '계약서 업로드에 실패했습니다. 다시 시도해주세요.'}
@@ -824,8 +837,8 @@ export default function ProductChecklistPage() {
             ocrInfo={ocrInfo}
             onUpload={restartUpload}
             uploadError={uploadError}
-            onChat={() => navigate('/doc-chat', { state: { applicationId } })}
             onKakaoNotification={handleOpenKakaoNotification}
+            onStartPreparation={() => navigate('/doc-chat', { state: { applicationId } })}
           />
           {finalDocuments ? (
             <FinalDocumentList result={finalDocuments} />

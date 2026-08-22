@@ -74,6 +74,58 @@
   color: #191919;
 }
 
+.preparationBanner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--space-6);
+  padding: var(--space-4) var(--space-5);
+  border: 0.1rem solid var(--blue-tint-100);
+  border-radius: var(--radius-lg);
+  background: #fff;
+}
+
+.preparationBannerContent {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  min-width: 0;
+}
+
+.preparationBannerIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 4.8rem;
+  width: 4.8rem;
+  height: 4.8rem;
+  border-radius: var(--radius-md);
+  background: var(--blue-tint-50);
+  color: var(--brand-blue);
+  font-size: var(--text-xl);
+}
+
+.preparationBannerTitle {
+  margin: 0 0 var(--space-1);
+  color: var(--text-primary);
+  font-size: var(--text-lg);
+  font-weight: 800;
+}
+
+.preparationBannerDescription {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.preparationBannerButton {
+  flex-shrink: 0;
+}
+
 .doneBannerTitle {
   display: inline-flex;
   align-items: center;
@@ -605,8 +657,17 @@
   }
 
   .analysisHeader,
-  .analysisActions {
+  .analysisActions,
+  .preparationBanner {
     flex-direction: column;
+  }
+
+  .preparationBanner {
+    align-items: stretch;
+  }
+
+  .preparationBannerButton {
+    width: 100%;
   }
 
   .summaryGrid,

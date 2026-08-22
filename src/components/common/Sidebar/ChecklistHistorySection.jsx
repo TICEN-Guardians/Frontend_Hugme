@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { FaListCheck } from 'react-icons/fa6';
 import { useLocation } from 'react-router-dom';
 import { getCompletedApplications } from '../../../api/checklist/checklistService.js';
-import { PRODUCT_DETAIL_PATH } from '../../../constants/products.js';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import {
   CHECKLIST_COMPLETED_EVENT,
@@ -79,7 +78,7 @@ export default function ChecklistHistorySection() {
           key={application.applicationId}
           className={styles.historyItemButton}
           data-product-code={application.productCode}
-          href={`${PRODUCT_DETAIL_PATH[application.productCode] ?? pathname}?applicationId=${application.applicationId}`}
+          href={`/doc-chat?applicationId=${application.applicationId}`}
           onClick={() => rememberApplication(application.applicationId)}
         >
           <span className={styles.historyIcon} aria-hidden="true">
