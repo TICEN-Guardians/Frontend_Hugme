@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   KAKAO_NOTIFICATION_PENDING_KEY,
+  markKakaoNotificationAsSent,
   sendKakaoNotification,
 } from '../../api/notification/notificationService.js';
 import styles from './KakaoMessageCallbackPage.module.css';
@@ -85,6 +86,7 @@ export default function KakaoMessageCallbackPage() {
       moveInDate: savedRequest.moveInDate,
     })
       .then((response) => {
+        markKakaoNotificationAsSent(savedRequest.applicationId);
         sessionStorage.removeItem(KAKAO_NOTIFICATION_PENDING_KEY);
         setStatus(STATUS.SUCCESS);
         setMessage(

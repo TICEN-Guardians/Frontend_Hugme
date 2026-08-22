@@ -15,6 +15,7 @@ import {
 } from '../../api/checklist/prepareChecklistService.js';
 import {
   createKakaoAuthorization,
+  hasKakaoNotificationBeenSent,
   KAKAO_NOTIFICATION_PENDING_KEY,
 } from '../../api/notification/notificationService.js';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
@@ -205,6 +206,7 @@ function ContractAnalysisPanel({
   prepareError,
   onReset,
   onKakaoNotification,
+  isKakaoNotificationSent,
   onStartPreparation,
 }) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
@@ -291,8 +293,9 @@ function ContractAnalysisPanel({
             variant="secondary"
             className={styles.kakaoButton}
             onClick={onKakaoNotification}
+            disabled={isKakaoNotificationSent}
           >
-            카카오 알림 보내기
+            {isKakaoNotificationSent ? '카카오 알림 전송 완료' : '카카오 알림 보내기'}
           </Button>
         </div>
       </div>
@@ -574,6 +577,7 @@ export default function ProductChecklistPage() {
   const [expandedDocumentGroupIds, setExpandedDocumentGroupIds] = useState([]);
   const [isKakaoModalOpen, setIsKakaoModalOpen] = useState(false);
   const [isKakaoAuthorizing, setIsKakaoAuthorizing] = useState(false);
+  const [isKakaoNotificationSent, setIsKakaoNotificationSent] = useState(false);
   const [kakaoError, setKakaoError] = useState('');
 
   const {
@@ -607,6 +611,12 @@ export default function ProductChecklistPage() {
     getQuestionsRequest: getPrepareQuestions,
     submitAnswersRequest: submitPrepareAnswers,
   });
+
+  useEffect(() => {
+    setIsKakaoNotificationSent(
+      hasKakaoNotificationBeenSent(applicationId),
+    );
+  }, [applicationId]);
 
   // OCR 확정이 끝나 'questions' 단계로 넘어오면, 최초 1회 STEP1 질문을 불러온다.
   useEffect(() => {
@@ -673,6 +683,11 @@ export default function ProductChecklistPage() {
   };
 
   const handleOpenKakaoNotification = () => {
+    if (hasKakaoNotificationBeenSent(applicationId)) {
+      setIsKakaoNotificationSent(true);
+      return;
+    }
+
     setKakaoError('');
     setIsKakaoModalOpen(true);
   };
@@ -684,7 +699,13 @@ export default function ProductChecklistPage() {
   };
 
   const handleKakaoNotification = async (dates) => {
-    if (applicationId == null || isKakaoAuthorizing) return;
+    if (
+      applicationId == null ||
+      isKakaoAuthorizing ||
+      hasKakaoNotificationBeenSent(applicationId)
+    ) {
+      return;
+    }
 
     setIsKakaoAuthorizing(true);
     setKakaoError('');
@@ -838,6 +859,7 @@ export default function ProductChecklistPage() {
             onUpload={restartUpload}
             uploadError={uploadError}
             onKakaoNotification={handleOpenKakaoNotification}
+            isKakaoNotificationSent={isKakaoNotificationSent}
             onStartPreparation={() => navigate('/doc-chat', { state: { applicationId } })}
           />
           {finalDocuments ? (
