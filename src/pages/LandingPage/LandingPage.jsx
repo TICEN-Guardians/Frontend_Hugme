@@ -444,6 +444,7 @@ function JourneyConnections({
   onRoutesUpdated,
   isTabletLayout,
   skipAnimation = false,
+  layoutRevision = 0,
 }) {
   const updateXarrow = useXarrow();
   const updateXarrowRef = useRef(updateXarrow);
@@ -479,17 +480,55 @@ function JourneyConnections({
     let frameId = 0;
     let settleFrameId = 0;
     let notifyFrameId = 0;
+    let retryCount = 0;
+    const maxRetries = 120;
+
+    const areVisibleRoutesMeasured = () => CONNECTIONS
+      .slice(0, visibleCount)
+      .every((connection) => {
+        const start = document.getElementById(connection.start);
+        const end = document.getElementById(connection.end);
+        const path = document.querySelector(
+          `path[data-journey-route="${getRouteKey(connection)}"]`,
+        );
+
+        if (!start || !end || !path || typeof path.getTotalLength !== 'function') {
+          return false;
+        }
+
+        const startRect = start.getBoundingClientRect();
+        const endRect = end.getBoundingClientRect();
+        if (startRect.width === 0 || startRect.height === 0 || endRect.width === 0 || endRect.height === 0) {
+          return false;
+        }
+
+        try {
+          return path.getTotalLength() > 0;
+        } catch {
+          return false;
+        }
+      });
+
     const scheduleUpdate = () => {
       window.cancelAnimationFrame(frameId);
       window.cancelAnimationFrame(settleFrameId);
       window.cancelAnimationFrame(notifyFrameId);
       frameId = window.requestAnimationFrame(() => {
-        updateXarrowRef.current();
-        // react-xarrows가 새 SVG 경로를 DOM에 반영한 다음 프레임에
-        // 노드와 말풍선 좌표를 같은 경로 기준으로 다시 계산한다.
-        // 새 선은 이 측정이 끝날 때까지 투명하게 유지해 초기 좌표가
-        // 한 프레임 노출되는 깜빡임을 방지한다.
+        try {
+          updateXarrowRef.current();
+        } catch {
+          // Xwrapper와 anchor 등록이 끝나지 않은 프레임은 다음 프레임에서 재시도한다.
+        }
+
         settleFrameId = window.requestAnimationFrame(() => {
+          if (!areVisibleRoutesMeasured() && retryCount < maxRetries) {
+            retryCount += 1;
+            scheduleUpdate();
+            return;
+          }
+
+          if (!areVisibleRoutesMeasured()) return;
+
           notifyFrameId = window.requestAnimationFrame(() => {
             onRoutesUpdated();
             setReadyCount((currentCount) => Math.max(currentCount, visibleCount));
@@ -513,7 +552,7 @@ function JourneyConnections({
       window.removeEventListener('resize', scheduleUpdate);
       window.removeEventListener('orientationchange', scheduleUpdate);
     };
-  }, [canvasRef, isTabletLayout, onRoutesUpdated, visibleCount]);
+  }, [canvasRef, isTabletLayout, layoutRevision, onRoutesUpdated, visibleCount]);
 
   return CONNECTIONS.slice(0, visibleCount).map((connection, index) => (
     <Xarrow
@@ -540,7 +579,9 @@ export default function LandingPage() {
   const [wasAnimationSeen] = useState(hasSeenLandingAnimation);
   const [showJourney, setShowJourney] = useState(wasAnimationSeen);
   const [routeRevision, setRouteRevision] = useState(0);
+  const [journeyLayoutRevision, setJourneyLayoutRevision] = useState(0);
   const canvasRef = useRef(null);
+  const hasSyncedRevisitLayoutRef = useRef(false);
   const prefersReducedMotion = useReducedMotion();
   const skipLandingAnimation = wasAnimationSeen || prefersReducedMotion;
   const handleRoutesUpdated = useRef(() => setRouteRevision((revision) => revision + 1)).current;
@@ -662,6 +703,12 @@ export default function LandingPage() {
               duration: skipLandingAnimation ? 1.5 : 1.05,
               ease: skipLandingAnimation ? [0.16, 1, 0.3, 1] : SCENE_EASE,
             }}
+            onAnimationComplete={() => {
+              if (skipLandingAnimation && !hasSyncedRevisitLayoutRef.current) {
+                hasSyncedRevisitLayoutRef.current = true;
+                setJourneyLayoutRevision((revision) => revision + 1);
+              }
+            }}
           >
             <div className={styles.titleGroup}>
               <p className={styles.eyebrow}>나의 안전한 전세 여정</p>
@@ -674,6 +721,7 @@ export default function LandingPage() {
                   canvasRef={canvasRef}
                   prefersReducedMotion={prefersReducedMotion}
                   skipAnimation={wasAnimationSeen}
+                  layoutRevision={journeyLayoutRevision}
                   onRoutesUpdated={handleRoutesUpdated}
                   isTabletLayout={isTabletLayout}
                 />
