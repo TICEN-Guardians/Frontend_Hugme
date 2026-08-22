@@ -30,7 +30,6 @@ export function AuthProvider({ children }) {
   const [isIdleLogoutNoticeOpen, setIsIdleLogoutNoticeOpen] = useState(false);
   const [isSessionExpiredNoticeOpen, setIsSessionExpiredNoticeOpen] = useState(false);
   const AUTH_ENTRY_PATHS = [
-    '/auth/login',
     '/auth/signup',
     '/auth/mail/verify',
     '/api/auth/mail/verify',
@@ -153,8 +152,8 @@ export function AuthProvider({ children }) {
 
   const checkEmail = useCallback((email) => checkEmailRequest(email), []);
 
-  const login = useCallback(async (email, password) => {
-    await loginRequest(email, password);
+  const login = useCallback(async (email, password, rememberMe) => {
+    await loginRequest(email, password, rememberMe);
     const me = await getMe();
 
     authenticatedRef.current = true;
