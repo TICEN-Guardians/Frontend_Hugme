@@ -4,14 +4,14 @@ import FloatingChatGlyph from './FloatingChatGlyph.jsx';
 import styles from './FloatingIcon.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
-const TOOLTIP_INTERVAL_MS = 40000; // 주기
+const TOOLTIP_INTERVAL_MS = 30000; // 주기
 const TOOLTIP_VISIBLE_MS = 4000; // 노출 시간
 
 const TOOLTIP_MESSAGES = [
-  '보증 궁금하지않아?',
+  '보증상품 궁금하지않으세요?',
   '전세사기 예방, 1분만 물어보세요',
-  '제 매물 안전한지 확인해볼까요?',
-  '궁금한 조건 있으면 편하게 물어보세요',
+  '매물이 안전한지 확인해볼까요?',
+  '궁금한게 있으면 편하게 물어보세요',
 ];
 
 export default function FloatingIcon({
@@ -19,6 +19,8 @@ export default function FloatingIcon({
   showTooltip = true,
   ariaLabel = '상담 챗봇 열기',
   mode = 'floating',
+  buttonRef,
+  dragHandlers,
 }) {
   const prefersReducedMotion = useReducedMotion();
   const [isTooltipVisible, setIsTooltipVisible] = useState(false);
@@ -53,7 +55,7 @@ export default function FloatingIcon({
   }
 
   return (
-    <div className={styles.wrap}>
+    <div className={`${styles.wrap} ${mode === 'docked' ? styles.dockedWrap : ''}`}>
       <AnimatePresence>
         {isTooltipVisible && (
           <motion.div
@@ -80,10 +82,12 @@ export default function FloatingIcon({
       </AnimatePresence>
 
       <motion.button
+        ref={buttonRef}
         type="button"
         className={styles.button}
         onClick={onOpen}
         aria-label={ariaLabel}
+        {...dragHandlers}
         initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.7 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0.2 : 0.5, ease: ENTRY_EASE }}

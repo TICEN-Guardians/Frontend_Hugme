@@ -9,6 +9,10 @@ const axiosInstance = axios.create({
     withCredentials: true,
 });
 
+export const publicAxiosInstance = axios.create({
+  baseURL,
+});
+
 const reissueClient = axios.create({
   baseURL,
   withCredentials: true,

@@ -1,8 +1,11 @@
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaComments } from 'react-icons/fa6';
+import { FiMinimize2, FiX } from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
-import useGuideChat from '../../../hooks/useGuideChat.js';
+import { FLOATING_CHAT_COLLAPSE_EVENT } from '../../../components/floatingChat/floatingChatEvents.js';
+import { useGuideChatContext } from '../../../context/guideChat/GuideChatContext.jsx';
 import styles from './ConditionChat.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
@@ -156,14 +159,47 @@ export default function ConditionChat() {
     cancelLogin,
     sendQuestion,
     handleRedirect,
-  } = useGuideChat();
+  } = useGuideChatContext();
   const prefersReducedMotion = useReducedMotion();
+  const navigate = useNavigate();
 
   const followUpQuestions = currentSuggestedQuestions;
   const visibleEntrySuggestionQuestions = entrySuggestionQuestions.slice(0, 6);
 
+  // 플로팅 위젯의 1단계 패널로 되돌아간다(대화는 유지). FloatingChatWidget은 이 페이지와
+  // 형제 컴포넌트라 상태를 직접 공유하지 못해 이벤트로 알린다.
+  const handleCollapse = () => {
+    window.dispatchEvent(new Event(FLOATING_CHAT_COLLAPSE_EVENT));
+    navigate(-1);
+  };
+
+  // 이 페이지로 들어오기 전 화면으로 돌아간다. 플로팅 위젯은 기본적으로 닫힌 상태로
+  // 다시 나타난다(따로 알릴 필요 없음).
+  const handleCloseToPreviousPage = () => {
+    navigate(-1);
+  };
+
   return (
     <div className={styles.workspace}>
+      <div className={styles.pageActions}>
+        <button
+          type="button"
+          className={styles.pageActionButton}
+          onClick={handleCollapse}
+          aria-label="축소"
+        >
+          <FiMinimize2 aria-hidden="true" />
+        </button>
+        <button
+          type="button"
+          className={styles.pageActionButton}
+          onClick={handleCloseToPreviousPage}
+          aria-label="닫기"
+        >
+          <FiX aria-hidden="true" />
+        </button>
+      </div>
+
       <motion.section
         className={styles.chatPanel}
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 34, scale: prefersReducedMotion ? 1 : 0.988 }}
@@ -194,16 +230,16 @@ export default function ConditionChat() {
                   custom={prefersReducedMotion}
                   variants={emptyTitleVariants}
                 >
-                  어떤 가입조건이 궁금하세요?
+                  무엇이든 물어보세요
                 </motion.h2>
                 <motion.p
                   className={styles.emptyDescription}
                   custom={prefersReducedMotion}
                   variants={emptyItemVariants}
                 >
-                  아래 조건 중 하나를 선택하면 해당 조건에 대한 상담이 시작돼요.
+                  HUG 보증상품부터 가입조건, 전세사기 예방까지
                   <br />
-                  HUG 전세보증금반환보증 가입조건 17개를 하나씩 확인해 드려요.
+                  궁금한 건 무엇이든 물어보세요.
                 </motion.p>
                 <motion.div
                   className={styles.suggestions}
@@ -395,7 +431,7 @@ export default function ConditionChat() {
               disabled={isSending}
               placeholder={
                 currentMessages.length === 0
-                  ? '궁금한 가입조건을 선택하거나 직접 입력하세요'
+                  ? '궁금한 걸 선택하거나 직접 입력하세요'
                   : '추천 질문을 선택하거나 직접 입력하세요'
               }
             />
