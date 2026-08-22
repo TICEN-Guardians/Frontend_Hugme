@@ -13,19 +13,21 @@ export default function Layout() {
 
   return (
     <div className={`${styles.pageWrapper} ${isChatAppPage ? styles.chatPageWrapper : ''}`}>
-      <Sidebar showHistory={!isMainPage} />
-      <div className={styles.contentColumn}>
-        <main
-          className={
-            isChatAppPage
-              ? `${styles.main} ${styles.chatMain}`
-              : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
-          }
-        >
-          <Outlet />
-        </main>
-        {!isChatAppPage && <Footer />}
+      <div className={styles.layoutBody}>
+        <Sidebar showHistory={!isMainPage} />
+        <div className={styles.contentColumn}>
+          <main
+            className={
+              isChatAppPage
+                ? `${styles.main} ${styles.chatMain}`
+                : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
+            }
+          >
+            <Outlet />
+          </main>
+        </div>
       </div>
+      {!isChatAppPage && <Footer />}
     </div>
   );
 }
