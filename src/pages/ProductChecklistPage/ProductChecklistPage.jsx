@@ -1,15 +1,26 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaChevronRight, FaCircleCheck, FaCircleInfo, FaFileLines } from 'react-icons/fa6';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
+import KakaoNotificationModal from '../../components/checklist/KakaoNotificationModal/KakaoNotificationModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
 import Button from '../../components/common/Button/Button.jsx';
 import Modal from '../../components/common/Modal/Modal.jsx';
 import TabBar from '../../components/common/TabBar/TabBar.jsx';
+import {
+  getPrepareQuestions,
+  submitPrepareAnswers,
+} from '../../api/checklist/prepareChecklistService.js';
+import {
+  createKakaoAuthorization,
+  KAKAO_NOTIFICATION_PENDING_KEY,
+} from '../../api/notification/notificationService.js';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
+import { useAuth } from '../../context/auth/AuthContext.jsx';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
+import { usePrepareChecklist } from '../../hooks/usePrepareChecklist.js';
 import { useProductChecklist } from '../../hooks/useProductChecklist.js';
 import { useQuestionFlow } from '../../hooks/useQuestionFlow.js';
 import ErrorPage from '../ErrorPage/ErrorPage.jsx';
@@ -139,10 +150,10 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.reanalysisModal}>
       <div className={styles.reanalysisContent}>
-        <p className={styles.reanalysisEyebrow}>다시 분석</p>
-        <h2 className={styles.reanalysisTitle}>계약서를 다시 분석할까요?</h2>
+        <p className={styles.reanalysisEyebrow}>새 계약서 분석</p>
+        <h2 className={styles.reanalysisTitle}>새 계약서를 분석할까요?</h2>
         <p className={styles.reanalysisDescription}>
-          다시 분석하면 이전 OCR 분석 결과와 확정된 준비서류가 새 계약서 기준으로 바뀝니다.
+          새 계약서를 분석하면 이전 OCR 분석 결과와 확정된 준비서류가 새 계약서 기준으로 바뀝니다.
           서류안내 챗봇에 연결된 서류 목록도 다시 생성됩니다.
         </p>
         <div className={styles.reanalysisActions}>
@@ -150,7 +161,7 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
             취소
           </Button>
           <Button type="button" onClick={onConfirm}>
-            다시 분석하기
+            새 계약서 분석하기
           </Button>
         </div>
       </div>
@@ -189,8 +200,12 @@ function ContractAnalysisPanel({
   onBeforeUpload,
   isPreparingUpload,
   uploadError,
+  onPrepareTest,
+  isPreparingTest,
+  prepareError,
   onReset,
-  onChat,
+  onKakaoNotification,
+  onStartPreparation,
 }) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
   const fileInputRef = useRef(null);
@@ -224,7 +239,7 @@ function ContractAnalysisPanel({
   if (!isDone) {
     return (
       <motion.section
-        className={styles.analysisPanel}
+        className={styles.checklistEntryPanel}
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: PANEL_EASE }}
@@ -233,9 +248,14 @@ function ContractAnalysisPanel({
           onFileSelected={onUpload}
           onBeforeUpload={onBeforeUpload}
           isPreparingUpload={isPreparingUpload}
+          onPrepareTest={onPrepareTest}
+          isPreparingTest={isPreparingTest}
         />
         {uploadError && (
           <p className={styles.uploadError}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
+        )}
+        {prepareError && (
+          <p className={styles.uploadError}>모의테스트를 시작하지 못했습니다. 다시 시도해주세요.</p>
         )}
       </motion.section>
     );
@@ -264,10 +284,15 @@ function ContractAnalysisPanel({
             className={styles.hiddenInput}
           />
           <Button type="button" variant="secondary" onClick={() => setIsReanalysisConfirmOpen(true)}>
-            다시 분석
+            새 계약서 분석
           </Button>
-          <Button type="button" onClick={onChat}>
-            서류안내 챗봇
+          <Button
+            type="button"
+            variant="secondary"
+            className={styles.kakaoButton}
+            onClick={onKakaoNotification}
+          >
+            카카오 알림 보내기
           </Button>
         </div>
       </div>
@@ -285,6 +310,22 @@ function ContractAnalysisPanel({
           ))}
         </div>
       )}
+      <div className={styles.preparationBanner}>
+        <div className={styles.preparationBannerContent}>
+          <span className={styles.preparationBannerIcon} aria-hidden="true">
+            <FaFileLines />
+          </span>
+          <div>
+            <h2 className={styles.preparationBannerTitle}>서류 준비를 시작해볼까요?</h2>
+            <p className={styles.preparationBannerDescription}>
+              필요한 서류를 하나씩 확인하고 준비 상태를 관리할 수 있어요.
+            </p>
+          </div>
+        </div>
+        <Button type="button" className={styles.preparationBannerButton} onClick={onStartPreparation}>
+          서류 준비 시작하기
+        </Button>
+      </div>
       {(fileError || uploadError) && (
         <p className={styles.uploadError}>
           {fileError || '계약서 업로드에 실패했습니다. 다시 시도해주세요.'}
@@ -295,6 +336,34 @@ function ContractAnalysisPanel({
         onClose={() => setIsReanalysisConfirmOpen(false)}
         onConfirm={handleConfirmReanalysis}
       />
+    </motion.section>
+  );
+}
+
+function PrepareResultPanel({ onRestart }) {
+  return (
+    <motion.section
+      className={styles.analysisPanel}
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, ease: PANEL_EASE }}
+    >
+      <div className={styles.analysisHeader}>
+        <div>
+          <p className={styles.doneBannerTitle}>
+            <FaCircleCheck aria-hidden="true" /> 모의테스트 완료
+          </p>
+          <h2 className={styles.analysisTitle}>예상 준비서류</h2>
+        </div>
+        <div className={styles.analysisActions}>
+          <Button type="button" variant="secondary" onClick={onRestart}>
+            다시 테스트
+          </Button>
+        </div>
+      </div>
+      <p className={styles.reanalysisDescription}>
+        선택한 조건을 기준으로 계산한 결과이며 실제 신청 내역에는 저장되지 않아요.
+      </p>
     </motion.section>
   );
 }
@@ -462,7 +531,9 @@ function DocumentDetail({
 }
 
 export default function ProductChecklistPage() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, isAuthLoading } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const { productCode: productCodeParam, guaranteeType } = useParams();
   const productCode = PRODUCT_ROUTE_TO_CODE[productCodeParam] ?? PRODUCT_ROUTE_TO_CODE[guaranteeType];
@@ -501,6 +572,9 @@ export default function ProductChecklistPage() {
 
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [expandedDocumentGroupIds, setExpandedDocumentGroupIds] = useState([]);
+  const [isKakaoModalOpen, setIsKakaoModalOpen] = useState(false);
+  const [isKakaoAuthorizing, setIsKakaoAuthorizing] = useState(false);
+  const [kakaoError, setKakaoError] = useState('');
 
   const {
     step,
@@ -522,9 +596,17 @@ export default function ProductChecklistPage() {
     closeOcrConfirm,
     reopenOcrConfirm,
     finishQuestions,
-  } = useContractUpload(productCode);
+  } = useContractUpload(productCode, {
+    isAuthenticated,
+    isAuthLoading,
+  });
 
   const questionFlow = useQuestionFlow(applicationId);
+  const prepareChecklist = usePrepareChecklist(productCode);
+  const prepareQuestionFlow = useQuestionFlow(prepareChecklist.applicationId, {
+    getQuestionsRequest: getPrepareQuestions,
+    submitAnswersRequest: submitPrepareAnswers,
+  });
 
   // OCR 확정이 끝나 'questions' 단계로 넘어오면, 최초 1회 STEP1 질문을 불러온다.
   useEffect(() => {
@@ -532,7 +614,8 @@ export default function ProductChecklistPage() {
       step === 'questions' &&
       questionFlow.questionStep == null &&
       questionFlow.visitedSteps.length === 0 &&
-      !questionFlow.isLoading
+      !questionFlow.isLoading &&
+      !questionFlow.error
     ) {
       questionFlow.start();
     }
@@ -541,7 +624,28 @@ export default function ProductChecklistPage() {
     questionFlow.questionStep,
     questionFlow.visitedSteps.length,
     questionFlow.isLoading,
+    questionFlow.error,
     questionFlow.start,
+  ]);
+
+  // 모의 계약정보가 확정되면 prepare 전용 API로 STEP1 질문을 불러온다.
+  useEffect(() => {
+    if (
+      prepareChecklist.step === 'questions' &&
+      prepareQuestionFlow.questionStep == null &&
+      prepareQuestionFlow.visitedSteps.length === 0 &&
+      !prepareQuestionFlow.isLoading &&
+      !prepareQuestionFlow.error
+    ) {
+      prepareQuestionFlow.start();
+    }
+  }, [
+    prepareChecklist.step,
+    prepareQuestionFlow.questionStep,
+    prepareQuestionFlow.visitedSteps.length,
+    prepareQuestionFlow.isLoading,
+    prepareQuestionFlow.error,
+    prepareQuestionFlow.start,
   ]);
 
   const handleSubmitStep = async (selectedOptionIds) => {
@@ -568,6 +672,84 @@ export default function ProductChecklistPage() {
     closeOcrConfirm();
   };
 
+  const handleOpenKakaoNotification = () => {
+    setKakaoError('');
+    setIsKakaoModalOpen(true);
+  };
+
+  const handleCloseKakaoNotification = () => {
+    if (isKakaoAuthorizing) return;
+    setIsKakaoModalOpen(false);
+    setKakaoError('');
+  };
+
+  const handleKakaoNotification = async (dates) => {
+    if (applicationId == null || isKakaoAuthorizing) return;
+
+    setIsKakaoAuthorizing(true);
+    setKakaoError('');
+
+    try {
+      const response = await createKakaoAuthorization(applicationId);
+      const authorizationUrl = response?.authorizationUrl;
+
+      if (!authorizationUrl) {
+        throw new Error('카카오 인증 주소가 응답에 없습니다.');
+      }
+
+      sessionStorage.setItem(
+        KAKAO_NOTIFICATION_PENDING_KEY,
+        JSON.stringify({
+          applicationId,
+          returnTo: `${location.pathname}${location.search}`,
+          ...dates,
+        }),
+      );
+
+      window.location.assign(authorizationUrl);
+    } catch (error) {
+      setKakaoError(
+        error?.response?.data?.message ??
+          '카카오 인증을 시작하지 못했습니다. 다시 시도해 주세요.',
+      );
+      setIsKakaoAuthorizing(false);
+    }
+  };
+
+  const handlePrepareStart = async () => {
+    prepareQuestionFlow.reset();
+    await prepareChecklist.start();
+  };
+
+  const handlePrepareSubmitStep = async (selectedOptionIds) => {
+    const done = await prepareQuestionFlow.submitStep(selectedOptionIds);
+    if (done) {
+      await prepareChecklist.finishQuestions();
+    }
+  };
+
+  const handlePrepareQuestionBack = () => {
+    if (prepareQuestionFlow.canGoBack) {
+      prepareQuestionFlow.goBack();
+      return;
+    }
+
+    prepareQuestionFlow.reset();
+    prepareChecklist.reopenInfo();
+  };
+
+  const handlePrepareClose = () => {
+    if (prepareQuestionFlow.isSubmitting || prepareChecklist.isConfirming) return;
+
+    prepareQuestionFlow.reset();
+    prepareChecklist.reset();
+  };
+
+  const handlePrepareRestart = () => {
+    prepareQuestionFlow.reset();
+    prepareChecklist.reset();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -583,6 +765,8 @@ export default function ProductChecklistPage() {
     label: group.groupName,
   }));
   const hasAnalysisResult = step === 'done' && Boolean(ocrInfo);
+  const hasPrepareResult =
+    prepareChecklist.step === 'done' && Boolean(prepareChecklist.finalDocuments);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -641,14 +825,20 @@ export default function ProductChecklistPage() {
         <p className={styles.status}>목록을 불러오지 못했습니다. 잠시 후 다시 시도해주세요.</p>
       )}
 
-      {hasAnalysisResult ? (
+      {hasPrepareResult ? (
+        <>
+          <PrepareResultPanel onRestart={handlePrepareRestart} />
+          <FinalDocumentList result={prepareChecklist.finalDocuments} />
+        </>
+      ) : hasAnalysisResult ? (
         <>
           <ContractAnalysisPanel
             isDone
             ocrInfo={ocrInfo}
             onUpload={restartUpload}
             uploadError={uploadError}
-            onChat={() => navigate('/doc-chat', { state: { applicationId } })}
+            onKakaoNotification={handleOpenKakaoNotification}
+            onStartPreparation={() => navigate('/doc-chat', { state: { applicationId } })}
           />
           {finalDocuments ? (
             <FinalDocumentList result={finalDocuments} />
@@ -696,54 +886,16 @@ export default function ProductChecklistPage() {
 
       ) : (
         status === 'success' && !isRestoring && (
-          <>
-            <ContractAnalysisPanel
-              isDone={false}
-              onUpload={startUpload}
-              onBeforeUpload={prepareUpload}
-              isPreparingUpload={isPreparingUpload}
-              uploadError={uploadError}
-            />
-            <motion.section
-              className={styles.board}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: PANEL_EASE }}
-            >
-              <div className={styles.boardHeader}>
-                <TabBar tabs={sectionTabs} activeKey={activeSectionCode} onChange={handleSectionChange} />
-
-              </div>
-
-
-              <div className={styles.itemArea}>
-                {isSectionLoading ? (
-                  <p className={styles.status}>불러오는 중...</p>
-                ) : items.length === 0 ? (
-                  <p className={styles.empty}>해당 항목에 표시할 서류가 없습니다.</p>
-                ) : (
-                  <div className={styles.checklistLayout}>
-                    <DocumentSelector
-                      items={items}
-                      selectedItemId={selectedItemId}
-                      onSelect={handleItemClick}
-                      groupTabs={groupTabs}
-                      activeGroupId={activeGroupId}
-                      onGroupChange={handleGroupChange}
-                    />
-                    <DocumentDetail
-                      selectedItem={selectedItem}
-                      entries={modalDocumentEntries}
-                      isLoading={isDocumentsLoading}
-                      expandedGroupIds={expandedDocumentGroupIds}
-                      onToggleGroup={toggleDocumentGroup}
-                    />
-                  </div>
-                )}
-              </div>
-
-            </motion.section>
-          </>
+          <ContractAnalysisPanel
+            isDone={false}
+            onUpload={startUpload}
+            onBeforeUpload={prepareUpload}
+            isPreparingUpload={isPreparingUpload}
+            uploadError={uploadError}
+            onPrepareTest={handlePrepareStart}
+            isPreparingTest={prepareChecklist.isStarting}
+            prepareError={prepareChecklist.error}
+          />
         )
       )}
 
@@ -780,6 +932,41 @@ export default function ProductChecklistPage() {
         onClose={handleQuestionClose}
         onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
+      />
+
+      <OcrConfirmModal
+        isOpen={prepareChecklist.step === 'infoConfirm'}
+        onClose={handlePrepareClose}
+        initialInfo={prepareChecklist.info}
+        onConfirm={prepareChecklist.confirmInfo}
+        isSubmitting={prepareChecklist.isConfirming}
+        mode="prepare"
+      />
+
+      <QuestionModal
+        isOpen={prepareChecklist.step === 'questions'}
+        questionStep={prepareQuestionFlow.questionStep}
+        questions={prepareQuestionFlow.questions}
+        isFinalStep={prepareQuestionFlow.isFinalStep}
+        visitedSteps={prepareQuestionFlow.visitedSteps}
+        initialAnswerIds={prepareQuestionFlow.currentAnswerIds}
+        isLoading={
+          prepareQuestionFlow.isLoading ||
+          prepareQuestionFlow.isSubmitting ||
+          prepareQuestionFlow.questionStep == null
+        }
+        isSubmitting={prepareQuestionFlow.isSubmitting}
+        onClose={handlePrepareClose}
+        onBack={handlePrepareQuestionBack}
+        onSubmitStep={handlePrepareSubmitStep}
+      />
+
+      <KakaoNotificationModal
+        isOpen={isKakaoModalOpen}
+        onClose={handleCloseKakaoNotification}
+        onSubmit={handleKakaoNotification}
+        isSubmitting={isKakaoAuthorizing}
+        error={kakaoError}
       />
     </motion.div>
   );

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FiEye, FiEyeOff } from 'react-icons/fi';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
 import SuccessModal from '../../components/common/Modal/SuccessModal.jsx';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
@@ -67,7 +67,6 @@ function validate(email, password) {
 export default function LoginPage() {
   const { login } = useAuth();
   const navigate = useNavigate();
-  const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
 
   const [email, setEmail] = useState('');
@@ -76,7 +75,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successModal, setSuccessModal] = useState({ isOpen: false, redirectTo: '/main' });
   const [errorModal, setErrorModal] = useState({ isOpen: false, message: '' });
 
   const handleSubmit = async (event) => {
@@ -88,8 +86,7 @@ export default function LoginPage() {
     setIsSubmitting(true);
     try {
       await login(email, password);
-      const redirectTo = location.state?.from?.pathname ?? '/main';
-      setSuccessModal({ isOpen: true, redirectTo });
+      navigate('/main', { replace: true });
     } catch (error) {
       setErrorModal({
         isOpen: true,
@@ -98,10 +95,6 @@ export default function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleSuccessConfirm = () => {
-    navigate(successModal.redirectTo, { replace: true });
   };
 
   const handleErrorConfirm = () => {
@@ -192,14 +185,6 @@ export default function LoginPage() {
         </motion.p>
       </motion.form>
 
-      <SuccessModal
-        isOpen={successModal.isOpen}
-        title="로그인 완료"
-        description="HUGME 서비스를 바로 이용할 수 있어요."
-        actionLabel="시작하기"
-        onAction={handleSuccessConfirm}
-        onClose={handleSuccessConfirm}
-      />
       <SuccessModal
         isOpen={errorModal.isOpen}
         tone="error"

@@ -4,14 +4,14 @@ import FloatingChatGlyph from './FloatingChatGlyph.jsx';
 import styles from './FloatingIcon.module.css';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
-const TOOLTIP_INTERVAL_MS = 40000; // 주기
+const TOOLTIP_INTERVAL_MS = 30000; // 주기
 const TOOLTIP_VISIBLE_MS = 4000; // 노출 시간
 
 const TOOLTIP_MESSAGES = [
-  '보증 궁금하지않아?',
+  '보증상품 궁금하지않으세요?',
   '전세사기 예방, 1분만 물어보세요',
-  '제 매물 안전한지 확인해볼까요?',
-  '궁금한 조건 있으면 편하게 물어보세요',
+  '매물이 안전한지 확인해볼까요?',
+  '궁금한게 있으면 편하게 물어보세요',
 ];
 
 export default function FloatingIcon({

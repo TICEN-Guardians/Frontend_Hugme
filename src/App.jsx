@@ -8,6 +8,7 @@ import ConditionChat from './pages/Chat/ConditionChat/ConditionChat.jsx';
 import DocumentChat from './pages/Chat/DocumentChat/DocumentChat.jsx';
 import ErrorPage from './pages/ErrorPage/ErrorPage.jsx';
 import LandingPage from './pages/LandingPage/LandingPage.jsx';
+import KakaoMessageCallbackPage from './pages/KakaoMessageCallbackPage/KakaoMessageCallbackPage.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
 import MainPage from './pages/MainPage/MainPage.jsx';
 import EmailVerifyPage from './pages/EmailVerifyPage/EmailVerifyPage.jsx';
@@ -59,6 +60,7 @@ export default function App() {
           <Route path="/user-chat" element={<ConditionChat />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/doc-chat" element={<DocumentChat />} />
+            <Route path="/oauth/kakao/message/callback" element={<KakaoMessageCallbackPage />} />
             <Route path="/main" element={<MainPage />} />
           </Route>
         </Route>

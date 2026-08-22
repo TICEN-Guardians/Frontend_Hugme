@@ -58,8 +58,16 @@ function normalizeInfo(info) {
   };
 }
 
-export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfirm, isSubmitting }) {
+export default function OcrConfirmModal({
+  isOpen,
+  onClose,
+  initialInfo,
+  onConfirm,
+  isSubmitting,
+  mode = 'ocr',
+}) {
   const [form, setForm] = useState(() => normalizeInfo(initialInfo));
+  const isPrepareMode = mode === 'prepare';
 
   useEffect(() => {
     setForm(normalizeInfo(initialInfo));
@@ -95,14 +103,20 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
       <form className={styles.form} onSubmit={handleSubmit}>
         <div className={styles.headerRow}>
           <span className={styles.badge}>
-            <FaCircleCheck aria-hidden="true" /> 분석 완료
+            <FaCircleCheck aria-hidden="true" /> {isPrepareMode ? '모의테스트' : '분석 완료'}
           </span>
-          <span className={styles.headerNote}>계약서에서 읽어온 정보예요</span>
+          <span className={styles.headerNote}>
+            {isPrepareMode ? '조건을 직접 선택해 주세요' : '계약서에서 읽어온 정보예요'}
+          </span>
         </div>
 
         <h2 className={styles.title}>계약 정보를 확인해 주세요</h2>
         <p className={styles.subtitle}>
-          이 정보로 낼 서류가 정해져요. <strong>잘못 읽은 값이 있으면 수정</strong>해 주세요.
+          {isPrepareMode ? (
+            '가정한 계약 조건으로 필요한 서류를 확인할 수 있어요.'
+          ) : (
+            <>이 정보로 낼 서류가 정해져요. <strong>잘못 읽은 값이 있으면 수정</strong>해 주세요.</>
+          )}
         </p>
 
         <div className={styles.grid}>
@@ -247,7 +261,11 @@ export default function OcrConfirmModal({ isOpen, onClose, initialInfo, onConfir
         </div>
 
         <div className={styles.footer}>
-          <p className={styles.footerNote}>확인이 끝나면 3단계 질문으로 서류가 확정돼요.</p>
+          <p className={styles.footerNote}>
+            {isPrepareMode
+              ? '확인이 끝나면 단계별 질문으로 예상 서류가 정해져요.'
+              : '확인이 끝나면 3단계 질문으로 서류가 확정돼요.'}
+          </p>
           <Button type="submit" disabled={isSubmitting}>
             {isSubmitting ? '저장 중...' : '다음'}
           </Button>

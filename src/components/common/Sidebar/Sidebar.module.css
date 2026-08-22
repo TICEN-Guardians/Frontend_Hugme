@@ -220,6 +220,68 @@
   font-size: 1.3rem;
 }
 
+.checklistHistoryList {
+  max-height: 30rem;
+  margin-top: var(--space-2);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.checklistHistoryList::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+.checklistHistoryList::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: var(--border-default);
+}
+
+.historyItemButton {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: var(--space-3);
+  border: 0.1rem solid transparent;
+  border-radius: 1rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.historyItemButton[data-product-code='GENERAL'] {
+  border-color: var(--blue-tint-100);
+  background: var(--blue-tint-50);
+}
+
+.historyItemButton[data-product-code='GENERAL'] .historyIcon {
+  background: #fff;
+  color: var(--brand-blue);
+}
+
+.historyItemButton[data-product-code='SPECIAL'] {
+  border-color: var(--green-tint-100);
+  background: var(--green-tint-50);
+}
+
+.historyItemButton[data-product-code='SPECIAL'] .historyIcon {
+  background: #fff;
+  color: var(--brand-green);
+}
+
+.historyItemButton[data-product-code='GENERAL']:hover {
+  border-color: var(--brand-blue);
+}
+
+.historyItemButton[data-product-code='SPECIAL']:hover {
+  border-color: var(--brand-green);
+}
+
 .historyItem {
   display: flex;
   align-items: center;
