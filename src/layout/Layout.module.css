@@ -1,13 +1,19 @@
 .pageWrapper {
   display: flex;
-  align-items: flex-start;
+  flex-direction: column;
+  align-items: stretch;
   min-height: 100vh;
+}
+
+.layoutBody {
+  display: flex;
+  flex: 1;
+  align-items: flex-start;
+  min-width: 0;
 }
 
 .fullWidthPageWrapper {
   width: 100%;
-  flex-direction: column;
-  align-items: stretch;
 }
 
 .fullWidthPageWrapper > .main {
@@ -19,6 +25,10 @@
   height: 100dvh;
   min-height: 0;
   overflow: hidden;
+}
+
+.chatPageWrapper .layoutBody {
+  min-height: 0;
 }
 
 .contentColumn {
@@ -63,19 +73,14 @@
 }
 
 @media (max-width: 76.7rem) {
-  .pageWrapper {
-    flex-direction: column;
-  }
-
-  .chatPageWrapper {
-    height: auto;
-    min-height: 100dvh;
-    overflow: visible;
+  .layoutBody {
+    flex-direction: row;
   }
 
   .contentColumn {
-    width: 100%;
-    min-height: 0;
+    width: auto;
+    min-height: 100vh;
+    min-height: 100dvh;
   }
 
   .wideMain {
@@ -84,8 +89,9 @@
   }
 
   .chatMain {
-    height: auto;
-    min-height: calc(100dvh - 19rem);
-    overflow: visible;
+    height: 100vh;
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
   }
 }

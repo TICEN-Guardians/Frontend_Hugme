@@ -46,13 +46,12 @@ export default function App() {
           <Route path="/auth/signup" element={<SignupPage />} />
           <Route path="/auth/mail/verify" element={<EmailVerifyPage />} />
           <Route path="/api/auth/mail/verify" element={<EmailVerifyPage />} />
-          {/* 회색 배경을 뷰포트 끝까지 채우고, 안쪽 콘텐츠만 자체적으로 container를 적용 */}
-          <Route path="/risk/new" element={<RiskFormPage />} />
-          <Route path="/risk/:reportId" element={<RiskReportPage />} />
         </Route>
 
-        {/* 공통 컨테이너(--container-max)로 폭을 맞추는 일반 페이지 */}
+        {/* 로그인 이후 서비스 화면은 헤더 대신 공통 사이드바를 사용한다. */}
         <Route element={<Layout />}>
+          <Route path="/risk/new" element={<RiskFormPage />} />
+          <Route path="/risk/:reportId" element={<RiskReportPage />} />
           <Route path="/guarantee-checklist" element={<ProductsPage />} />
           <Route path="/guarantee-checklist/:guaranteeType" element={<ProductChecklistPage />} />
           <Route path="/products" element={<ProductsPage />} />
