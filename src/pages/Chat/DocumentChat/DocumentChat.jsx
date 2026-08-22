@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
+import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
 import { sendDocumentMessage } from '../../../api/docChat/docChatService.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
@@ -38,7 +39,11 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
 
 export default function DocumentChat() {
   const navigate = useNavigate();
+  const location = useLocation();
   const prefersReducedMotion = useReducedMotion();
+  const applicationId =
+    location.state?.applicationId ??
+    sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
   const [activeSectionCode, setActiveSectionCode] = useState('BASIC');
   const [expandedDocumentId, setExpandedDocumentId] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -53,7 +58,7 @@ export default function DocumentChat() {
     isUpdating,
     error,
     changePrepared,
-  } = useDocumentPreparation();
+  } = useDocumentPreparation(applicationId);
 
   const sections = useMemo(
     () =>
