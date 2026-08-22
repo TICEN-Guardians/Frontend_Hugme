@@ -1,127 +1,139 @@
-import { useState } from 'react';
-import { FaFileLines } from 'react-icons/fa6';
-import Button from '../../components/common/Button/Button.jsx';
-import Chip from '../../components/common/Chip/Chip.jsx';
-import DocumentCard from '../../components/common/DocumentCard/DocumentCard.jsx';
-import Modal from '../../components/common/Modal/Modal.jsx';
-import StatusBadge from '../../components/common/StatusBadge/StatusBadge.jsx';
-import TabBar from '../../components/common/TabBar/TabBar.jsx';
-import ChatInput from '../../components/chat/ChatInput/ChatInput.jsx';
-import MessageList from '../../components/chat/MessageList/MessageList.jsx';
+import { FaArrowRightLong } from 'react-icons/fa6';
+import { motion, useReducedMotion } from 'framer-motion';
+import { Link } from 'react-router-dom';
+import { useAuth } from '../../context/auth/AuthContext.jsx';
+import useLastRiskAnalysis from '../../hooks/useLastRiskAnalysis.js';
 import styles from './MainPage.module.css';
 
-const TABS = [
-  { key: 'all', label: '전체', count: 12 },
-  { key: 'pending', label: '대기', count: 3 },
-  { key: 'done', label: '완료' },
+const SERVICES = [
+  {
+    key: 'risk',
+    eyebrow: '계약 전 먼저',
+    title: '전세 위험도 진단',
+    description: <>주소와 계약 정보를 바탕으로<br />놓치기 쉬운 위험 신호를 확인해요.</>,
+    cta: '위험도 진단하기',
+    image: '/images/main/risk-diagnosis.png',
+    imageAlt: '집과 계약 서류를 돋보기로 살펴보는 전세 위험도 진단 일러스트',
+    theme: 'blue',
+  },
+  {
+    key: 'checklist',
+    eyebrow: '내 상황에 맞게',
+    title: '보증 체크리스트',
+    description: <>필요 서류 확인부터 발급·준비 방법까지<br />단계별로 빠짐없이 안내해드려요.</>,
+    cta: '체크리스트 시작하기',
+    image: '/images/main/guarantee-checklist.png',
+    imageAlt: '보증 준비 서류와 완료된 체크리스트 일러스트',
+    theme: 'green',
+    to: '/guarantee-checklist',
+  },
 ];
 
-const INITIAL_MESSAGES = [
-  { role: 'assistant', content: '안녕하세요, 무엇을 도와드릴까요?' },
-  { role: 'user', content: '전세 계약서 서류 안내해주세요.' },
-];
+const REVEAL_EASE = [0.16, 1, 0.3, 1];
 
-function ThemeSection({ theme, label }) {
-  const [activeTab, setActiveTab] = useState('all');
-  const [isModalOpen, setModalOpen] = useState(false);
-  const [messages, setMessages] = useState(INITIAL_MESSAGES);
+const introVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      delayChildren: 0.08,
+      staggerChildren: 0.1,
+    },
+  },
+};
 
-  const handleSend = (text) => {
-    setMessages((prev) => [...prev, { role: 'user', content: text }]);
-  };
+const introItemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.72, ease: REVEAL_EASE },
+  },
+};
 
-  return (
-    <section className={styles.section} data-theme={theme}>
-      <h2 className={styles.sectionTitle}>{label}</h2>
+const cardGridVariants = {
+  hidden: {},
+  visible: {
+    transition: {
+      delayChildren: 0.28,
+      staggerChildren: 0.13,
+    },
+  },
+};
 
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>Button</h3>
-        <div className={styles.row}>
-          <Button variant="primary" size="md">
-            Primary MD
-          </Button>
-          <Button variant="primary" size="sm">
-            Primary SM
-          </Button>
-          <Button variant="secondary" size="md">
-            Secondary MD
-          </Button>
-          <Button variant="secondary" size="sm">
-            Secondary SM
-          </Button>
-          <Button variant="primary" size="md" disabled>
-            Disabled
-          </Button>
-        </div>
-      </div>
-
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>Chip / StatusBadge</h3>
-        <div className={styles.row}>
-          <Chip>카테고리</Chip>
-          <StatusBadge label="검토중" tone="neutral" />
-          <StatusBadge label="완료" tone="accent" />
-        </div>
-      </div>
-
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>TabBar</h3>
-        <TabBar tabs={TABS} activeKey={activeTab} onChange={setActiveTab} />
-      </div>
-
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>DocumentCard</h3>
-        <div className={styles.cardGrid}>
-          <DocumentCard
-            icon={<FaFileLines />}
-            title="전체 표시"
-            description="모든 항목이 채워진 카드입니다."
-            chip="임대차계약서"
-            status={{ label: '완료', tone: 'accent' }}
-            onClick={() => {}}
-          />
-          <DocumentCard
-            icon={<FaFileLines />}
-            title="description 없음"
-            chip="등기부등본"
-            status={{ label: '대기', tone: 'neutral' }}
-          />
-          <DocumentCard
-            icon={<FaFileLines />}
-            title="chip·status 없음"
-            description="설명만 있는 카드입니다."
-          />
-          <DocumentCard icon={<FaFileLines />} title="제목만" />
-        </div>
-      </div>
-
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>Modal</h3>
-        <Button variant="secondary" size="sm" onClick={() => setModalOpen(true)}>
-          모달 열기
-        </Button>
-        <Modal isOpen={isModalOpen} onClose={() => setModalOpen(false)}>
-          <p>{label} 테마 모달 내용입니다.</p>
-        </Modal>
-      </div>
-
-      <div className={styles.block}>
-        <h3 className={styles.blockTitle}>Chat (MessageList + ChatInput)</h3>
-        <div className={styles.chatDemo}>
-          <MessageList messages={messages} />
-          <ChatInput onSend={handleSend} />
-        </div>
-      </div>
-    </section>
-  );
-}
+const cardVariants = {
+  hidden: { opacity: 0, y: 34, scale: 0.975 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.82, ease: REVEAL_EASE },
+  },
+};
 
 export default function MainPage() {
+  const { user } = useAuth();
+  const { entryPath: riskEntryPath } = useLastRiskAnalysis(user?.email);
+  const prefersReducedMotion = useReducedMotion();
+  const userName = user?.name ?? '사용자';
+  const motionState = prefersReducedMotion ? 'visible' : undefined;
+
   return (
     <div className={styles.root}>
-      <p className={styles.notice}>임시 컴포넌트 갤러리 — 추후 삭제 예정</p>
-      <ThemeSection theme="general" label="General" />
-      <ThemeSection theme="special" label="Special" />
+      <motion.header
+        className={styles.intro}
+        variants={introVariants}
+        initial={motionState ?? 'hidden'}
+        animate="visible"
+      >
+        <motion.p className={styles.eyebrow} variants={introItemVariants}>
+          HUGME HOME
+        </motion.p>
+        <motion.p className={styles.greeting} variants={introItemVariants}>
+          안녕하세요, {userName}님
+        </motion.p>
+        <motion.h1 variants={introItemVariants}>
+          보증보험 가입 전 위험은 먼저 확인하고,
+          <br />내게 맞는 보증 준비는 빠짐없이 챙겨보세요.
+        </motion.h1>
+      </motion.header>
+
+      <motion.section
+        className={styles.cardGrid}
+        aria-label="HUGME 주요 서비스"
+        variants={cardGridVariants}
+        initial={motionState ?? 'hidden'}
+        animate="visible"
+      >
+        {SERVICES.map((service) => (
+          <motion.div
+            key={service.key}
+            className={styles.cardMotion}
+            variants={cardVariants}
+          >
+            <Link
+              to={service.key === 'risk' ? riskEntryPath : service.to}
+              className={`${styles.serviceCard} ${styles[service.theme]}`}
+            >
+              <div className={styles.cardCopy}>
+                <span className={styles.cardEyebrow}>{service.eyebrow}</span>
+                <h2>{service.title}</h2>
+                <p>{service.description}</p>
+              </div>
+
+              <img
+                src={service.image}
+                alt={service.imageAlt}
+                className={styles.illustration}
+              />
+
+              <span className={styles.cardAction}>
+                <span>{service.cta}</span>
+                <FaArrowRightLong aria-hidden="true" />
+              </span>
+            </Link>
+          </motion.div>
+        ))}
+      </motion.section>
     </div>
   );
 }

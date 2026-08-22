@@ -40,18 +40,18 @@ export function AuthProvider({ children }) {
     ) {
       return undefined;
     }
-  
+
     const channel = new BroadcastChannel(
       AUTH_CHANNEL_NAME,
     );
-  
+
     authChannelRef.current = channel;
-  
+
     const handleAuthMessage = (event) => {
       if (event.data?.type !== 'LOGOUT') {
         return;
       }
-  
+
       clearAccessToken();
       setUser(null);
       setIsAuthenticated(false);
@@ -60,23 +60,23 @@ export function AuthProvider({ children }) {
       if (event.data?.reason === 'IDLE') {
         setIsIdleLogoutNoticeOpen(true);
       }
-  
+
       navigate('/', { replace: true });
     };
-  
+
     channel.addEventListener(
       'message',
       handleAuthMessage,
     );
-  
+
     return () => {
       channel.removeEventListener(
         'message',
         handleAuthMessage,
       );
-  
+
       channel.close();
-  
+
       if (authChannelRef.current === channel) {
         authChannelRef.current = null;
       }
@@ -88,23 +88,23 @@ export function AuthProvider({ children }) {
       setUser(null);
       setIsAuthenticated(false);
       setIsAuthLoading(false);
-  
+
       return undefined;
     }
-  
+
     let ignore = false;
-  
+
     reissue()
       .then(() => getMe())
       .then((me) => {
         if (ignore) return;
-  
+
         setUser(me);
         setIsAuthenticated(true);
       })
       .catch(() => {
         if (ignore) return;
-  
+
         setUser(null);
         setIsAuthenticated(false);
       })
@@ -113,7 +113,7 @@ export function AuthProvider({ children }) {
           setIsAuthLoading(false);
         }
       });
-  
+
     return () => {
       ignore = true;
     };
@@ -139,7 +139,7 @@ export function AuthProvider({ children }) {
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
   const checkEmail = useCallback((email) => checkEmailRequest(email), []);
-  
+
   const login = useCallback(async (email, password) => {
     await loginRequest(email, password);
     const me = await getMe();

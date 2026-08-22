@@ -1,80 +1,291 @@
 .root {
   display: flex;
+  box-sizing: border-box;
+  height: 100vh;
+  min-height: 68rem;
   flex-direction: column;
-  gap: var(--space-10);
-  padding: var(--space-6);
+  padding: 4.4rem 0 4rem;
 }
 
-.notice {
+.intro {
+  max-width: 92rem;
+}
+
+.eyebrow {
+  margin: 0 0 1.2rem;
+  color: var(--brand-blue);
+  font-size: 1.25rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+}
+
+.greeting {
+  margin: 0 0 1rem;
+  color: #657484;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.intro h1 {
   margin: 0;
-  padding: var(--space-2) var(--space-4);
-  border-radius: var(--radius-md);
-  background: var(--border-subtle);
-  color: var(--text-secondary);
-  font-size: var(--text-sm);
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-6);
-  padding: var(--space-6);
-  border: 0.1rem solid var(--border-default);
-  border-radius: var(--radius-lg);
-}
-
-.sectionTitle {
-  margin: 0;
-  font-size: var(--text-2xl);
-  color: var(--text-strong);
-}
-
-.block {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.blockTitle {
-  margin: 0;
-  font-size: var(--text-sm);
-  color: var(--text-secondary);
-}
-
-.row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-3);
+  color: #17212b;
+  font-size: clamp(3.2rem, 3.4vw, 4.8rem);
+  font-weight: 850;
+  line-height: 1.24;
+  letter-spacing: -0.045em;
+  word-break: keep-all;
 }
 
 .cardGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(22rem, 1fr));
-  gap: var(--space-4);
+  flex: 1;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 2.8rem;
+  min-height: 0;
+  margin-top: 3.2rem;
 }
 
-.chatDemo {
+.cardMotion {
+  min-width: 0;
+  min-height: 0;
+}
+
+.serviceCard {
+  position: relative;
   display: flex;
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
   flex-direction: column;
-  gap: var(--space-3);
-  max-width: 48rem;
-  padding: var(--space-3);
-  border: 0.1rem solid var(--border-default);
-  border-radius: var(--radius-lg);
+  padding: 4.4rem 4.4rem 3.2rem;
+  border-radius: 3.2rem;
+  color: #fff;
+  text-decoration: none;
+  isolation: isolate;
+  box-shadow: 0 2rem 5rem rgba(30, 62, 88, 0.14);
+  transition:
+    transform 0.25s cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 0.25s ease;
+}
+
+.blue {
+  background: linear-gradient(145deg, #347cc6 0%, #155a98 100%);
+}
+
+.green {
+  background: linear-gradient(145deg, #58a846 0%, #2e7c2b 100%);
+}
+
+.serviceCard:hover {
+  box-shadow: 0 2.8rem 6rem rgba(30, 62, 88, 0.2);
+  transform: translateY(-0.6rem);
+}
+
+.serviceCard:focus-visible {
+  outline: 0.35rem solid rgba(15, 117, 189, 0.32);
+  outline-offset: 0.5rem;
+}
+
+.cardCopy {
+  position: relative;
+  z-index: 2;
+}
+
+.cardEyebrow {
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  opacity: 0.78;
+}
+
+.cardCopy h2 {
+  margin: 1.2rem 0 0;
+  font-size: clamp(3rem, 3.2vw, 4.5rem);
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+}
+
+.cardCopy p {
+  margin: 1.8rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 550;
+  line-height: 1.65;
+  opacity: 0.82;
+}
+
+.illustration {
+  position: absolute;
+  right: 3.5rem;
+  bottom: 7.8rem;
+  width: min(54%, 34rem);
+  max-height: 31rem;
+  object-fit: contain;
+  object-position: right bottom;
+  filter: drop-shadow(0 1.5rem 2.6rem rgba(10, 36, 58, 0.16));
+  transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.serviceCard:hover .illustration {
+  transform: translateY(-0.7rem) scale(1.025);
+}
+
+.cardAction {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  min-height: 6.4rem;
+  margin: auto -1.2rem -0.4rem;
+  padding: 0 2.4rem;
+  border: 0.1rem solid rgba(255, 255, 255, 0.16);
+  border-radius: 1.8rem;
+  background: rgba(5, 31, 52, 0.22);
+  color: #fff;
+  font-size: 1.55rem;
+  font-weight: 850;
+  backdrop-filter: blur(0.6rem);
+}
+
+.green .cardAction {
+  background: rgba(12, 58, 18, 0.25);
+}
+
+.cardAction svg {
+  font-size: 1.9rem;
+  transition: transform 0.2s ease;
+}
+
+.serviceCard:hover .cardAction svg {
+  transform: translateX(0.5rem);
+}
+
+@media (max-width: 110rem) {
+  .root {
+    padding-top: 3.6rem;
+  }
+
+  .serviceCard {
+    padding: 3.6rem 3.4rem 2.8rem;
+  }
+
+  .illustration {
+    right: 2.4rem;
+    width: 62%;
+  }
+}
+
+@media (max-width: 90rem) {
+  .cardGrid {
+    gap: 2rem;
+  }
+
+  .serviceCard {
+    min-height: 0;
+  }
+
+  .illustration {
+    width: 57%;
+    max-height: 29rem;
+  }
 }
 
 @media (max-width: 76.7rem) {
   .root {
-    gap: var(--space-6);
-    padding: var(--space-4);
+    height: auto;
+    min-height: 0;
+    padding: 4rem 0 6.4rem;
   }
 
-  .section {
-    padding: var(--space-4);
+  .intro h1 {
+    font-size: clamp(2.8rem, 7vw, 3.8rem);
   }
 
-  .sectionTitle {
-    font-size: var(--text-xl);
+  .cardGrid {
+    grid-template-columns: 1fr;
+    margin-top: 3.2rem;
+  }
+
+  .serviceCard {
+    min-height: 48rem;
+  }
+
+  .illustration {
+    width: min(55%, 34rem);
+  }
+}
+
+@media (max-width: 48rem) {
+  .root {
+    padding-top: 3.2rem;
+    padding-bottom: 4.8rem;
+  }
+
+  .eyebrow {
+    margin-bottom: 0.8rem;
+    font-size: 1.1rem;
+  }
+
+  .greeting {
+    margin-bottom: 0.8rem;
+    font-size: 1.35rem;
+  }
+
+  .intro h1 {
+    font-size: clamp(2.35rem, 7.2vw, 3rem);
+    line-height: 1.32;
+  }
+
+  .cardGrid {
+    gap: 1.6rem;
+    margin-top: 2.4rem;
+  }
+
+  .serviceCard {
+    min-height: 40rem;
+    padding: 2.6rem 2.2rem 2rem;
+    border-radius: 2.2rem;
+  }
+
+  .cardCopy h2 {
+    margin-top: 0.8rem;
+    font-size: clamp(1.9rem, 6vw, 2.8rem);
+    letter-spacing: -0.06em;
+  }
+
+  .cardCopy p {
+    margin-top: 1.2rem;
+    font-size: 1.3rem;
+    line-height: 1.55;
+  }
+
+  .illustration {
+    position: relative;
+    right: auto;
+    bottom: auto;
+    align-self: center;
+    width: 72%;
+    max-height: 19rem;
+    margin: auto 0 -0.4rem;
+    object-position: center;
+  }
+
+  .cardAction {
+    width: 100%;
+    min-height: 5.4rem;
+    margin: 0;
+    padding: 0 1.8rem;
+    border-radius: 1.5rem;
+    font-size: 1.35rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .serviceCard,
+  .illustration,
+  .cardAction svg {
+    transition: none;
   }
 }

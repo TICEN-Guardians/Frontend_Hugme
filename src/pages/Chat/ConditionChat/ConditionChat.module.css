@@ -1,4 +1,5 @@
 .workspace {
+  position: relative;
   display: flex;
   width: 100%;
   max-width: none;
@@ -7,6 +8,35 @@
   margin: 0;
   overflow: hidden;
   background: var(--on-accent);
+}
+
+.pageActions {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+  z-index: 30;
+  display: flex;
+  gap: var(--space-2);
+}
+
+.pageActionButton {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.6rem;
+  height: 3.6rem;
+  border: 0.1rem solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background: var(--on-accent);
+  color: var(--text-disabled);
+  font-size: 1.6rem;
+  cursor: pointer;
+  box-shadow: 0 0.4rem 1.2rem rgba(15, 23, 42, 0.08);
+}
+
+.pageActionButton:hover {
+  border-color: var(--brand-blue);
+  color: var(--brand-blue);
 }
 
 .chatPanel {

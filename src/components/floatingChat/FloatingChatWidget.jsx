@@ -2,6 +2,7 @@ import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useGuideChatContext } from '../../context/guideChat/GuideChatContext.jsx';
+import { FLOATING_CHAT_COLLAPSE_EVENT } from './floatingChatEvents.js';
 import FloatingChatStage1 from './FloatingChatStage1/FloatingChatStage1.jsx';
 import FloatingIcon from './FloatingIcon/FloatingIcon.jsx';
 
@@ -10,98 +11,70 @@ const VIEWPORT_GAP = 12;
 const WIDGET_GAP = 12;
 const DEFAULT_ICON_SIZE = 88;
 const DEFAULT_PANEL_SIZE = { width: 380, height: 580 };
-const OPPOSITE_SIDE = { left: 'right', right: 'left', above: 'below', below: 'above' };
-const POSITION_EASE = [0.16, 1, 0.3, 1];
 
 const clamp = (value, min, max) => Math.min(Math.max(value, min), Math.max(min, max));
 const getViewport = () => ({ width: window.innerWidth, height: window.innerHeight });
-
-function clampRectPosition(position, size, viewport) {
-  return {
-    x: clamp(position.x, VIEWPORT_GAP, viewport.width - size.width - VIEWPORT_GAP),
-    y: clamp(position.y, VIEWPORT_GAP, viewport.height - size.height - VIEWPORT_GAP),
-  };
-}
-
-function placeCompanion(anchor, companionSize, preferredSide, viewport, crossOffset = null) {
-  const spaces = {
-    left: anchor.x - VIEWPORT_GAP,
-    right: viewport.width - anchor.x - anchor.width - VIEWPORT_GAP,
-    above: anchor.y - VIEWPORT_GAP,
-    below: viewport.height - anchor.y - anchor.height - VIEWPORT_GAP,
-  };
-  const needed = (side) => (
-    (side === 'left' || side === 'right' ? companionSize.width : companionSize.height) + WIDGET_GAP
-  );
-  const sides = [...new Set([preferredSide, OPPOSITE_SIDE[preferredSide], 'left', 'right', 'above', 'below'])];
-  const side = sides.find((candidate) => spaces[candidate] >= needed(candidate))
-    ?? sides.reduce((best, candidate) => (
-      spaces[candidate] - needed(candidate) > spaces[best] - needed(best) ? candidate : best
-    ));
-
-  let position;
-  if (side === 'left') {
-    position = { x: anchor.x - companionSize.width - WIDGET_GAP, y: anchor.y + (crossOffset?.y ?? (anchor.height - companionSize.height) / 2) };
-  } else if (side === 'right') {
-    position = { x: anchor.x + anchor.width + WIDGET_GAP, y: anchor.y + (crossOffset?.y ?? (anchor.height - companionSize.height) / 2) };
-  } else if (side === 'above') {
-    position = { x: anchor.x + (crossOffset?.x ?? (anchor.width - companionSize.width) / 2), y: anchor.y - companionSize.height - WIDGET_GAP };
-  } else {
-    position = { x: anchor.x + (crossOffset?.x ?? (anchor.width - companionSize.width) / 2), y: anchor.y + anchor.height + WIDGET_GAP };
-  }
-
-  return { side, position: clampRectPosition(position, companionSize, viewport) };
-}
-
-function isRectInsideViewport(position, size, viewport) {
-  return position.x >= VIEWPORT_GAP
-    && position.y >= VIEWPORT_GAP
-    && position.x + size.width <= viewport.width - VIEWPORT_GAP
-    && position.y + size.height <= viewport.height - VIEWPORT_GAP;
-}
 
 function getInitialIconPosition() {
   const viewport = getViewport();
   return { x: viewport.width - DEFAULT_ICON_SIZE - 24, y: viewport.height - DEFAULT_ICON_SIZE - 24 };
 }
 
-// 사용자가 잡은 요소는 포인터를 따라가고, 짝이 되는 요소는 화면 경계에 따라
-// 상하좌우 중 안전한 위치로 자동 전환된다.
+// 패널은 항상 아이콘 기준 왼쪽, 아래쪽 라인이 서로 맞도록(하단 정렬) 고정된 오프셋에
+// 위치한다 — 아이콘과 패널이 하나의 고정된 짝으로 함께 움직이므로 둘 사이 상대 위치가
+// 절대 바뀌지 않고, 따라서 서로 겹칠 일도 없다(예전에는 화면 경계에 부딪히면 상하좌우로
+// 옆면을 바꿔가며 재배치했는데, 그 과정에서 여유 공간이 부족하면 겹치는 문제가 있었다).
+function derivePanelPosition(iconPosition, iconSize, panelSize) {
+  return {
+    x: iconPosition.x - panelSize.width - WIDGET_GAP,
+    y: iconPosition.y + iconSize.height - panelSize.height,
+  };
+}
+
+// 아이콘이 움직일 수 있는 범위. 패널이 열려있을 때는 "아이콘 기준 왼쪽·하단 정렬"이라는
+// 고정 오프셋을 적용했을 때 패널까지 함께 화면 안에 들어오도록 범위를 더 좁힌다.
+function getIconBounds(iconSize, panelSize, viewport, panelOpen) {
+  const maxX = viewport.width - iconSize.width - VIEWPORT_GAP;
+  const maxY = viewport.height - iconSize.height - VIEWPORT_GAP;
+  let minX = VIEWPORT_GAP;
+  let minY = VIEWPORT_GAP;
+
+  if (panelOpen) {
+    minX = VIEWPORT_GAP + panelSize.width + WIDGET_GAP;
+    // panel.y = icon.y + iconH - panelH >= VIEWPORT_GAP 를 icon.y에 대해 정리
+    minY = VIEWPORT_GAP + panelSize.height - iconSize.height;
+  }
+
+  return { minX, maxX, minY, maxY };
+}
+
+function clampIconPosition(position, bounds) {
+  return {
+    x: clamp(position.x, bounds.minX, bounds.maxX),
+    y: clamp(position.y, bounds.minY, bounds.maxY),
+  };
+}
+
+// 사용자가 잡은 요소(아이콘 또는 패널 헤더)는 포인터를 따라가고, 짝이 되는 요소는 고정된
+// 오프셋을 유지한 채 함께 이동한다.
 export default function FloatingChatWidget() {
   const location = useLocation();
   const navigate = useNavigate();
   const [stage, setStage] = useState(STAGE.CLOSED);
   const [iconPosition, setIconPosition] = useState(getInitialIconPosition);
-  const [panelPosition, setPanelPosition] = useState({ x: VIEWPORT_GAP, y: VIEWPORT_GAP });
   const [iconSize, setIconSize] = useState({ width: DEFAULT_ICON_SIZE, height: DEFAULT_ICON_SIZE });
   const [panelSize, setPanelSize] = useState(DEFAULT_PANEL_SIZE);
-  const [flippingElement, setFlippingElement] = useState(null);
   const iconRef = useRef(null);
   const panelRef = useRef(null);
-  const iconPositionRef = useRef(iconPosition);
-  const iconSizeRef = useRef(iconSize);
   const dragRef = useRef(null);
-  const flipTimerRef = useRef(null);
   const suppressOpenRef = useRef(false);
-  const placementRef = useRef({ panelFromIcon: 'left', iconFromPanel: 'right' });
   const chat = useGuideChatContext();
   const prefersReducedMotion = useReducedMotion();
   const isExpandedPage = location.pathname === '/user-chat';
-  iconPositionRef.current = iconPosition;
-  iconSizeRef.current = iconSize;
-
-  const placePanelFromIcon = (nextIconPosition, nextIconSize = iconSize, nextPanelSize = panelSize) => {
-    const result = placeCompanion(
-      { ...nextIconPosition, ...nextIconSize }, nextPanelSize,
-      placementRef.current.panelFromIcon, getViewport(),
-    );
-    placementRef.current = { panelFromIcon: result.side, iconFromPanel: OPPOSITE_SIDE[result.side] };
-    setPanelPosition(result.position);
-  };
+  const panelPosition = derivePanelPosition(iconPosition, iconSize, panelSize);
 
   const handleOpen = () => {
     chat.resetToNewSession();
-    placePanelFromIcon(iconPosition);
     setStage(STAGE.STAGE_1);
   };
 
@@ -119,24 +92,14 @@ export default function FloatingChatWidget() {
     navigate('/user-chat');
   };
 
-  const markCompanionFlip = (element) => {
-    window.clearTimeout(flipTimerRef.current);
-    setFlippingElement(element);
-    flipTimerRef.current = window.setTimeout(() => setFlippingElement(null), 240);
-  };
-
   const beginDrag = (kind) => (event) => {
     if (event.button !== 0 || (kind === 'panel' && event.target.closest('button'))) return;
     event.currentTarget.setPointerCapture(event.pointerId);
     dragRef.current = {
-      kind,
       pointerId: event.pointerId,
       startX: event.clientX,
       startY: event.clientY,
       iconStart: iconPosition,
-      panelStart: panelPosition,
-      panelFromIcon: placementRef.current.panelFromIcon,
-      iconFromPanel: placementRef.current.iconFromPanel,
       moved: false,
     };
   };
@@ -147,98 +110,19 @@ export default function FloatingChatWidget() {
     const deltaX = event.clientX - drag.startX;
     const deltaY = event.clientY - drag.startY;
     if (Math.hypot(deltaX, deltaY) > 5) drag.moved = true;
-    const viewport = getViewport();
 
-    if (drag.kind === 'icon') {
-      const nextIcon = clampRectPosition(
-        { x: drag.iconStart.x + deltaX, y: drag.iconStart.y + deltaY }, iconSize, viewport,
-      );
-      setIconPosition(nextIcon);
-      if (stage === STAGE.STAGE_1) {
-        const appliedDelta = { x: nextIcon.x - drag.iconStart.x, y: nextIcon.y - drag.iconStart.y };
-        const nextPanel = {
-          x: drag.panelStart.x + appliedDelta.x,
-          y: drag.panelStart.y + appliedDelta.y,
-        };
-
-        if (isRectInsideViewport(nextPanel, panelSize, viewport)) {
-          setPanelPosition(nextPanel);
-        } else {
-          const panelPlacement = placeCompanion(
-            { ...nextIcon, ...iconSize },
-            panelSize,
-            OPPOSITE_SIDE[drag.panelFromIcon],
-            viewport,
-            {
-              x: drag.panelStart.x - drag.iconStart.x,
-              y: drag.panelStart.y - drag.iconStart.y,
-            },
-          );
-          placementRef.current = {
-            panelFromIcon: panelPlacement.side,
-            iconFromPanel: OPPOSITE_SIDE[panelPlacement.side],
-          };
-          setPanelPosition(panelPlacement.position);
-          markCompanionFlip('panel');
-          dragRef.current = {
-            ...drag,
-            startX: event.clientX,
-            startY: event.clientY,
-            iconStart: nextIcon,
-            panelStart: panelPlacement.position,
-            panelFromIcon: panelPlacement.side,
-            iconFromPanel: OPPOSITE_SIDE[panelPlacement.side],
-          };
-        }
-      }
-      return;
-    }
-
-    const nextPanel = clampRectPosition(
-      { x: drag.panelStart.x + deltaX, y: drag.panelStart.y + deltaY }, panelSize, viewport,
+    const bounds = getIconBounds(iconSize, panelSize, getViewport(), stage === STAGE.STAGE_1);
+    const nextIcon = clampIconPosition(
+      { x: drag.iconStart.x + deltaX, y: drag.iconStart.y + deltaY },
+      bounds,
     );
-    setPanelPosition(nextPanel);
-    const appliedDelta = { x: nextPanel.x - drag.panelStart.x, y: nextPanel.y - drag.panelStart.y };
-    const nextIcon = {
-      x: drag.iconStart.x + appliedDelta.x,
-      y: drag.iconStart.y + appliedDelta.y,
-    };
-
-    if (isRectInsideViewport(nextIcon, iconSize, viewport)) {
-      setIconPosition(nextIcon);
-    } else {
-      const iconPlacement = placeCompanion(
-        { ...nextPanel, ...panelSize },
-        iconSize,
-        OPPOSITE_SIDE[drag.iconFromPanel],
-        viewport,
-        {
-          x: drag.iconStart.x - drag.panelStart.x,
-          y: drag.iconStart.y - drag.panelStart.y,
-        },
-      );
-      placementRef.current = {
-        iconFromPanel: iconPlacement.side,
-        panelFromIcon: OPPOSITE_SIDE[iconPlacement.side],
-      };
-      setIconPosition(iconPlacement.position);
-      markCompanionFlip('icon');
-      dragRef.current = {
-        ...drag,
-        startX: event.clientX,
-        startY: event.clientY,
-        iconStart: iconPlacement.position,
-        panelStart: nextPanel,
-        iconFromPanel: iconPlacement.side,
-        panelFromIcon: OPPOSITE_SIDE[iconPlacement.side],
-      };
-    }
+    setIconPosition(nextIcon);
   };
 
   const endDrag = (event) => {
     const drag = dragRef.current;
     if (!drag || drag.pointerId !== event.pointerId) return;
-    if (drag.kind === 'icon' && drag.moved) {
+    if (drag.moved) {
       suppressOpenRef.current = true;
       window.setTimeout(() => { suppressOpenRef.current = false; }, 0);
     }
@@ -262,15 +146,17 @@ export default function FloatingChatWidget() {
     const observer = new ResizeObserver(update);
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+    // isExpandedPage가 바뀔 때마다 재실행: /user-chat에 들어가면 아이콘이 통째로
+    // 언마운트됐다가 나올 때 다시 마운트되므로, 그때마다 새 DOM 노드에 다시 붙어야
+    // iconSize가 정확하게 유지된다(예전엔 마운트 시 한 번만 붙어서, 재등장한 새
+    // 아이콘은 관찰되지 않고 크기 값이 stale하게 남아있는 버그가 있었다).
+  }, [isExpandedPage]);
 
   useLayoutEffect(() => {
     const element = panelRef.current;
     if (!element || stage !== STAGE.STAGE_1) return undefined;
     const update = () => {
-      const nextSize = { width: element.offsetWidth, height: element.offsetHeight };
-      setPanelSize(nextSize);
-      placePanelFromIcon(iconPositionRef.current, iconSizeRef.current, nextSize);
+      setPanelSize({ width: element.offsetWidth, height: element.offsetHeight });
     };
     update();
     const observer = new ResizeObserver(update);
@@ -278,21 +164,28 @@ export default function FloatingChatWidget() {
     return () => observer.disconnect();
   }, [stage]);
 
+  // 아이콘/패널 크기가 바뀌거나(리사이즈 관찰), 패널이 열리고 닫히거나, 창 크기가 바뀔 때마다
+  // 현재 아이콘 위치가 여전히 유효한 범위 안에 있는지 다시 확인해서 필요하면 안쪽으로 당긴다.
   useEffect(() => {
-    const handleResize = () => {
-      const nextIcon = clampRectPosition(iconPosition, iconSize, getViewport());
-      setIconPosition(nextIcon);
-      if (stage === STAGE.STAGE_1) placePanelFromIcon(nextIcon);
+    const reclamp = () => {
+      const bounds = getIconBounds(iconSize, panelSize, getViewport(), stage === STAGE.STAGE_1);
+      setIconPosition((prev) => clampIconPosition(prev, bounds));
     };
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, [iconPosition, iconSize, panelSize, stage]);
+    reclamp();
+    window.addEventListener('resize', reclamp);
+    return () => window.removeEventListener('resize', reclamp);
+  }, [iconSize, panelSize, stage]);
 
   useEffect(() => {
     if (isExpandedPage) setStage(STAGE.CLOSED);
   }, [isExpandedPage]);
 
-  useEffect(() => () => window.clearTimeout(flipTimerRef.current), []);
+  // /user-chat(확장 상태)의 "축소" 버튼에서 쏘는 이벤트를 받아 1단계 패널을 다시 연다.
+  useEffect(() => {
+    const handleCollapseRequest = () => setStage(STAGE.STAGE_1);
+    window.addEventListener(FLOATING_CHAT_COLLAPSE_EVENT, handleCollapseRequest);
+    return () => window.removeEventListener(FLOATING_CHAT_COLLAPSE_EVENT, handleCollapseRequest);
+  }, []);
 
   if (isExpandedPage) return null;
 
@@ -313,8 +206,8 @@ export default function FloatingChatWidget() {
         transition={{
           opacity: { duration: prefersReducedMotion ? 0.1 : 0.28, ease: 'easeOut' },
           scale: { duration: prefersReducedMotion ? 0.1 : 0.28, ease: 'easeOut' },
-          left: { duration: flippingElement === 'icon' && !prefersReducedMotion ? 0.24 : 0, ease: POSITION_EASE },
-          top: { duration: flippingElement === 'icon' && !prefersReducedMotion ? 0.24 : 0, ease: POSITION_EASE },
+          left: { duration: 0 },
+          top: { duration: 0 },
         }}
       >
         <FloatingIcon
@@ -338,7 +231,6 @@ export default function FloatingChatWidget() {
             onExpand={handleExpand}
             panelRef={panelRef}
             dragHandlers={makeDragHandlers('panel')}
-            isPositionFlipping={flippingElement === 'panel'}
           />
         )}
       </AnimatePresence>

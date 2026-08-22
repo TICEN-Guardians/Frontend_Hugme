@@ -13,6 +13,11 @@
   background: #fff;
   box-shadow: 0.8rem 0 3.2rem rgba(15, 23, 42, 0.035);
   z-index: 20;
+  transition:
+    width 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    flex-basis 0.28s cubic-bezier(0.22, 1, 0.36, 1),
+    padding 0.28s ease,
+    box-shadow 0.28s ease;
 }
 
 .identityRegion,
@@ -26,8 +31,10 @@
 }
 
 .serviceRegion {
+  flex: 1 1 auto;
   min-height: 0;
   margin-top: var(--space-8);
+  overflow: hidden;
 }
 
 .brand {
@@ -36,12 +43,17 @@
   align-self: flex-start;
   min-height: 4.8rem;
   margin-bottom: var(--space-10);
+  overflow: hidden;
 }
 
 .logo {
   display: block;
   width: 13.6rem;
   height: auto;
+}
+
+.logoMark {
+  display: none;
 }
 
 .profileArea {
@@ -205,19 +217,104 @@
   font-size: 1.7rem;
 }
 
-.history {
-  min-height: 0;
-  margin-top: var(--space-8);
-  padding-top: var(--space-6);
-  border-top: 0.1rem solid var(--border-subtle);
+.collapsedHistoryButton {
+  display: none;
 }
 
-.historyHeading {
+.history {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  flex-direction: column;
+  gap: var(--space-6);
+  margin-top: var(--space-8);
+  padding-top: var(--space-6);
+  padding-right: var(--space-1);
+  border-top: 0.1rem solid var(--border-subtle);
+  overflow-y: auto;
+}
+
+.history::-webkit-scrollbar {
+  width: 0.4rem;
+}
+
+.history::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: #d9e1e7;
+}
+
+.historyGroup {
+  min-width: 0;
+}
+
+.historyGroupTitle {
+  margin: 0;
+  color: #8a96a3;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
+.checklistHistoryList {
+  max-height: 30rem;
+  margin-top: var(--space-2);
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border-default) transparent;
+}
+
+.checklistHistoryList::-webkit-scrollbar {
+  width: 0.5rem;
+}
+
+.checklistHistoryList::-webkit-scrollbar-thumb {
+  border-radius: var(--radius-pill);
+  background: var(--border-default);
+}
+
+.historyItemButton {
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  color: #a0a9b3;
-  font-size: 1.3rem;
+  gap: var(--space-3);
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--space-1);
+  padding: var(--space-3);
+  border: 0.1rem solid transparent;
+  border-radius: 1rem;
+  background: transparent;
+  color: inherit;
+  text-align: left;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.historyItemButton[data-product-code='GENERAL'] {
+  border-color: var(--blue-tint-100);
+  background: var(--blue-tint-50);
+}
+
+.historyItemButton[data-product-code='GENERAL'] .historyIcon {
+  background: #fff;
+  color: var(--brand-blue);
+}
+
+.historyItemButton[data-product-code='SPECIAL'] {
+  border-color: var(--green-tint-100);
+  background: var(--green-tint-50);
+}
+
+.historyItemButton[data-product-code='SPECIAL'] .historyIcon {
+  background: #fff;
+  color: var(--brand-green);
+}
+
+.historyItemButton[data-product-code='GENERAL']:hover {
+  border-color: var(--brand-blue);
+}
+
+.historyItemButton[data-product-code='SPECIAL']:hover {
+  border-color: var(--brand-green);
 }
 
 .historyItem {
@@ -235,6 +332,16 @@
   background: #f6f9fb;
 }
 
+.historyButton {
+  box-sizing: border-box;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
 .historyIcon {
   display: inline-flex;
   align-items: center;
@@ -245,6 +352,11 @@
   border-radius: var(--radius-md);
   background: var(--blue-tint-50);
   color: var(--brand-blue);
+}
+
+.checklistHistoryIcon {
+  background: var(--green-tint-50);
+  color: var(--brand-green);
 }
 
 .historyText {
@@ -310,6 +422,151 @@
   color: var(--brand-blue);
 }
 
+.collapseButton {
+  position: absolute;
+  top: 2.8rem;
+  right: 2rem;
+  display: grid;
+  width: 3.2rem;
+  height: 3.2rem;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-md);
+  background: #f3f7fa;
+  color: #71808e;
+  font-size: 1.5rem;
+  cursor: pointer;
+  place-items: center;
+  z-index: 3;
+}
+
+.collapseButton:hover {
+  background: var(--blue-tint-50);
+  color: var(--brand-blue);
+}
+
+.sidebar[data-collapsed='true'] .collapseButton {
+  top: 2rem;
+  right: 50%;
+  transform: translateX(50%);
+}
+
+.sidebar[data-collapsed='true'] .brand {
+  margin-top: 4.8rem;
+}
+
+.collapseButton:focus-visible {
+  outline: 0.2rem solid rgba(15, 117, 189, 0.28);
+  outline-offset: 0.2rem;
+}
+
+.sidebar[data-collapsed='true'] {
+  flex-basis: 8rem;
+  width: 8rem;
+  padding-right: 1.2rem;
+  padding-left: 1.2rem;
+}
+
+.sidebar[data-collapsed='true'] .brand {
+  justify-content: center;
+  width: 100%;
+}
+
+.sidebar[data-collapsed='true'] .logo {
+  display: none;
+}
+
+.sidebar[data-collapsed='true'] .logoMark {
+  display: block;
+  width: 4.4rem;
+  height: 4.4rem;
+  object-fit: contain;
+}
+
+.sidebar[data-collapsed='true'] .profile {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.sidebar[data-collapsed='true'] .profileText,
+.sidebar[data-collapsed='true'] .sectionLabel,
+.sidebar[data-collapsed='true'] .menuText,
+.sidebar[data-collapsed='true'] .accountText {
+  display: none;
+}
+
+.sidebar[data-collapsed='true'] .serviceRegion {
+  margin-top: var(--space-8);
+}
+
+.sidebar[data-collapsed='true'] .menuLink {
+  justify-content: center;
+  padding-right: 0;
+  padding-left: 0;
+}
+
+.sidebar[data-collapsed='true'] .menuIcon {
+  width: 2.4rem;
+}
+
+.sidebar[data-collapsed='true'] .collapsedHistoryButton {
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  width: 100%;
+  min-height: 6.8rem;
+  margin-top: var(--space-6);
+  padding: var(--space-5) 0 0;
+  border: 0;
+  border-top: 0.1rem solid var(--border-subtle);
+  background: transparent;
+  color: #71808e;
+  font-size: 1.7rem;
+  cursor: pointer;
+}
+
+.sidebar[data-collapsed='true'] .collapsedHistoryButton:hover {
+  color: var(--brand-blue);
+}
+
+.sidebar[data-collapsed='true'] .collapsedHistoryButton:focus-visible {
+  border-radius: var(--radius-md);
+  outline: 0.2rem solid rgba(15, 117, 189, 0.28);
+  outline-offset: 0.2rem;
+}
+
+.sidebar[data-collapsed='true'] .history {
+  display: none;
+}
+
+.sidebar[data-collapsed='true'] .logoutButton,
+.sidebar[data-collapsed='true'] .loginLink {
+  padding: 0;
+  font-size: 1.6rem;
+}
+
+.mainSidebar {
+  flex: 0 0 8rem;
+}
+
+.mainSidebar:not([data-collapsed='true']) {
+  flex-basis: 28rem;
+  width: 28rem;
+  margin-right: -20rem;
+  box-shadow: 1.4rem 0 4rem rgba(15, 23, 42, 0.13);
+}
+
+.overlayBackdrop {
+  position: fixed;
+  inset: 0;
+  padding: 0;
+  border: 0;
+  background: rgba(15, 23, 42, 0.14);
+  cursor: default;
+  z-index: 19;
+}
+
 @media (max-width: 100rem) {
   .sidebar {
     flex-basis: 24rem;
@@ -320,38 +577,62 @@
 }
 
 @media (max-width: 76.7rem) {
-  .sidebar {
-    position: relative;
-    flex-basis: auto;
-    width: 100%;
-    height: auto;
-    padding: var(--space-4);
-    border-right: 0;
-    border-bottom: 0.1rem solid #e8edf2;
+  .sidebar,
+  .sidebar[data-collapsed='true'],
+  .mainSidebar,
+  .mainSidebar:not([data-collapsed='true']) {
+    position: sticky;
+    top: 0;
+    flex: 0 0 6.8rem;
+    width: 6.8rem;
+    height: 100vh;
+    height: 100dvh;
+    margin-right: 0;
+    padding: 1.6rem 0.8rem;
+    border-right: 0.1rem solid #e8edf2;
+    border-bottom: 0;
   }
 
-  .brand {
-    min-height: 3.6rem;
-    margin-bottom: var(--space-6);
+  .sidebar:not([data-collapsed='true']),
+  .mainSidebar:not([data-collapsed='true']) {
+    flex-basis: 26rem;
+    width: 26rem;
+    margin-right: -19.2rem;
+    padding-right: 1.6rem;
+    padding-left: 1.6rem;
+    box-shadow: 1.2rem 0 3.6rem rgba(15, 23, 42, 0.14);
   }
 
-  .logo {
-    width: 11.2rem;
+  .sidebar[data-collapsed='true'] .brand {
+    margin-top: 4.8rem;
   }
 
-  .profile {
-    padding: var(--space-3);
+  .sidebar[data-collapsed='true'] .logoMark {
+    display: block;
+    width: 4rem;
+    height: 4rem;
+  }
+
+  .profileArea {
+    display: block;
+    margin-top: 0;
+  }
+
+  .sidebar[data-collapsed='true'] .profile {
+    justify-content: center;
+    padding-right: 0;
+    padding-left: 0;
   }
 
   .profileMenu {
     top: 50%;
-    right: 0;
-    left: auto;
-    transform: translateY(-50%) translateX(-1rem) scale(0.96);
+    right: auto;
+    left: calc(100% + 0.8rem);
+    transform: translate(-1rem, -50%) scale(0.96);
   }
 
   .profileMenu[data-open='true'] {
-    transform: translateY(-50%) translateX(0) scale(1);
+    transform: translate(0, -50%) scale(1);
   }
 
   .avatar {
@@ -360,27 +641,42 @@
     height: 3.8rem;
   }
 
-  .navigation {
-    margin-top: 0;
-  }
-
   .serviceRegion {
-    margin-top: var(--space-4);
+    display: flex;
+    margin-top: var(--space-8);
   }
 
   .menuList {
-    display: grid;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    display: flex;
+    flex-direction: column;
   }
 
   .menuLink {
-    justify-content: center;
-    min-height: 4.4rem;
-    padding: 0 var(--space-2);
+    min-height: 4.8rem;
   }
 
-  .history,
-  .accountAction {
-    display: none;
+  .sidebar[data-collapsed='true'] .menuLink {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .accountAction,
+  .sidebar[data-collapsed='true'] .accountAction {
+    display: block;
+    padding-top: var(--space-4);
+  }
+
+  .sidebar[data-collapsed='true'] .logoutButton,
+  .sidebar[data-collapsed='true'] .loginLink {
+    padding: 0;
+    font-size: 1.5rem;
+  }
+
+  .collapseButton {
+    display: grid;
+  }
+
+  .overlayBackdrop {
+    display: block;
   }
 }

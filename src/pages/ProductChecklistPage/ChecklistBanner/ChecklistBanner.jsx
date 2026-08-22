@@ -9,7 +9,13 @@ import styles from './ChecklistBanner.module.css';
 const ACCEPT_ATTR = 'image/*';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB, 명세에 없어서 임의 값
 
-export default function ChecklistBanner({ onFileSelected, onBeforeUpload, isPreparingUpload = false }) {
+export default function ChecklistBanner({
+  onFileSelected,
+  onBeforeUpload,
+  isPreparingUpload = false,
+  onPrepareTest,
+  isPreparingTest = false,
+}) {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const location = useLocation();
   const fileInputRef = useRef(null);
@@ -49,62 +55,85 @@ export default function ChecklistBanner({ onFileSelected, onBeforeUpload, isPrep
     return <div className={`${styles.banner} ${styles.skeleton}`} aria-hidden="true" />;
   }
 
-  if (isAuthenticated) {
-    return (
-      <div>
-        <div className={`${styles.banner} ${styles.uploadBanner}`}>
+  return (
+    <div className={styles.bannerStack}>
+      {isAuthenticated ? (
+        <div>
+          <div className={`${styles.banner} ${styles.uploadBanner}`}>
+            <div className={styles.content}>
+              <span className={styles.icon}>
+                <FaFileLines aria-hidden="true" />
+              </span>
+              <div>
+                <p className={styles.title}>내 계약에 맞춰 보기</p>
+                <p className={styles.description}>
+                  임대차계약서를 분석하면 내 상황에 맞는 준비서류를 확인할 수 있어요.
+                </p>
+              </div>
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={ACCEPT_ATTR}
+              onChange={handleFileChange}
+              className={styles.hiddenInput}
+            />
+            <Button
+              type="button"
+              onClick={handleUploadClick}
+              disabled={isPreparingUpload}
+              className={styles.uploadButton}
+            >
+              {isPreparingUpload ? '기존 내역 확인 중...' : '계약서 업로드'}
+            </Button>
+          </div>
+          {fileError && <p className={styles.fileError}>{fileError}</p>}
+        </div>
+      ) : (
+        <div className={`${styles.banner} ${styles.loginBanner}`}>
           <div className={styles.content}>
             <span className={styles.icon}>
               <FaFileLines aria-hidden="true" />
             </span>
             <div>
-              <p className={styles.title}>내 계약에 맞춰 보기</p>
+              <p className={styles.title}>로그인하면 맞춤 확인 가능</p>
               <p className={styles.description}>
-                임대차계약서를 분석하면 내 상황에 맞는 준비서류를 확인할 수 있어요.
+                임대차계약서를 바탕으로 필요한 서류를 확인할 수 있어요.
               </p>
             </div>
           </div>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={ACCEPT_ATTR}
-            onChange={handleFileChange}
-            className={styles.hiddenInput}
-          />
-          <Button
-            type="button"
-            onClick={handleUploadClick}
-            disabled={isPreparingUpload}
-            className={styles.uploadButton}
+          <Link
+            to="/auth/login"
+            state={{ from: location }}
+            className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.md} ${styles.cta}`}
           >
-            {isPreparingUpload ? '기존 내역 확인 중...' : '계약서 업로드'}
-          </Button>
+            로그인하기
+          </Link>
         </div>
-        {fileError && <p className={styles.fileError}>{fileError}</p>}
-      </div>
-    );
-  }
+      )}
 
-  return (
-    <div className={`${styles.banner} ${styles.loginBanner}`}>
-      <div className={styles.content}>
-        <span className={styles.icon}>
-          <FaFileLines aria-hidden="true" />
-        </span>
-        <div>
-        <p className={styles.title}>로그인하면 맞춤 확인 가능</p>
-        <p className={styles.description}>
-          임대차계약서를 바탕으로 필요한 서류를 확인할 수 있어요.
-        </p>
+      <div className={`${styles.banner} ${styles.testBanner}`}>
+        <div className={styles.content}>
+          <span className={styles.icon}>
+            <FaFileLines aria-hidden="true" />
+          </span>
+          <div>
+            <p className={styles.title}>계약서 없이 미리 확인</p>
+            <p className={styles.description}>
+              조건을 직접 선택하고 예상 준비서류를 확인할 수 있어요.
+            </p>
+          </div>
         </div>
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={onPrepareTest}
+          disabled={isPreparingTest}
+          className={styles.uploadButton}
+        >
+          {isPreparingTest ? '모의테스트 준비 중...' : '모의테스트 진행하기'}
+        </Button>
       </div>
-      <Link
-        to="/auth/login"
-        state={{ from: location }}
-        className={`${buttonStyles.button} ${buttonStyles.primary} ${buttonStyles.md} ${styles.cta}`}
-      >
-        로그인하기
-      </Link>
     </div>
   );
 }

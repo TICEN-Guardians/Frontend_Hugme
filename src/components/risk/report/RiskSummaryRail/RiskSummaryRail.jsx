@@ -13,7 +13,7 @@ export default function RiskSummaryRail({ summary, motionSet }) {
       <div className={styles.scoreBlock}>
         <p className={styles.eyebrow}>
           <LuShieldAlert aria-hidden="true" />
-          종합 위험도
+          {summary.scoreEyebrow}
         </p>
         <div className={styles.scoreWrap}>
           <strong className={styles.score}>{summary.totalScore ?? '-'}</strong>
@@ -27,11 +27,15 @@ export default function RiskSummaryRail({ summary, motionSet }) {
       <div className={styles.moneyList}>
         <MoneyItem label="AI 예상 매매가" value={summary.saleLabel} />
         <MoneyItem label="계약 보증금" value={summary.depositLabel} />
-        <MoneyItem
-          label={summary.recoveryTone === 'danger' ? '보증금 회수 부족' : '보증금 회수 상태'}
-          value={summary.recoveryStatusLabel}
-          tone={summary.recoveryTone}
-        />
+        {summary.isDetailed ? (
+          <MoneyItem
+            label={summary.recoveryTone === 'danger' ? '보증금 회수 부족' : '보증금 회수 상태'}
+            value={summary.recoveryStatusLabel}
+            tone={summary.recoveryTone}
+          />
+        ) : (
+          <MoneyItem label="AI 예상 전세가" value={summary.leaseLabel} />
+        )}
       </div>
 
       <div className={styles.divider} />
