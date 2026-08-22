@@ -342,6 +342,10 @@ function toReportViewModel(data) {
     data.dataWarnings,
     data.fallbackFeatures,
   );
+  const depositRecommendation = depositRecommendationViewModel(
+    data.depositRecommendation,
+    isDetailed,
+  );
   const mortgage = numberOrNull(registry?.totalActiveMaxClaimAmount);
   const recoverableAmount = numberOrNull(indicators.recoverableAmount);
   const remaining = numberOrNull(indicators.remainingCollateralCapacity);
@@ -423,6 +427,7 @@ function toReportViewModel(data) {
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
     reliabilityHelp: TERM_HELP.valuationReliability,
     dataQuality,
+    depositRecommendation,
     scenarios: scenarios.map((item) => ({
       ...item,
       progressWidth: Math.max((item.rateValue / maxScenarioRate) * 100, item.rateValue > 0 ? 8 : 0),
@@ -456,6 +461,45 @@ function toReportViewModel(data) {
   };
 }
 
+function depositRecommendationViewModel(value, isDetailed) {
+  if (!value) return null;
+
+  const recommendedLimit = numberOrNull(value.recommendedLimit);
+  const currentDeposit = numberOrNull(value.currentDeposit);
+  const reductionRequired = numberOrNull(value.reductionRequired) ?? 0;
+  if (recommendedLimit == null || currentDeposit == null) return null;
+
+  const unresolvedReasons = (value.unresolvedRiskReasons ?? [])
+    .map((code) => SCORE_FLOOR_REASON[code] ?? code)
+    .filter(Boolean);
+  const withinLimit = value.withinRecommendedLimit === true;
+  const targetScore = numberOrNull(value.targetScoreMax);
+  const targetLabel = targetScore == null
+    ? '가격 위험 낮음 구간'
+    : `가격 위험점수 ${targetScore}점 이하 · 낮음 구간`;
+
+  return {
+    recommendedLimit,
+    recommendedLimitLabel: money(recommendedLimit),
+    currentDepositLabel: money(currentDeposit),
+    reductionRequiredLabel: money(reductionRequired),
+    withinLimit,
+    targetLabel,
+    registryReflected: value.registryReflected === true,
+    provisional: value.provisional === true,
+    adjustmentCanResolveFinalRisk: value.adjustmentCanResolveFinalRisk !== false,
+    unresolvedReasons,
+    title: withinLimit
+      ? '현재 보증금은 가격 위험 낮음 구간 상한 이내입니다.'
+      : `보증금을 ${money(reductionRequired)} 낮추면 가격 위험 낮음 구간에 들어갑니다.`,
+    description: withinLimit
+      ? `${targetLabel}을 유지할 수 있는 상한은 ${money(recommendedLimit)}입니다.`
+      : `현재 보증금 ${money(currentDeposit)}을 ${money(recommendedLimit)} 이하로 조정하는 안입니다.`,
+    basisLabel: isDetailed && value.registryReflected === true
+      ? 'AI 시세와 등기부상 활성 선순위 근저당 반영'
+      : 'AI 시세와 시장지표 기준 · 등기 권리관계 미반영',
+  };
+}
 function dataQualityViewModel(reliability, warnings = [], fallbackFeatures = []) {
   const label = reliabilityLabel(reliability) ?? '확인 불가';
   const tone = reliability === 'HIGH' ? 'high' : reliability === 'LOW' ? 'low' : 'medium';

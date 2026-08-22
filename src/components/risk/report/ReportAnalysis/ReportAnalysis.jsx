@@ -159,10 +159,55 @@ function PriceRiskSection({ report }) {
       </div>
 
       <InsightList insights={report.priceInsights} />
+      {report.depositRecommendation && (
+        <DepositRecommendationCard recommendation={report.depositRecommendation} />
+      )}
     </>
   );
 }
 
+function DepositRecommendationCard({ recommendation }) {
+  return (
+    <div className={`${styles.depositRecommendation} ${recommendation.withinLimit ? styles.withinLimit : ''}`}>
+      <div className={styles.depositRecommendationHeading}>
+        <div>
+          <span>서비스 점수 기준 권장 보증금 상한</span>
+          <TermHelp
+            label="권장 보증금 상한"
+            description="현재 분석의 가격 위험점수가 낮음 구간인 25점 이하가 되도록 기존 점수 규칙을 역산한 최대 보증금입니다."
+          />
+        </div>
+        <strong>{recommendation.recommendedLimitLabel}</strong>
+      </div>
+
+      <div className={styles.depositRecommendationBody}>
+        <div className={styles.depositAdjustment}>
+          <span>현재 {recommendation.currentDepositLabel}</span>
+          <strong aria-hidden="true">→</strong>
+          <span>권장 {recommendation.recommendedLimitLabel}</span>
+        </div>
+        <div>
+          <h3>{recommendation.title}</h3>
+          <p>{recommendation.description}</p>
+          <span className={styles.calculationBasis}>{recommendation.basisLabel}</span>
+        </div>
+      </div>
+
+      {recommendation.provisional && (
+        <p className={styles.recommendationNotice}>
+          <LuTriangleAlert aria-hidden="true" />
+          등기 권리관계를 반영하지 않은 잠정 상한입니다. 정밀진단 결과에서는 상한이 낮아질 수 있습니다.
+        </p>
+      )}
+      {!recommendation.adjustmentCanResolveFinalRisk && recommendation.unresolvedReasons.length > 0 && (
+        <p className={`${styles.recommendationNotice} ${styles.dangerNotice}`}>
+          <LuTriangleAlert aria-hidden="true" />
+          보증금을 조정해도 {recommendation.unresolvedReasons.join(', ')} 항목이 해소되지 않으면 최종 위험등급은 내려가지 않습니다.
+        </p>
+      )}
+    </div>
+  );
+}
 function MarketComparableSection({ comparable }) {
   if (!comparable.available) {
     return (

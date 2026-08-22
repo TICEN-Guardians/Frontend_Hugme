@@ -646,6 +646,109 @@
   font-size: 1.5rem;
 }
 
+.depositRecommendation {
+  display: grid;
+  gap: 2rem;
+  margin-top: 3rem;
+  padding: 2.6rem;
+  border: 0.1rem solid rgba(15, 117, 189, 0.32);
+  border-radius: 1.6rem;
+  background: linear-gradient(135deg, #f7fbff 0%, #eef6fd 100%);
+}
+.depositRecommendation.withinLimit {
+  border-color: rgba(62, 154, 67, 0.3);
+  background: linear-gradient(135deg, #fbfefb 0%, #f0f8f1 100%);
+}
+.depositRecommendationHeading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+.depositRecommendationHeading > div {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  color: #506174;
+  font-size: 1.35rem;
+  font-weight: 750;
+}
+.depositRecommendationHeading strong {
+  color: var(--text-blue-dark);
+  font-size: 2.7rem;
+  font-weight: 850;
+}
+.withinLimit .depositRecommendationHeading strong {
+  color: var(--brand-green);
+}
+.depositRecommendationBody {
+  display: grid;
+  grid-template-columns: minmax(23rem, 0.42fr) minmax(0, 1fr);
+  gap: 2.4rem;
+  align-items: center;
+}
+.depositAdjustment {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.2rem;
+  min-height: 7.2rem;
+  padding: 1.5rem;
+  border: 0.1rem solid #dce7f1;
+  border-radius: 1.2rem;
+  background: #fff;
+  color: #58677a;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+.depositAdjustment strong {
+  color: var(--brand-blue);
+  font-size: 1.8rem;
+}
+.depositRecommendationBody h3,
+.depositRecommendationBody p {
+  margin: 0;
+}
+.depositRecommendationBody h3 {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  line-height: 1.45;
+}
+.depositRecommendationBody p {
+  margin-top: 0.7rem;
+  color: var(--text-secondary);
+  font-size: 1.35rem;
+  line-height: 1.6;
+}
+.calculationBasis {
+  display: inline-block;
+  margin-top: 1rem;
+  color: #607286;
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+.recommendationNotice {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  padding-top: 1.5rem;
+  border-top: 0.1rem solid rgba(15, 117, 189, 0.16);
+  color: #6b7280;
+  font-size: 1.28rem;
+  line-height: 1.6;
+}
+.recommendationNotice svg {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  color: #b7791f;
+}
+.dangerNotice {
+  color: #9f2d27;
+}
+.dangerNotice svg {
+  color: #d94841;
+}
 .comparablePanel {
   display: grid;
   gap: 2.4rem;
@@ -960,7 +1063,8 @@
 
 @media (max-width: 900px) {
   .comparableContent,
-  .dataQualityPanel {
+  .dataQualityPanel,
+  .depositRecommendationBody {
     grid-template-columns: 1fr;
   }
 }
@@ -989,6 +1093,18 @@
 
   .dataQualityDetails {
     grid-template-columns: 1fr;
+  }
+
+  .depositRecommendation {
+    padding: 2rem 1.6rem;
+  }
+
+  .depositRecommendationHeading {
+    flex-direction: column;
+  }
+
+  .depositAdjustment {
+    flex-wrap: wrap;
   }
 }
 
