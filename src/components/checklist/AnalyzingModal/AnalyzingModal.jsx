@@ -3,7 +3,7 @@ import styles from './AnalyzingModal.module.css';
 
 export default function AnalyzingModal({ isOpen }) {
   return (
-    <Modal isOpen={isOpen} onClose={() => {}}>
+    <Modal isOpen={isOpen} onClose={() => {}} showCloseButton={false}>
       <div className={styles.content}>
         <span className={styles.spinner} aria-hidden="true" />
         <div>

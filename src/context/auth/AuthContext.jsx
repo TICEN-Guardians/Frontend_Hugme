@@ -23,10 +23,12 @@ export function AuthProvider({ children }) {
   const location = useLocation();
   const navigate = useNavigate();
   const authChannelRef = useRef(null);
+  const authenticatedRef = useRef(false);
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAuthLoading, setIsAuthLoading] = useState(true);
   const [isIdleLogoutNoticeOpen, setIsIdleLogoutNoticeOpen] = useState(false);
+  const [isSessionExpiredNoticeOpen, setIsSessionExpiredNoticeOpen] = useState(false);
   const AUTH_ENTRY_PATHS = [
     '/auth/login',
     '/auth/signup',
@@ -53,12 +55,15 @@ export function AuthProvider({ children }) {
       }
 
       clearAccessToken();
+      authenticatedRef.current = false;
       setUser(null);
       setIsAuthenticated(false);
       setIsAuthLoading(false);
 
       if (event.data?.reason === 'IDLE') {
         setIsIdleLogoutNoticeOpen(true);
+      } else {
+        setIsSessionExpiredNoticeOpen(true);
       }
 
       navigate('/', { replace: true });
@@ -85,6 +90,7 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     if (AUTH_ENTRY_PATHS.includes(location.pathname)) {
+      authenticatedRef.current = false;
       setUser(null);
       setIsAuthenticated(false);
       setIsAuthLoading(false);
@@ -99,12 +105,14 @@ export function AuthProvider({ children }) {
       .then((me) => {
         if (ignore) return;
 
+        authenticatedRef.current = true;
         setUser(me);
         setIsAuthenticated(true);
       })
       .catch(() => {
         if (ignore) return;
 
+        authenticatedRef.current = false;
         setUser(null);
         setIsAuthenticated(false);
       })
@@ -121,11 +129,16 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     const handleAuthExpired = () => {
+      const wasAuthenticated = authenticatedRef.current;
+
+      clearAccessToken();
+      authenticatedRef.current = false;
       setUser(null);
       setIsAuthenticated(false);
+      setIsAuthLoading(false);
 
-      if (location.pathname.startsWith('/risk')) {
-        navigate('/', { replace: true });
+      if (wasAuthenticated) {
+        setIsSessionExpiredNoticeOpen(true);
       }
     };
 
@@ -134,7 +147,7 @@ export function AuthProvider({ children }) {
     return () => {
       window.removeEventListener('auth:expired', handleAuthExpired);
     };
-  }, [location.pathname, navigate]);
+  }, []);
 
   const signup = useCallback((email, password, name) => signupRequest(email, password, name), []);
 
@@ -144,6 +157,7 @@ export function AuthProvider({ children }) {
     await loginRequest(email, password);
     const me = await getMe();
 
+    authenticatedRef.current = true;
     setUser(me);
     setIsAuthenticated(true);
 
@@ -155,6 +169,7 @@ export function AuthProvider({ children }) {
     await logoutRequest();
   } finally {
     clearAccessToken();
+    authenticatedRef.current = false;
     setUser(null);
     setIsAuthenticated(false);
 
@@ -306,6 +321,11 @@ useEffect(() => {
     [user, isAuthenticated, isAuthLoading, signup, checkEmail, login, logout],
   );
 
+  const handleSessionExpiredConfirm = () => {
+    setIsSessionExpiredNoticeOpen(false);
+    navigate('/auth/login', { replace: true });
+  };
+
   return (
     <AuthContext.Provider value={value}>
       {children}
@@ -317,6 +337,15 @@ useEffect(() => {
         actionLabel="확인"
         onAction={() => setIsIdleLogoutNoticeOpen(false)}
         onClose={() => setIsIdleLogoutNoticeOpen(false)}
+      />
+      <SuccessModal
+        isOpen={isSessionExpiredNoticeOpen}
+        tone="error"
+        title="로그아웃되었습니다."
+        description="다시 로그인해주세요."
+        actionLabel="다시 로그인"
+        onAction={handleSessionExpiredConfirm}
+        onClose={handleSessionExpiredConfirm}
       />
     </AuthContext.Provider>
   );

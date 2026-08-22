@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   HiArrowPathRoundedSquare,
@@ -61,6 +62,10 @@ const GROUPS = [
 export default function ProductsPage() {
   const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, []);
 
   const handleProductClick = (product) => {
     // 기존 신청 확인은 상세 화면의 계약서 업로드 시점에 수행한다.
