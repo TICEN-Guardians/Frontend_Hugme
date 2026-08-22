@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
-import { FiCheck, FiFileText, FiShield } from 'react-icons/fi';
+import { FiCheck, FiFileText, FiMessageCircle, FiShield } from 'react-icons/fi';
 import { Link } from 'react-router-dom';
 import Xarrow, { Xwrapper, useXarrow } from 'react-xarrows';
 import LandingIntro from './LandingIntro/LandingIntro.jsx';
@@ -12,24 +12,22 @@ const FEATURE_REVEAL_DURATION = 0.62;
 const FEATURE_HOLD_DURATION = 1.2;
 const ROUTE_DRAW_DURATION = 2.35;
 const TABLET_ROUTE_DRAW_DURATION = 3.6;
+const COMPLETE_REVEAL_DURATION = 0.65;
+const START_BUTTON_REVEAL_GAP = 0.5;
 
 const RISK_REVEAL_DELAY = 1.15;
 const RISK_ROUTE_DELAY = RISK_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
 const CHECKLIST_REVEAL_DELAY = RISK_ROUTE_DELAY + ROUTE_DRAW_DURATION;
 const CHECKLIST_ROUTE_DELAY = CHECKLIST_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const GUIDE_REVEAL_DELAY = CHECKLIST_ROUTE_DELAY + ROUTE_DRAW_DURATION;
-const GUIDE_ROUTE_DELAY = GUIDE_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const STATUS_REVEAL_DELAY = GUIDE_ROUTE_DELAY + ROUTE_DRAW_DURATION;
-const STATUS_ROUTE_DELAY = STATUS_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const COMPLETE_REVEAL_DELAY = STATUS_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const PREPARATION_REVEAL_DELAY = CHECKLIST_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const PREPARATION_ROUTE_DELAY = PREPARATION_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const COMPLETE_REVEAL_DELAY = PREPARATION_ROUTE_DELAY + ROUTE_DRAW_DURATION;
 const TABLET_RISK_ROUTE_DELAY = RISK_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
 const TABLET_CHECKLIST_REVEAL_DELAY = TABLET_RISK_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
 const TABLET_CHECKLIST_ROUTE_DELAY = TABLET_CHECKLIST_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const TABLET_GUIDE_REVEAL_DELAY = TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
-const TABLET_GUIDE_ROUTE_DELAY = TABLET_GUIDE_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const TABLET_STATUS_REVEAL_DELAY = TABLET_GUIDE_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
-const TABLET_STATUS_ROUTE_DELAY = TABLET_STATUS_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
-const TABLET_COMPLETE_REVEAL_DELAY = TABLET_STATUS_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_PREPARATION_REVEAL_DELAY = TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_PREPARATION_ROUTE_DELAY = TABLET_PREPARATION_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const TABLET_COMPLETE_REVEAL_DELAY = TABLET_PREPARATION_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
 const TABLET_JOURNEY_QUERY = '(min-width: 768px) and (max-width: 1439px)';
 
 const FEATURES = [
@@ -40,7 +38,7 @@ const FEATURES = [
     className: styles.riskPoint,
     to: '/risk/new',
     label: '전세 위험도 진단',
-    description: '계약 전 집의 위험을 확인해요.',
+    description: '계약 전 집의 위험을 분석해요.\n보증금 회수 가능성을 확인해요.',
     delay: RISK_REVEAL_DELAY,
     tabletDelay: RISK_REVEAL_DELAY,
     exitAnchor: 'riskExit',
@@ -52,69 +50,46 @@ const FEATURES = [
     className: styles.checklistPoint,
     to: '/guarantee-checklist',
     label: '보증 체크리스트',
-    description: '계약서로 필요한 서류만 확인해요.',
+    description: '계약서로 필요한 서류를 골라요.\n맞춤 준비 목록을 확인해요.',
     delay: CHECKLIST_REVEAL_DELAY,
     tabletDelay: TABLET_CHECKLIST_REVEAL_DELAY,
     entryAnchor: 'checklistEntry',
     exitAnchor: 'checklistExit',
   },
   {
-    key: 'issue-guide',
+    key: 'preparation-guide',
     type: 'robot',
-    className: styles.guidePoint,
+    icon: 'chat',
+    className: styles.preparationPoint,
     to: '/doc-chat',
-    eyebrow: '안내 챗봇',
-    step: '01',
-    label: '발급처 안내',
-    description: '서류별 발급처와 방법을 안내해요.',
-    delay: GUIDE_REVEAL_DELAY,
-    tabletDelay: TABLET_GUIDE_REVEAL_DELAY,
-    entryAnchor: 'guideEntry',
-    exitAnchor: 'guideExit',
-  },
-  {
-    key: 'status-guide',
-    type: 'robot',
-    className: styles.statusPoint,
-    to: '/doc-chat',
-    eyebrow: '안내 챗봇',
-    step: '02',
-    label: '준비 현황 확인',
-    description: '준비한 서류와 남은 서류를 확인해요.',
-    delay: STATUS_REVEAL_DELAY,
-    tabletDelay: TABLET_STATUS_REVEAL_DELAY,
-    entryAnchor: 'statusEntry',
-    exitAnchor: 'statusExit',
+    label: '서류 준비 도우미',
+    description: '서류별 발급처와 방법을 안내해요.\n준비한 서류와 남은 서류를 확인해요.',
+    delay: PREPARATION_REVEAL_DELAY,
+    tabletDelay: TABLET_PREPARATION_REVEAL_DELAY,
+    entryAnchor: 'preparationEntry',
+    exitAnchor: 'preparationExit',
   },
 ];
 
 const CONNECTIONS = [
   { start: 'riskExit', end: 'checklistEntry', startAnchor: 'bottom', endAnchor: 'left', delay: RISK_ROUTE_DELAY, tabletDelay: TABLET_RISK_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
-  { start: 'checklistExit', end: 'guideEntry', startAnchor: 'top', endAnchor: 'left', delay: CHECKLIST_ROUTE_DELAY, tabletDelay: TABLET_CHECKLIST_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
-  { start: 'guideExit', end: 'statusEntry', startAnchor: 'right', endAnchor: 'top', delay: GUIDE_ROUTE_DELAY, tabletDelay: TABLET_GUIDE_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
-  { start: 'statusExit', end: 'completeEntry', startAnchor: 'right', endAnchor: 'bottom', delay: STATUS_ROUTE_DELAY, tabletDelay: TABLET_STATUS_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.9 },
+  { start: 'checklistExit', end: 'preparationEntry', startAnchor: 'right', endAnchor: 'left', delay: CHECKLIST_ROUTE_DELAY, tabletDelay: TABLET_CHECKLIST_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.35 },
+  { start: 'preparationExit', end: 'completeEntry', startAnchor: 'right', endAnchor: 'bottom', delay: PREPARATION_ROUTE_DELAY, tabletDelay: TABLET_PREPARATION_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
 ];
 
 const JOURNEY_BUBBLES = [
-  { key: 'safe', text: '안전하네, 계약해야겠다!', className: styles.safeBubble, connectionIndex: 0, tabletProgress: 0.22 },
-  { key: 'documents', text: '보증보험엔 어떤 서류가 필요하지?', className: styles.documentsBubble, connectionIndex: 0, tabletProgress: 0.72 },
-  { key: 'required-documents', text: '이 서류들이 필요하구나!', className: styles.requiredDocumentsBubble, connectionIndex: 1, tabletProgress: 0.22 },
-  { key: 'issue-place', text: '이 서류들, 어디서 발급받지?', className: styles.issuePlaceBubble, connectionIndex: 1, tabletProgress: 0.72 },
-  { key: 'issued-documents', text: '필요한 서류를 발급받았어!', className: styles.issuedDocumentsBubble, connectionIndex: 2, tabletProgress: 0.22 },
-  { key: 'upload-status', text: '준비한 서류를 올리고,\n어떤 서류가 남았는지 확인해볼까?', className: styles.uploadStatusBubble, connectionIndex: 2, tabletProgress: 0.72 },
+  { key: 'risk-to-checklist', text: '안전하네, 계약해야겠다!\n보증보험엔 어떤 서류가 필요하지?', className: styles.riskToChecklistBubble, connectionIndex: 0, tabletProgress: 0.5 },
+  { key: 'checklist-to-preparation', text: '필요한 서류는 알겠어.\n발급처와 준비 방법을 알아볼까?', className: styles.checklistToPreparationBubble, connectionIndex: 1, tabletProgress: 0.5 },
+  { key: 'preparation-to-complete', text: '발급부터 준비 현황까지 확인했어!\n필요한 서류가 모두 준비됐어.', className: styles.preparationToCompleteBubble, connectionIndex: 2, tabletProgress: 0.5 },
 ];
 
 const MOBILE_JOURNEY_ITEMS = [
   { key: 'risk', type: 'feature', featureKey: 'risk', initial: true },
-  { key: 'safe', type: 'thought', text: '안전하네, 계약해야겠다!', tone: 'dark' },
-  { key: 'documents', type: 'thought', text: '보증보험엔 어떤 서류가 필요하지?', tone: 'blue', compact: true },
+  { key: 'risk-to-checklist', type: 'thought', text: '안전하네, 계약해야겠다!\n보증보험엔 어떤 서류가 필요하지?', tone: 'blue' },
   { key: 'checklist', type: 'feature', featureKey: 'checklist' },
-  { key: 'required-documents', type: 'thought', text: '이 서류들이 필요하구나!', tone: 'dark' },
-  { key: 'issue-place', type: 'thought', text: '이 서류들, 어디서 발급받지?', tone: 'blue', compact: true },
-  { key: 'issue-guide', type: 'feature', featureKey: 'issue-guide' },
-  { key: 'issued-documents', type: 'thought', text: '필요한 서류를 발급받았어!', tone: 'dark' },
-  { key: 'upload-status', type: 'thought', text: '준비한 서류를 올리고,\n어떤 서류가 남았는지 확인해볼까?', tone: 'blue', compact: true },
-  { key: 'status-guide', type: 'feature', featureKey: 'status-guide' },
+  { key: 'checklist-to-preparation', type: 'thought', text: '필요한 서류는 알겠어.\n발급처와 준비 방법을 알아볼까?', tone: 'blue' },
+  { key: 'preparation-guide', type: 'feature', featureKey: 'preparation-guide' },
+  { key: 'preparation-to-complete', type: 'thought', text: '발급부터 준비 현황까지 확인했어!\n필요한 서류가 모두 준비됐어.', tone: 'blue' },
   { key: 'complete', type: 'complete' },
 ];
 
@@ -152,6 +127,7 @@ function ShapeOutline({ type }) {
 function FeatureIcon({ icon }) {
   if (icon === 'shield') return <FiShield />;
   if (icon === 'document') return <FiFileText />;
+  if (icon === 'chat') return <FiMessageCircle />;
   return null;
 }
 
@@ -179,11 +155,6 @@ function FeaturePoint({ feature, prefersReducedMotion, isTabletLayout }) {
                 <FeatureIcon icon={feature.icon} />
               </span>
             )}
-            {feature.eyebrow && (
-              <span className={styles.chatbotEyebrow}>
-                {feature.eyebrow}<em>{feature.step}</em>
-              </span>
-            )}
             <strong>{feature.label}</strong>
             <small>{feature.description}</small>
           </span>
@@ -203,7 +174,7 @@ function CompletePoint({ prefersReducedMotion, isTabletLayout }) {
         className={styles.completeBox}
         initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14, scale: prefersReducedMotion ? 1 : 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        transition={{ duration: prefersReducedMotion ? 0.2 : 0.65, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: prefersReducedMotion ? 0.2 : COMPLETE_REVEAL_DURATION, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
       >
         <motion.span
           className={styles.completeGlow}
@@ -213,7 +184,38 @@ function CompletePoint({ prefersReducedMotion, isTabletLayout }) {
         />
         <span className={styles.completeIcon} aria-hidden="true"><FiCheck /></span>
         <strong>서류 준비 완료!</strong>
-        <small>보증보험을 신청할 준비가 끝났어요.</small>
+        <small>필요한 보증보험 서류가 모두 준비됐어요.<br />준비한 서류로 보증보험을 신청하면 돼요.</small>
+      </motion.div>
+    </div>
+  );
+}
+
+function ResponsiveStartButton({ prefersReducedMotion, isTabletLayout }) {
+  const revealDelay = TABLET_COMPLETE_REVEAL_DELAY + COMPLETE_REVEAL_DURATION + START_BUTTON_REVEAL_GAP;
+
+  return (
+    <motion.div
+      className={styles.responsiveStartButtonWrap}
+      initial={{ opacity: isTabletLayout ? 0 : 1, y: isTabletLayout && !prefersReducedMotion ? 12 : 0, scale: isTabletLayout && !prefersReducedMotion ? 0.96 : 1 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: prefersReducedMotion || !isTabletLayout ? 0.2 : 0.45, delay: prefersReducedMotion || !isTabletLayout ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <Link className={styles.responsiveStartButton} to="/auth/login">HUGME 시작하기</Link>
+    </motion.div>
+  );
+}
+
+function DesktopStartButton({ prefersReducedMotion }) {
+  const revealDelay = COMPLETE_REVEAL_DELAY + COMPLETE_REVEAL_DURATION + START_BUTTON_REVEAL_GAP;
+
+  return (
+    <div className={styles.desktopStartButtonWrap}>
+      <motion.div
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12, scale: prefersReducedMotion ? 1 : 0.96 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: prefersReducedMotion ? 0.2 : 0.45, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <Link className={styles.desktopStartButton} to="/auth/login">HUGME 시작하기</Link>
       </motion.div>
     </div>
   );
@@ -230,11 +232,6 @@ function MobileFeatureCard({ feature }) {
               <FeatureIcon icon={feature.icon} />
             </span>
           )}
-          {feature.eyebrow && (
-            <span className={styles.chatbotEyebrow}>
-              {feature.eyebrow}<em>{feature.step}</em>
-            </span>
-          )}
           <strong>{feature.label}</strong>
           <small>{feature.description}</small>
         </span>
@@ -248,7 +245,7 @@ function MobileCompleteCard() {
     <div className={`${styles.completeBox} ${styles.mobileCompleteBox}`}>
       <span className={styles.completeIcon} aria-hidden="true"><FiCheck /></span>
       <strong>서류 준비 완료!</strong>
-      <small>보증보험을 신청할 준비가 끝났어요.</small>
+      <small>필요한 보증보험 서류가 모두 준비됐어요.<br />준비한 서류로 보증보험을 신청하면 돼요.</small>
     </div>
   );
 }
@@ -270,7 +267,7 @@ function MobileJourneyItem({ item, prefersReducedMotion }) {
       if (!entry.isIntersecting) return;
       setIsVisible(true);
       observer.disconnect();
-    }, { threshold: 0.08, rootMargin: '0px 0px -50% 0px' });
+    }, { threshold: 0.01, rootMargin: '0px 0px -15% 0px' });
 
     observer.observe(element);
     return () => observer.disconnect();
@@ -544,9 +541,8 @@ export default function LandingPage() {
     const completedRoutes = new Set();
     const scrollRoutes = [
       { start: TABLET_RISK_ROUTE_DELAY, end: TABLET_RISK_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-checklist' },
-      { start: TABLET_CHECKLIST_ROUTE_DELAY, end: TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-issue-guide' },
-      { start: TABLET_GUIDE_ROUTE_DELAY, end: TABLET_GUIDE_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-status-guide' },
-      { start: TABLET_STATUS_ROUTE_DELAY, end: TABLET_STATUS_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-complete' },
+      { start: TABLET_CHECKLIST_ROUTE_DELAY, end: TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-preparation-guide' },
+      { start: TABLET_PREPARATION_ROUTE_DELAY, end: TABLET_PREPARATION_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-complete' },
     ];
 
     const getTargetScroll = (id) => {
@@ -618,6 +614,7 @@ export default function LandingPage() {
             <div className={styles.titleGroup}>
               <p className={styles.eyebrow}>나의 안전한 전세 여정</p>
               <h1 id="landing-title">전세위험진단부터 보증보험 서류 준비까지</h1>
+              <DesktopStartButton prefersReducedMotion={prefersReducedMotion} />
             </div>
             <Xwrapper>
               <div ref={canvasRef} className={styles.journeyCanvas}>
@@ -628,9 +625,7 @@ export default function LandingPage() {
               </div>
             </Xwrapper>
             <MobileJourney prefersReducedMotion={prefersReducedMotion} />
-            <div className={styles.responsiveStartButtonWrap}>
-              <Link className={styles.responsiveStartButton} to="/auth/login">HUGME 시작하기</Link>
-            </div>
+            <ResponsiveStartButton prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />
           </motion.section>
         )}
       </AnimatePresence>
