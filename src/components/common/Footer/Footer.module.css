@@ -1,117 +1,144 @@
 .footer {
   box-sizing: border-box;
   width: 100%;
-  min-height: var(--footer-height);
-  background: var(--footer-bg);
-  color: var(--footer-text);
+  border-top: 0.1rem solid #e3e6e8;
+  background: #fff;
+  color: #59616a;
 }
 
 .inner {
-  margin: 0 auto;
-  min-height: var(--footer-height);
-  padding-top: 1.8rem;
-  padding-bottom: 1.8rem;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 9.6rem;
+  display: flex;
+  min-height: 7.2rem;
   align-items: center;
-  justify-items: stretch;
+  justify-content: space-between;
+  gap: var(--space-8);
+  padding-top: var(--space-4);
+  padding-bottom: var(--space-4);
+  font-size: 1.3rem;
+  line-height: 1.5;
 }
 
-.brandCol {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-self: start;
-  align-self: center;
-  text-align: left;
-}
-
-.logo {
-  display: block;
-  width: 18rem;
-  height: auto;
-  margin-bottom: 0.8rem;
-}
-
-.brandText {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  justify-content: center;
-  text-align: left;
-}
-
-.tagline,
-.copyright {
-  font-size: 1.4rem;
-  color: var(--footer-text-muted);
-  line-height: 1.45;
+.inner p {
   margin: 0;
 }
 
-.tagline {
-  margin-bottom: 0.2rem;
-}
-
-.linkCol {
+.location,
+.info {
   display: flex;
-  flex-direction: column;
-  gap: 1.4rem;
   align-items: center;
-  text-align: center;
 }
 
-.linkCol:last-child {
-  align-items: flex-end;
-  text-align: right;
+.location {
+  min-width: 0;
+  gap: var(--space-3);
 }
 
-.linkCol a {
-  font-size: 1.5rem;
+.locationIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 3.2rem;
+  width: 3.2rem;
+  height: 3.2rem;
+  border: 0.1rem solid #dfe3e6;
+  border-radius: 50%;
+  color: #4c545c;
+  font-size: 1.2rem;
+}
+
+.address {
+  color: #343a40;
+  font-style: normal;
   font-weight: 600;
-  color: var(--footer-text);
-  text-decoration: none;
+  white-space: nowrap;
 }
 
-.linkCol a:hover {
-  color: var(--footer-text-muted);
+.postalCode {
+  margin-left: var(--space-2);
+  color: #8a9198;
+  font-size: 1.2rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
 }
 
-@media (max-width: 140rem) {
+.info {
+  flex: 0 0 auto;
+  gap: var(--space-5);
+  white-space: nowrap;
+}
+
+.tagline {
+  color: #687078;
+}
+
+.divider {
+  width: 0.1rem;
+  height: 1.4rem;
+  background: #d9dde0;
+}
+
+.copyright {
+  color: #92989e;
+  font-size: 1.2rem;
+  letter-spacing: 0.01em;
+}
+
+@media (max-width: 100rem) {
   .inner {
-    gap: var(--space-10);
-  }
-}
-
-@media (max-width: 90rem) {
-  .inner {
-    grid-template-columns: 1fr 1fr;
-    gap: var(--space-6);
-  }
-
-  .brandCol {
-    grid-column: 1 / -1;
-  }
-
-  .linkCol {
     align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 9rem;
+  }
+
+  .info {
+    gap: var(--space-3);
+  }
+
+  .address,
+  .info {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 76.7rem) {
+  .inner {
+    min-height: 0;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
     text-align: left;
   }
 
-  .linkCol:last-child {
+  .location,
+  .info {
     align-items: flex-start;
-    text-align: left;
-  }
-}
-
-@media (max-width: 56rem) {
-  .inner {
-    grid-template-columns: 1fr;
-    gap: var(--space-5);
+    justify-content: flex-start;
   }
 
-  .logo {
-    width: 15.6rem;
+  .address,
+  .info {
+    white-space: normal;
+  }
+
+  .locationIcon,
+  .divider {
+    display: none;
+  }
+
+  .info {
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .address {
+    line-height: 1.65;
+    word-break: keep-all;
+  }
+
+  .postalCode {
+    display: inline-block;
   }
 }
