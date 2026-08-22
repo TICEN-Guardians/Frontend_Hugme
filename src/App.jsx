@@ -57,10 +57,10 @@ export default function App() {
           <Route path="/products" element={<ProductsPage />} />
           <Route path="/products/:productCode/checklist" element={<ProductChecklistPage />} />
           <Route path="/user-chat" element={<ConditionChat />} />
+          <Route path="/main" element={<MainPage />} />
           <Route element={<ProtectedRoute />}>
             <Route path="/doc-chat" element={<DocumentChat />} />
             <Route path="/oauth/kakao/message/callback" element={<KakaoMessageCallbackPage />} />
-            <Route path="/main" element={<MainPage />} />
           </Route>
         </Route>
 

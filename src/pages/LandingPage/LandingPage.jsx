@@ -7,6 +7,7 @@ import LandingIntro from './LandingIntro/LandingIntro.jsx';
 import styles from './LandingPage.module.css';
 
 const INTRO_DURATION_MS = 4000;
+const LANDING_ANIMATION_SEEN_KEY = 'hugme:landing-animation-seen';
 const SCENE_EASE = [0.65, 0, 0.35, 1];
 const FEATURE_REVEAL_DURATION = 0.62;
 const FEATURE_HOLD_DURATION = 1.2;
@@ -30,13 +31,30 @@ const TABLET_PREPARATION_ROUTE_DELAY = TABLET_PREPARATION_REVEAL_DELAY + FEATURE
 const TABLET_COMPLETE_REVEAL_DELAY = TABLET_PREPARATION_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
 const TABLET_JOURNEY_QUERY = '(min-width: 768px) and (max-width: 1439px)';
 
+const hasSeenLandingAnimation = () => {
+  if (typeof window === 'undefined') return false;
+
+  try {
+    return window.sessionStorage.getItem(LANDING_ANIMATION_SEEN_KEY) === 'true';
+  } catch {
+    return false;
+  }
+};
+
+const rememberLandingAnimation = () => {
+  try {
+    window.sessionStorage.setItem(LANDING_ANIMATION_SEEN_KEY, 'true');
+  } catch {
+    // 저장소를 사용할 수 없는 환경에서는 현재 방문의 애니메이션만 정상적으로 진행한다.
+  }
+};
+
 const FEATURES = [
   {
     key: 'risk',
     type: 'house',
     icon: 'shield',
     className: styles.riskPoint,
-    to: '/risk/new',
     label: '전세 위험도 진단',
     description: '계약 전 집의 위험을 분석해요.\n보증금 회수 가능성을 확인해요.',
     delay: RISK_REVEAL_DELAY,
@@ -48,7 +66,6 @@ const FEATURES = [
     type: 'document',
     icon: 'document',
     className: styles.checklistPoint,
-    to: '/guarantee-checklist',
     label: '보증 체크리스트',
     description: '계약서로 필요한 서류를 골라요.\n맞춤 준비 목록을 확인해요.',
     delay: CHECKLIST_REVEAL_DELAY,
@@ -61,7 +78,6 @@ const FEATURES = [
     type: 'robot',
     icon: 'chat',
     className: styles.preparationPoint,
-    to: '/doc-chat',
     label: '서류 준비 도우미',
     description: '서류별 발급처와 방법을 안내해요.\n준비한 서류와 남은 서류를 확인해요.',
     delay: PREPARATION_REVEAL_DELAY,
@@ -141,10 +157,10 @@ function FeaturePoint({ feature, prefersReducedMotion, isTabletLayout }) {
     <div id={`journey-${feature.key}`} className={`${styles.featurePosition} ${feature.className}`}>
       <RouteAnchor anchorKey={feature.entryAnchor} kind="entry" />
       <RouteAnchor anchorKey={feature.exitAnchor} kind="exit" />
-      <Link className={styles.featureLink} to={feature.to} aria-label={`${feature.label} 바로가기`}>
+      <div className={styles.featureLink}>
         <motion.div
           className={`${styles.featureBox} ${styles[`${feature.type}Box`]}`}
-          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 16, scale: prefersReducedMotion ? 1 : 0.95 }}
+          initial={prefersReducedMotion ? false : { opacity: 0, y: 16, scale: 0.95 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}
           transition={{ duration: prefersReducedMotion ? 0.2 : FEATURE_REVEAL_DURATION, delay: prefersReducedMotion ? 0 : (isTabletLayout ? feature.tabletDelay : feature.delay), ease: [0.16, 1, 0.3, 1] }}
         >
@@ -159,7 +175,7 @@ function FeaturePoint({ feature, prefersReducedMotion, isTabletLayout }) {
             <small>{feature.description}</small>
           </span>
         </motion.div>
-      </Link>
+      </div>
     </div>
   );
 }
@@ -172,7 +188,7 @@ function CompletePoint({ prefersReducedMotion, isTabletLayout }) {
       <RouteAnchor anchorKey="completeEntry" kind="entry" />
       <motion.div
         className={styles.completeBox}
-        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14, scale: prefersReducedMotion ? 1 : 0.92 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 14, scale: 0.92 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0.2 : COMPLETE_REVEAL_DURATION, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
       >
@@ -196,11 +212,11 @@ function ResponsiveStartButton({ prefersReducedMotion, isTabletLayout }) {
   return (
     <motion.div
       className={styles.responsiveStartButtonWrap}
-      initial={{ opacity: isTabletLayout ? 0 : 1, y: isTabletLayout && !prefersReducedMotion ? 12 : 0, scale: isTabletLayout && !prefersReducedMotion ? 0.96 : 1 }}
+      initial={prefersReducedMotion ? false : { opacity: isTabletLayout ? 0 : 1, y: isTabletLayout ? 12 : 0, scale: isTabletLayout ? 0.96 : 1 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       transition={{ duration: prefersReducedMotion || !isTabletLayout ? 0.2 : 0.45, delay: prefersReducedMotion || !isTabletLayout ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
     >
-      <Link className={styles.responsiveStartButton} to="/auth/login">HUGME 시작하기</Link>
+      <Link className={styles.responsiveStartButton} to="/main">HUGME 시작하기</Link>
     </motion.div>
   );
 }
@@ -211,11 +227,11 @@ function DesktopStartButton({ prefersReducedMotion }) {
   return (
     <div className={styles.desktopStartButtonWrap}>
       <motion.div
-        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 12, scale: prefersReducedMotion ? 1 : 0.96 }}
+        initial={prefersReducedMotion ? false : { opacity: 0, y: 12, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: prefersReducedMotion ? 0.2 : 0.45, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
       >
-        <Link className={styles.desktopStartButton} to="/auth/login">HUGME 시작하기</Link>
+        <Link className={styles.desktopStartButton} to="/main">HUGME 시작하기</Link>
       </motion.div>
     </div>
   );
@@ -223,7 +239,7 @@ function DesktopStartButton({ prefersReducedMotion }) {
 
 function MobileFeatureCard({ feature }) {
   return (
-    <Link className={`${styles.featureLink} ${styles.mobileFeatureLink}`} to={feature.to} aria-label={`${feature.label} 바로가기`}>
+    <div className={`${styles.featureLink} ${styles.mobileFeatureLink}`}>
       <div className={`${styles.featureBox} ${styles.mobileFeatureBox} ${styles[`${feature.type}Box`]}`}>
         <ShapeOutline type={feature.type} />
         <span className={styles.featureCopy}>
@@ -236,7 +252,7 @@ function MobileFeatureCard({ feature }) {
           <small>{feature.description}</small>
         </span>
       </div>
-    </Link>
+    </div>
   );
 }
 
@@ -304,18 +320,19 @@ function MobileJourney({ prefersReducedMotion }) {
   );
 }
 
-function JourneyBubble({ bubble, canvasRef, prefersReducedMotion, routeRevision }) {
+function JourneyBubble({
+  bubble,
+  canvasRef,
+  prefersReducedMotion,
+  routeRevision,
+  skipAnimation = false,
+}) {
   const pointRef = useRef(null);
   const routeProgressRef = useRef({ desktop: null, tablet: bubble.tabletProgress });
-  const [routeSync, setRouteSync] = useState(prefersReducedMotion ? { delay: 0 } : null);
-  const isRouteReady = prefersReducedMotion || routeSync?.left !== undefined;
+  const [routeSync, setRouteSync] = useState(null);
+  const isRouteReady = routeSync?.left !== undefined;
 
   useLayoutEffect(() => {
-    if (prefersReducedMotion) {
-      setRouteSync({ delay: 0 });
-      return undefined;
-    }
-
     const connection = CONNECTIONS[bubble.connectionIndex];
     const routeKey = getRouteKey(connection);
     let retryId = 0;
@@ -391,7 +408,9 @@ function JourneyBubble({ bubble, canvasRef, prefersReducedMotion, routeRevision 
       setRouteSync((previous) => ({
         left: screenPoint.x - canvasRect.left,
         top: screenPoint.y - canvasRect.top,
-        delay: previous?.delay ?? Math.max(0, routeDuration * progress - 0.08),
+        delay: skipAnimation || prefersReducedMotion
+          ? 0
+          : previous?.delay ?? Math.max(0, routeDuration * progress - 0.08),
       }));
     };
 
@@ -401,16 +420,16 @@ function JourneyBubble({ bubble, canvasRef, prefersReducedMotion, routeRevision 
       cancelled = true;
       window.clearTimeout(retryId);
     };
-  }, [bubble.connectionIndex, canvasRef, prefersReducedMotion, routeRevision]);
+  }, [bubble.connectionIndex, canvasRef, prefersReducedMotion, routeRevision, skipAnimation]);
 
   return (
     <motion.div
       ref={pointRef}
       className={`${styles.journeyBubblePoint} ${bubble.className}`}
       style={routeSync?.left === undefined ? undefined : { left: routeSync.left, top: routeSync.top }}
-      initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
+      initial={prefersReducedMotion || skipAnimation ? false : { opacity: 0, scale: 0.96 }}
       animate={{ opacity: isRouteReady ? 1 : 0, scale: isRouteReady ? 1 : 0.96 }}
-      transition={{ duration: prefersReducedMotion ? 0.2 : 0.32, delay: routeSync?.delay ?? 0, ease: [0.16, 1, 0.3, 1] }}
+      transition={{ duration: prefersReducedMotion || skipAnimation ? 0 : 0.32, delay: routeSync?.delay ?? 0, ease: [0.16, 1, 0.3, 1] }}
     >
       <span className={styles.journeyBubbleConnector} aria-hidden="true" />
       <span className={styles.journeyBubbleNode} aria-hidden="true" />
@@ -419,16 +438,23 @@ function JourneyBubble({ bubble, canvasRef, prefersReducedMotion, routeRevision 
   );
 }
 
-function JourneyConnections({ canvasRef, prefersReducedMotion, onRoutesUpdated, isTabletLayout }) {
+function JourneyConnections({
+  canvasRef,
+  prefersReducedMotion,
+  onRoutesUpdated,
+  isTabletLayout,
+  skipAnimation = false,
+}) {
   const updateXarrow = useXarrow();
   const updateXarrowRef = useRef(updateXarrow);
-  const [visibleCount, setVisibleCount] = useState(prefersReducedMotion ? CONNECTIONS.length : 0);
-  const [readyCount, setReadyCount] = useState(prefersReducedMotion ? CONNECTIONS.length : 0);
+  const showImmediately = prefersReducedMotion || skipAnimation;
+  const [visibleCount, setVisibleCount] = useState(showImmediately ? CONNECTIONS.length : 0);
+  const [readyCount, setReadyCount] = useState(0);
   const startedAtRef = useRef(performance.now());
   updateXarrowRef.current = updateXarrow;
 
   useEffect(() => {
-    if (prefersReducedMotion) {
+    if (showImmediately) {
       setVisibleCount(CONNECTIONS.length);
       return undefined;
     }
@@ -444,7 +470,7 @@ function JourneyConnections({ canvasRef, prefersReducedMotion, onRoutesUpdated, 
         setVisibleCount((currentCount) => Math.max(currentCount, index + 1));
       }, (delay - elapsed) * 1000));
     return () => timerIds.forEach((timerId) => window.clearTimeout(timerId));
-  }, [isTabletLayout, prefersReducedMotion]);
+  }, [isTabletLayout, showImmediately]);
 
   useLayoutEffect(() => {
     const canvas = canvasRef.current;
@@ -501,7 +527,7 @@ function JourneyConnections({ canvasRef, prefersReducedMotion, onRoutesUpdated, 
       color="#3d86b9"
       strokeWidth={3.5}
       showHead={false}
-      animateDrawing={prefersReducedMotion ? false : (isTabletLayout ? connection.tabletDuration : connection.duration)}
+      animateDrawing={showImmediately ? false : (isTabletLayout ? connection.tabletDuration : connection.duration)}
       zIndex={2}
       arrowBodyProps={{ strokeLinecap: 'round', strokeLinejoin: 'round', 'data-journey-route': getRouteKey(connection) }}
       divContainerStyle={{ pointerEvents: 'none', opacity: index < readyCount ? 1 : 0 }}
@@ -511,17 +537,33 @@ function JourneyConnections({ canvasRef, prefersReducedMotion, onRoutesUpdated, 
 }
 
 export default function LandingPage() {
-  const [showJourney, setShowJourney] = useState(false);
+  const [wasAnimationSeen] = useState(hasSeenLandingAnimation);
+  const [showJourney, setShowJourney] = useState(wasAnimationSeen);
   const [routeRevision, setRouteRevision] = useState(0);
   const canvasRef = useRef(null);
   const prefersReducedMotion = useReducedMotion();
+  const skipLandingAnimation = wasAnimationSeen || prefersReducedMotion;
   const handleRoutesUpdated = useRef(() => setRouteRevision((revision) => revision + 1)).current;
   const [isTabletLayout, setIsTabletLayout] = useState(() => window.matchMedia(TABLET_JOURNEY_QUERY).matches);
 
+  useLayoutEffect(() => {
+    if (!wasAnimationSeen) return;
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [wasAnimationSeen]);
+
   useEffect(() => {
-    const timerId = window.setTimeout(() => setShowJourney(true), INTRO_DURATION_MS);
+    if (wasAnimationSeen || prefersReducedMotion) {
+      setShowJourney(true);
+      return undefined;
+    }
+
+    const timerId = window.setTimeout(() => {
+      rememberLandingAnimation();
+      setShowJourney(true);
+    }, INTRO_DURATION_MS);
+
     return () => window.clearTimeout(timerId);
-  }, []);
+  }, [prefersReducedMotion, wasAnimationSeen]);
 
   useEffect(() => {
     const tabletMedia = window.matchMedia(TABLET_JOURNEY_QUERY);
@@ -555,7 +597,7 @@ export default function LandingPage() {
 
     const followRoute = () => {
       const elapsed = (performance.now() - journeyStartedAt) / 1000;
-      if (tabletMedia.matches && !prefersReducedMotion) {
+      if (tabletMedia.matches && !skipLandingAnimation) {
         scrollRoutes.forEach((route, index) => {
           if (elapsed >= route.end && !completedRoutes.has(index)) {
             const targetScroll = getTargetScroll(route.id);
@@ -592,7 +634,7 @@ export default function LandingPage() {
     return () => {
       window.cancelAnimationFrame(frameId);
     };
-  }, [prefersReducedMotion, showJourney]);
+  }, [showJourney, skipLandingAnimation]);
 
   return (
     <main className={styles.root}>
@@ -606,26 +648,51 @@ export default function LandingPage() {
 
       <AnimatePresence mode="sync">
         {!showJourney ? (
-          <motion.div key="landing-intro" className={styles.sceneLayer} initial={{ x: 0, opacity: 1 }} animate={{ x: 0, opacity: 1 }} exit={{ x: prefersReducedMotion ? 0 : '-105%', opacity: prefersReducedMotion ? 0 : 1 }} transition={{ duration: prefersReducedMotion ? 0.2 : 1.05, ease: SCENE_EASE }}>
+          <motion.div key="landing-intro" className={styles.sceneLayer} initial={{ x: 0, opacity: 1 }} animate={{ x: 0, opacity: 1 }} exit={{ x: skipLandingAnimation ? 0 : '-105%', opacity: skipLandingAnimation ? 0 : 1 }} transition={{ duration: skipLandingAnimation ? 0.2 : 1.05, ease: SCENE_EASE }}>
             <LandingIntro />
           </motion.div>
         ) : (
-          <motion.section key="landing-journey" className={styles.journey} aria-labelledby="landing-title" initial={{ x: prefersReducedMotion ? 0 : '105%', opacity: prefersReducedMotion ? 0 : 1 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: prefersReducedMotion ? 0.2 : 1.05, ease: SCENE_EASE }}>
+          <motion.section
+            key="landing-journey"
+            className={styles.journey}
+            aria-labelledby="landing-title"
+            initial={skipLandingAnimation ? { x: 0, opacity: 0 } : { x: '105%', opacity: 1 }}
+            animate={{ x: 0, opacity: 1 }}
+            transition={{
+              duration: skipLandingAnimation ? 1.5 : 1.05,
+              ease: skipLandingAnimation ? [0.16, 1, 0.3, 1] : SCENE_EASE,
+            }}
+          >
             <div className={styles.titleGroup}>
               <p className={styles.eyebrow}>나의 안전한 전세 여정</p>
               <h1 id="landing-title">전세위험진단부터 보증보험 서류 준비까지</h1>
-              <DesktopStartButton prefersReducedMotion={prefersReducedMotion} />
+              <DesktopStartButton prefersReducedMotion={skipLandingAnimation} />
             </div>
             <Xwrapper>
               <div ref={canvasRef} className={styles.journeyCanvas}>
-                <JourneyConnections canvasRef={canvasRef} prefersReducedMotion={prefersReducedMotion} onRoutesUpdated={handleRoutesUpdated} isTabletLayout={isTabletLayout} />
-                {FEATURES.map((feature) => <FeaturePoint key={feature.key} feature={feature} prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />)}
-                {JOURNEY_BUBBLES.map((bubble) => <JourneyBubble key={bubble.key} bubble={bubble} canvasRef={canvasRef} prefersReducedMotion={prefersReducedMotion} routeRevision={routeRevision} />)}
-                <CompletePoint prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />
+                <JourneyConnections
+                  canvasRef={canvasRef}
+                  prefersReducedMotion={prefersReducedMotion}
+                  skipAnimation={wasAnimationSeen}
+                  onRoutesUpdated={handleRoutesUpdated}
+                  isTabletLayout={isTabletLayout}
+                />
+                {FEATURES.map((feature) => <FeaturePoint key={feature.key} feature={feature} prefersReducedMotion={skipLandingAnimation} isTabletLayout={isTabletLayout} />)}
+                {JOURNEY_BUBBLES.map((bubble) => (
+                  <JourneyBubble
+                    key={bubble.key}
+                    bubble={bubble}
+                    canvasRef={canvasRef}
+                    prefersReducedMotion={prefersReducedMotion}
+                    skipAnimation={wasAnimationSeen}
+                    routeRevision={routeRevision}
+                  />
+                ))}
+                <CompletePoint prefersReducedMotion={skipLandingAnimation} isTabletLayout={isTabletLayout} />
               </div>
             </Xwrapper>
-            <MobileJourney prefersReducedMotion={prefersReducedMotion} />
-            <ResponsiveStartButton prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />
+            <MobileJourney prefersReducedMotion={skipLandingAnimation} />
+            <ResponsiveStartButton prefersReducedMotion={skipLandingAnimation} isTabletLayout={isTabletLayout} />
           </motion.section>
         )}
       </AnimatePresence>
