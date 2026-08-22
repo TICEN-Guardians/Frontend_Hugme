@@ -1,11 +1,17 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaArrowRight, FaFileLines, FaLock, FaRegMessage } from 'react-icons/fa6';
 import ChatInput from '../../../components/chat/ChatInput/ChatInput.jsx';
 import MessageList from '../../../components/chat/MessageList/MessageList.jsx';
 import { useDocumentPreparation } from '../../../hooks/useDocumentPreparation.js';
 import { sendDocumentMessage } from '../../../api/docChat/docChatService.js';
+import { useAuth } from '../../../context/auth/AuthContext.jsx';
+import {
+  createDocumentChatConversationId,
+  getDocumentChatSessions,
+  saveDocumentChatSession,
+} from '../../../utils/documentChatHistoryStorage.js';
 import ChecklistPanel from './ChecklistPanel/ChecklistPanel.jsx';
 import styles from './DocumentChat.module.css';
 
@@ -38,7 +44,11 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
 
 export default function DocumentChat() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { user } = useAuth();
   const prefersReducedMotion = useReducedMotion();
+  const consumedNavigationStateRef = useRef(null);
+  const [conversationId, setConversationId] = useState(createDocumentChatConversationId);
   const [activeSectionCode, setActiveSectionCode] = useState('BASIC');
   const [expandedDocumentId, setExpandedDocumentId] = useState(null);
   const [selectedDocumentId, setSelectedDocumentId] = useState(null);
@@ -91,6 +101,47 @@ export default function DocumentChat() {
       setActiveSectionCode(sections[0].sectionCode);
     }
   }, [activeSectionCode, sections]);
+
+  useEffect(() => {
+    if (consumedNavigationStateRef.current === location.state) return;
+
+    const shouldStartNew = location.state?.startNewDocumentChat;
+    const requestedConversationId = location.state?.openDocumentChatConversationId;
+    if (!shouldStartNew && !requestedConversationId) return;
+
+    consumedNavigationStateRef.current = location.state;
+
+    if (shouldStartNew) {
+      setConversationId(createDocumentChatConversationId());
+      setMessages([]);
+      setSelectedDocumentId(null);
+      setExpandedDocumentId(null);
+    } else {
+      const session = getDocumentChatSessions(user?.email)
+        .find((item) => item.conversationId === requestedConversationId);
+      if (session) {
+        setConversationId(session.conversationId);
+        setMessages(Array.isArray(session.messages) ? session.messages : []);
+      }
+    }
+
+    navigate(location.pathname, { replace: true, state: {} });
+  }, [location.pathname, location.state, navigate, user?.email]);
+
+  useEffect(() => {
+    if (messages.length === 0) return;
+    const firstQuestion = messages.find((message) => message.role === 'user')?.content;
+    const title = typeof firstQuestion === 'string' && firstQuestion.trim()
+      ? firstQuestion.trim().slice(0, 36)
+      : '서류 안내 상담';
+
+    saveDocumentChatSession(user?.email, {
+      conversationId,
+      title,
+      messages,
+      updatedAt: new Date().toISOString(),
+    });
+  }, [conversationId, messages, user?.email]);
 
   const handleTogglePrepared = async (document) => {
     await changePrepared(document.documentId, !document.prepared);

@@ -15,15 +15,6 @@ const FEATURE_PATHS = {
   DOCUMENT_GUIDE: '/guarantee-checklist',
 };
 
-// 로그인 사용자의 상담 세션 목록이 바뀔 때(새 세션 생성, 삭제) 쏘는 전역 이벤트. 이 훅과
-// 별도로 자체 세션 목록을 들고 있는 공통 Sidebar의 GuideChatSidebarSection이 이 이벤트를
-// 구독해서 다시 불러온다 — 훅 인스턴스를 공유하지 않고도 두 곳의 세션 목록을 동기화하기 위함.
-export const GUIDE_SESSIONS_UPDATED_EVENT = 'guide-chat-sessions-updated';
-
-const notifySessionsUpdated = () => {
-  window.dispatchEvent(new Event(GUIDE_SESSIONS_UPDATED_EVENT));
-};
-
 const historyToMessages = (history) =>
   history.flatMap((entry) => [
     { role: 'user', content: entry.question },
@@ -272,8 +263,6 @@ export default function useGuideChat() {
     }
 
     setSessions((prev) => prev.filter((session) => session.sessionId !== targetSessionId));
-    notifySessionsUpdated();
-
     if (targetSessionId === sessionId) {
       startNewChat();
     }
@@ -303,7 +292,6 @@ export default function useGuideChat() {
       getGuideSessions()
         .then((result) => setSessions(Array.isArray(result) ? result : []))
         .catch(() => {});
-      notifySessionsUpdated();
     } catch (error) {
       setMessages((prev) => [
         ...prev,

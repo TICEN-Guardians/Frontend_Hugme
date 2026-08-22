@@ -3,6 +3,14 @@
   flex-direction: column;
 }
 
+.groupTitle {
+  margin: 0 0 var(--space-1);
+  color: #8a96a3;
+  font-size: 1.1rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+}
+
 .item {
   display: flex;
   align-items: center;

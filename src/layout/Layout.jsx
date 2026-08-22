@@ -9,18 +9,23 @@ export default function Layout() {
   const isChecklistDetailPage =
     pathname.startsWith('/guarantee-checklist/') ||
     (pathname.startsWith('/products/') && pathname.endsWith('/checklist'));
+  const isRiskPage = pathname.startsWith('/risk/');
   const isMainPage = pathname === '/main';
 
   return (
     <div className={`${styles.pageWrapper} ${isChatAppPage ? styles.chatPageWrapper : ''}`}>
       <div className={styles.layoutBody}>
-        <Sidebar showHistory={!isMainPage} />
+        <Sidebar
+          key={isMainPage ? 'main-sidebar' : 'service-sidebar'}
+          showHistory={!isMainPage}
+          mode={isMainPage ? 'main' : 'default'}
+        />
         <div className={styles.contentColumn}>
           <main
             className={
               isChatAppPage
                 ? `${styles.main} ${styles.chatMain}`
-                : `${styles.main} ${isChecklistDetailPage ? styles.wideMain : 'container'}`
+                : `${styles.main} ${isChecklistDetailPage || isRiskPage ? styles.wideMain : 'container'}`
             }
           >
             <Outlet />

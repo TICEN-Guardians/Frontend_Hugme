@@ -85,25 +85,37 @@
 
 @media (max-width: 100rem) {
   .inner {
-    gap: var(--space-5);
+    align-items: flex-start;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-2);
+    min-height: 9rem;
   }
 
   .info {
     gap: var(--space-3);
   }
+
+  .address,
+  .info {
+    white-space: normal;
+  }
 }
 
 @media (max-width: 76.7rem) {
   .inner {
-    flex-direction: column;
-    justify-content: center;
-    gap: var(--space-2);
-    text-align: center;
+    min-height: 0;
+    align-items: flex-start;
+    gap: var(--space-3);
+    padding-top: var(--space-6);
+    padding-bottom: var(--space-6);
+    text-align: left;
   }
 
   .location,
   .info {
-    justify-content: center;
+    align-items: flex-start;
+    justify-content: flex-start;
   }
 
   .address,
@@ -117,7 +129,16 @@
   }
 
   .info {
-    flex-wrap: wrap;
-    column-gap: var(--space-3);
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .address {
+    line-height: 1.65;
+    word-break: keep-all;
+  }
+
+  .postalCode {
+    display: inline-block;
   }
 }
