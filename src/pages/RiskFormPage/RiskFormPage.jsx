@@ -1,464 +1,515 @@
-import { useRef, useState } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
-import { FaArrowUp, FaCircleCheck, FaCircleInfo } from 'react-icons/fa6';
+import { useEffect, useRef, useState } from 'react';
+import {
+  LuCheck,
+  LuChevronRight,
+  LuFileSearch,
+  LuInfo,
+  LuMapPin,
+  LuSearch,
+  LuShieldCheck,
+  LuSparkles,
+  LuUpload,
+} from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
 import Button from '../../components/common/Button/Button.jsx';
-import Modal from '../../components/common/Modal/Modal.jsx';
+import {
+  analyzeDiagnosis,
+  createDiagnosis,
+  resolveProperty,
+  searchProperty,
+  suggestAddresses,
+  updateDiagnosisAddress,
+  updateDiagnosisDetails,
+  uploadRegistry,
+} from '../../api/propertyRisk/propertyRiskService.js';
 import { useAuth } from '../../context/auth/AuthContext.jsx';
-import { analyzeDiagnosis, createDiagnosis, resolveProperty, searchProperty, updateDiagnosisDetails, uploadRegistry } from '../../api/propertyRisk/propertyRiskService.js';
 import { setLastRiskAnalysisId } from '../../utils/riskDiagnosisStorage.js';
 import styles from './RiskFormPage.module.css';
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024;
-const ACCEPTED_TYPE = 'application/pdf';
-const ENTRY_EASE = [0.16, 1, 0.3, 1];
-const HOUSING_LABEL = { APARTMENT: '아파트', VILLA: '연립·다세대', OFFICETEL: '오피스텔', DETACHED_MULTI: '단독·다가구' };
-const errorMessage = (error, fallback) => error?.response?.data?.message ?? error?.response?.data?.detail?.message ?? fallback;
-const onlyDigits = (value) => value.replace(/\D/g, '');
-const parseFloorInput = (value) => (String(value).trim() === '' ? null : Number(value));
-const formatMoneyInput = (value) => {
-  const digits = onlyDigits(value);
+const HOUSING_LABEL = {
+  APARTMENT: '아파트',
+  VILLA: '연립·다세대',
+  OFFICETEL: '오피스텔',
+  DETACHED_MULTI: '단독·다가구',
+};
+
+const errorMessage = (error, fallback) => (
+  error?.response?.data?.message
+  ?? error?.response?.data?.detail?.message
+  ?? fallback
+);
+
+const moneyInput = (value) => {
+  const digits = String(value).replace(/\D/g, '');
   return digits ? Number(digits).toLocaleString('ko-KR') : '';
 };
-const PROGRESS_STEPS = [
-  { key: 'resolve', label: '건물 정보 확인', description: '건축물 정보와 계약 대상 호수를 대조하고 있습니다.' },
-  { key: 'save', label: '계약 정보 저장', description: '입력한 계약 조건을 진단 요청으로 준비하고 있습니다.' },
-  { key: 'registry', label: '등기부등본 분석', description: '등기부등본에서 권리관계와 면적 정보를 확인하고 있습니다.' },
-  { key: 'analyze', label: '위험도 계산', description: '시세와 담보 정보를 바탕으로 위험도를 계산하고 있습니다.' },
-];
 
 export default function RiskFormPage() {
   const navigate = useNavigate();
-  const { user } = useAuth();
-  const prefersReducedMotion = useReducedMotion();
+  const { user, isAuthenticated, isAuthLoading } = useAuth();
   const fileInputRef = useRef(null);
-  const contractDateInputRef = useRef(null);
-  const pendingDiagnosisRef = useRef(null);
+  const [mode, setMode] = useState(null);
+  const [stage, setStage] = useState('mode');
+  const [analysisId, setAnalysisId] = useState(null);
+  const [isStarting, setIsStarting] = useState(false);
   const [address, setAddress] = useState('');
   const [normalizedAddress, setNormalizedAddress] = useState('');
+  const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [suggestions, setSuggestions] = useState([]);
   const [candidates, setCandidates] = useState([]);
-  const [addressCandidates, setAddressCandidates] = useState([]);
-  const [resolvedProperty, setResolvedProperty] = useState(null);
   const [selectedIndex, setSelectedIndex] = useState('');
+  const [preferredDongName, setPreferredDongName] = useState('');
   const [hoName, setHoName] = useState('');
-  const [area, setArea] = useState('');
   const [floor, setFloor] = useState('');
+  const [area, setArea] = useState('');
   const [deposit, setDeposit] = useState('');
   const [contractDate, setContractDate] = useState('');
   const [landlordName, setLandlordName] = useState('');
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [registryResult, setRegistryResult] = useState(null);
+  const [registryStatus, setRegistryStatus] = useState('idle');
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState({});
-  const [fileError, setFileError] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isConsentModalOpen, setIsConsentModalOpen] = useState(false);
-  const [isAreaRequiredModalOpen, setIsAreaRequiredModalOpen] = useState(false);
-  const [submitError, setSubmitError] = useState(null);
   const [progressMessage, setProgressMessage] = useState('');
-  const [progressStep, setProgressStep] = useState('resolve');
-  const [stage, setStage] = useState('registry');
-  const [analysisId, setAnalysisId] = useState(null);
-  const [ocrResult, setOcrResult] = useState(null);
 
+  const anonymous = !isAuthenticated;
   const selectedCandidate = selectedIndex === '' ? null : candidates[Number(selectedIndex)];
   const housingType = selectedCandidate?.housingType ?? null;
-  const contractAreaRequired = resolvedProperty?.contractAreaRequired ?? housingType === 'DETACHED_MULTI';
-  // 단독·다가구는 집합건물이 아니라 '호'가 없고, 예측 모델에도 층 Feature가 없다.
-  // 받아도 버려지는 값이라 입력칸을 아예 내리고 값도 보내지 않는다.
-  // 아직 동을 고르지 않아 유형을 모를 때는 기존처럼 보여준다.
-  const unitFieldsEnabled = housingType !== 'DETACHED_MULTI';
+  const unitFieldsEnabled = !addressConfirmed || housingType !== 'DETACHED_MULTI';
+  const contractAreaRequired = addressConfirmed && housingType === 'DETACHED_MULTI';
 
-  const resetAddressResult = () => {
-    setNormalizedAddress(''); setCandidates([]); setAddressCandidates([]); setSelectedIndex(''); setHoName(''); setResolvedProperty(null);
+  useEffect(() => {
+    if (!isAuthLoading && !isAuthenticated) setMode('QUICK');
+  }, [isAuthLoading, isAuthenticated]);
+
+  useEffect(() => {
+    const keyword = address.trim();
+    if (stage !== 'form' || addressConfirmed || keyword.length < 2) {
+      setSuggestions([]);
+      return undefined;
+    }
+
+    let active = true;
+    const timer = window.setTimeout(() => {
+      suggestAddresses(keyword, anonymous)
+        .then((result) => {
+          if (active) setSuggestions(result.candidates ?? []);
+        })
+        .catch(() => {
+          if (active) setSuggestions([]);
+        });
+    }, 400);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [address, addressConfirmed, anonymous, stage]);
+
+  const startDiagnosis = async () => {
+    if (!mode) return;
+    setIsStarting(true);
+    setErrors({});
+    try {
+      const created = await createDiagnosis({ mode, anonymous });
+      setAnalysisId(created.analysisId);
+      setStage('form');
+    } catch (error) {
+      setErrors({ page: errorMessage(error, '진단을 시작하지 못했습니다.') });
+    } finally {
+      setIsStarting(false);
+    }
   };
 
-  const runAddressSearch = async (keyword) => {
-    if (!keyword) return setErrors((current) => ({ ...current, address: '주소를 입력해 주세요.' }));
+  const resetConfirmedAddress = (nextAddress) => {
+    setAddress(nextAddress);
+    setNormalizedAddress('');
+    setAddressConfirmed(false);
+    setCandidates([]);
+    setSelectedIndex('');
+    setErrors((current) => ({ ...current, address: '', candidate: '' }));
+  };
+
+  const confirmAddress = async (value = address) => {
+    const keyword = value.trim();
+    if (!keyword) {
+      setErrors((current) => ({ ...current, address: '주소를 입력해 주세요.' }));
+      return;
+    }
     setIsSearching(true);
     setErrors((current) => ({ ...current, address: '', candidate: '' }));
     try {
-      const result = await searchProperty(keyword);
-      const nextAddresses = result.addressCandidates ?? [];
-      if (nextAddresses.length) {
-        setNormalizedAddress(''); setCandidates([]); setSelectedIndex(''); setResolvedProperty(null);
-        setAddressCandidates(nextAddresses);
+      const result = await searchProperty(keyword, anonymous);
+      if (result.addressCandidates?.length) {
+        setSuggestions(result.addressCandidates);
+        setAddressConfirmed(false);
         return;
       }
-      setAddressCandidates([]);
       const nextCandidates = result.candidates ?? [];
-      setNormalizedAddress(result.normalizedAddress);
+      if (!nextCandidates.length) {
+        setAddressConfirmed(false);
+        setErrors((current) => ({
+          ...current,
+          candidate: '선택 가능한 건축물 정보를 찾지 못했습니다.',
+        }));
+        return;
+      }
+      const preferredIndex = nextCandidates.findIndex(
+        (candidate) => preferredDongName && candidate.dongName === preferredDongName,
+      );
+      const nextIndex = preferredIndex >= 0 ? preferredIndex : 0;
+      const confirmedAddress = result.normalizedAddress || keyword;
+      await updateDiagnosisAddress(analysisId, {
+        address: confirmedAddress,
+        dongName: preferredDongName || null,
+        hoName: hoName.trim() || null,
+        propertySnapshot: {
+          roadAddress: result.roadAddress || confirmedAddress,
+          jibunAddress: result.jibunAddress || null,
+        },
+      });
+      setAddress(confirmedAddress);
+      setNormalizedAddress(confirmedAddress);
+      setSuggestions([]);
       setCandidates(nextCandidates);
-      setSelectedIndex(nextCandidates.length === 1 ? '0' : '');
-      if (!nextCandidates.length) setErrors((current) => ({ ...current, candidate: '선택 가능한 건축물대장 결과가 없습니다.' }));
+      setSelectedIndex(String(nextIndex));
+      setAddressConfirmed(true);
+      if (registryResult?.parseStatus === 'SUCCESS') {
+        setRegistryStatus('success');
+        setErrors((current) => ({ ...current, files: '' }));
+      }
     } catch (error) {
-      resetAddressResult();
-      setErrors((current) => ({ ...current, address: errorMessage(error, '주소 검색에 실패했습니다.') }));
-    } finally { setIsSearching(false); }
+      setAddressConfirmed(false);
+      setCandidates([]);
+      setSelectedIndex('');
+      if (registryResult?.parseStatus === 'SUCCESS') setRegistryStatus('review');
+      setErrors((current) => ({
+        ...current,
+        address: errorMessage(error, '주소를 확인하지 못했습니다.'),
+      }));
+    } finally {
+      setIsSearching(false);
+    }
   };
 
-  const handleAddressSearch = () => runAddressSearch(address.trim());
-
-  const handleAddressCandidateSelect = (roadAddress) => {
-    setAddress(roadAddress);
-    setAddressCandidates([]);
-    runAddressSearch(roadAddress);
+  const selectSuggestion = (candidate) => {
+    const nextAddress = candidate.roadAddress || candidate.jibunAddress;
+    resetConfirmedAddress(nextAddress);
+    setSuggestions([]);
+    confirmAddress(nextAddress);
   };
 
-  const handleFileChange = (event) => {
-    const picked = event.target.files?.[0] ?? null;
+  const applyRegistryResult = (result) => {
+    if (result.propertyAddress && !addressConfirmed) {
+      resetConfirmedAddress(result.propertyAddress);
+    }
+    if (result.dongName) setPreferredDongName(result.dongName);
+    if (result.hoName) setHoName(result.hoName);
+    if (result.floor != null) setFloor(String(result.floor));
+    if (result.exclusiveArea != null) setArea(String(result.exclusiveArea));
+  };
+
+  const handleRegistryFiles = async (event) => {
+    const picked = Array.from(event.target.files ?? []);
     event.target.value = '';
-    if (!picked) return;
-    if (picked.type !== ACCEPTED_TYPE) return setFileError('PDF 파일만 업로드할 수 있습니다.');
-    if (picked.size > MAX_FILE_SIZE) return setFileError('파일 용량은 10MB를 초과할 수 없습니다.');
-    setFileError(''); setFile(picked);
+    if (!picked.length) return;
+    if (picked.length > 2) {
+      setErrors((current) => ({ ...current, files: 'PDF는 최대 2개까지 첨부할 수 있습니다.' }));
+      return;
+    }
+    const invalid = picked.find((file) => (
+      file.type !== 'application/pdf'
+      || !file.name.toLowerCase().endsWith('.pdf')
+      || file.size > MAX_FILE_SIZE
+    ));
+    if (invalid) {
+      setErrors((current) => ({
+        ...current,
+        files: '10MB 이하의 PDF 파일만 첨부해 주세요.',
+      }));
+      return;
+    }
+
+    setFiles(picked);
+    setRegistryStatus('uploading');
+    setRegistryResult(null);
+    setErrors((current) => ({ ...current, files: '' }));
+    try {
+      const result = await uploadRegistry({ analysisId, files: picked });
+      setRegistryResult(result);
+      applyRegistryResult(result);
+      const addressAccepted = [
+        'MATCH',
+        'PENDING_ADDRESS_CONFIRMATION',
+      ].includes(result.addressMatchStatus);
+      if (result.parseStatus === 'SUCCESS' && addressAccepted) {
+        setRegistryStatus('success');
+      } else {
+        setRegistryStatus('review');
+        const message = result.addressMatchStatus === 'MISMATCH'
+          ? '확정한 주소와 등기부의 부동산 주소가 다릅니다.'
+          : result.addressMatchStatus === 'PARTIAL_MATCH_REVIEW_REQUIRED'
+            ? '건물 주소는 일치하지만 등기부의 동·호를 확인하지 못했습니다.'
+            : '등기부 내용을 정상적으로 확인하지 못했습니다. 파일을 다시 첨부해 주세요.';
+        setErrors((current) => ({ ...current, files: message }));
+      }
+    } catch (error) {
+      setRegistryStatus('error');
+      setErrors((current) => ({
+        ...current,
+        files: errorMessage(error, '등기부등본을 분석하지 못했습니다.'),
+      }));
+    }
   };
 
-  const openContractDatePicker = () => {
-    const input = contractDateInputRef.current;
-    if (!input) return;
-    if (typeof input.showPicker === 'function') input.showPicker(); else input.focus();
-  };
-
-  const setProgress = (step, message) => {
-    setProgressStep(step);
-    setProgressMessage(message);
-  };
-
-  const validateRegistry = () => {
+  const validate = () => {
     const next = {};
-    if (addressCandidates.length) next.address = '검색된 주소 중 하나를 선택해 주세요.';
-    else if (!address.trim() || !normalizedAddress) next.address = '주소 검색을 완료해 주세요.';
+    if (!addressConfirmed || !normalizedAddress) next.address = '주소를 검색해 확정해 주세요.';
     if (!selectedCandidate) next.candidate = '진단할 건물 또는 동을 선택해 주세요.';
     if (unitFieldsEnabled) {
-      const floorText = String(floor).trim();
       if (!hoName.trim()) next.hoName = '호수를 입력해 주세요.';
-      if (floorText === '') next.floor = '해당 층을 입력해 주세요.';
-      else if (!Number.isInteger(Number(floorText))) next.floor = '해당 층을 정수로 입력해 주세요.';
+      if (String(floor).trim() === '' || !Number.isInteger(Number(floor))) {
+        next.floor = '층을 정수로 입력해 주세요.';
+      }
     }
-    if (!landlordName.trim()) next.landlordName = '계약 상대방 이름을 입력해 주세요.';
+    if (!area || Number(area) <= 0) {
+      next.area = `${contractAreaRequired ? '계약면적' : '전용면적'}을 입력해 주세요.`;
+    }
     if (!deposit || Number(deposit.replaceAll(',', '')) <= 0) next.deposit = '보증금을 입력해 주세요.';
     if (!contractDate) next.contractDate = '계약 예정일을 입력해 주세요.';
-    if (!file) next.file = '등기부등본 PDF를 업로드해 주세요.';
+    if (mode === 'DETAILED' && !landlordName.trim()) next.landlordName = '계약 상대방 이름을 입력해 주세요.';
+    if (mode === 'DETAILED' && registryStatus !== 'success') next.files = '정상 확인된 등기부등본이 필요합니다.';
     if (!agreed) next.agreed = '서비스 이용에 동의해 주세요.';
     return next;
   };
 
-  const validateDetails = () => {
-    const next = {};
-    if (!area || Number(area) <= 0) next.area = (contractAreaRequired ? '계약면적' : '전용면적') + '을 입력해 주세요.';
-    return next;
-  };
-
-  const diagnosisDetails = (resolvedArea, useContractArea) => ({
-    dongName: selectedCandidate.dongName || null,
-    hoName: unitFieldsEnabled ? hoName.trim() : null,
-    deposit: Number(deposit.replaceAll(',', '')),
-    contractDate,
-    contractArea: useContractArea ? Number(resolvedArea) : null,
-    exclusiveArea: useContractArea ? null : Number(resolvedArea),
-    floor: unitFieldsEnabled ? parseFloorInput(floor) : null,
-    landlordName: landlordName.trim(),
-  });
-
-  const completeDiagnosis = async (targetAnalysisId, resolvedArea, resolved) => {
-    const useContractArea = resolved?.contractAreaRequired ?? contractAreaRequired;
-    await updateDiagnosisDetails(
-      targetAnalysisId,
-      diagnosisDetails(resolvedArea, useContractArea),
-    );
-    setProgress('analyze', '시세와 위험도를 계산하고 있습니다.');
-    await analyzeDiagnosis(targetAnalysisId);
-    setLastRiskAnalysisId(user?.email, targetAnalysisId);
-    navigate('/risk/' + targetAnalysisId);
-  };
-
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    const nextErrors = stage === 'registry' ? validateRegistry() : validateDetails();
+  const submitDiagnosis = async () => {
+    const nextErrors = validate();
     setErrors(nextErrors);
     if (Object.keys(nextErrors).length) return;
+
     setIsSubmitting(true);
-    setSubmitError(null);
-    setIsAreaRequiredModalOpen(false);
-    let currentStep = stage === 'registry' ? '건물 정보를 확인' : '시세와 위험도를 계산';
     try {
-      if (stage === 'registry') {
-        setProgress('resolve', '건물과 소유자 정보를 확인하고 있습니다.');
-        const resolved = await resolveProperty({
-          address: address.trim(),
-          dongName: selectedCandidate.dongName,
-          hoName: unitFieldsEnabled ? hoName.trim() : null,
-        });
-        setResolvedProperty(resolved);
-        currentStep = '계약 정보를 저장';
-        setProgress('save', '입력한 계약 정보를 저장하고 있습니다.');
-        // 진단 재사용 여부는 사용자가 입력한 값으로만 판단한다.
-        // 매물 스냅샷은 같은 입력이면 항상 같은 값이라 키에 넣지 않는다.
-        const contract = {
-          address: address.trim(),
-          dongName: selectedCandidate.dongName || null,
-          hoName: unitFieldsEnabled ? hoName.trim() : null,
-          deposit: Number(deposit.replaceAll(',', '')),
-          contractDate,
-          contractArea: null,
-          exclusiveArea: null,
-          floor: unitFieldsEnabled ? parseFloorInput(floor) : null,
-          landlordName: landlordName.trim(),
-        };
-        const payloadKey = JSON.stringify(contract) + '|' + (file ? `${file.name}:${file.size}:${file.lastModified}` : '');
-        const reusableAnalysisId = pendingDiagnosisRef.current?.payloadKey === payloadKey
-          ? pendingDiagnosisRef.current.analysisId
-          : null;
-        const targetAnalysisId = reusableAnalysisId ?? (await createDiagnosis({
-          ...contract,
-          // 분석 단계에서 주소·건축물대장을 다시 조회하지 않도록 그대로 돌려준다.
-          propertySnapshot: resolved?.propertySnapshot ?? null,
-        })).analysisId;
-        pendingDiagnosisRef.current = { analysisId: targetAnalysisId, payloadKey };
-        currentStep = '등기부등본을 분석';
-        setProgress('registry', '등기부등본에서 전용면적과 권리관계를 확인하고 있습니다.');
-        const registry = await uploadRegistry({ analysisId: targetAnalysisId, file });
-        pendingDiagnosisRef.current = null;
-        setAnalysisId(targetAnalysisId);
-        setOcrResult(registry);
-        const useContractArea = resolved?.contractAreaRequired ?? contractAreaRequired;
-        const ocrArea = useContractArea ? null : Number(registry.exclusiveArea);
-        if (Number.isFinite(ocrArea) && ocrArea > 0) {
-          currentStep = '시세와 위험도를 계산';
-          await completeDiagnosis(targetAnalysisId, ocrArea, resolved);
-          return;
-        }
-        setStage('details');
-        setProgressMessage('');
-        setIsAreaRequiredModalOpen(true);
-      } else {
-        setProgress('analyze', '시세와 위험도를 계산하고 있습니다.');
-        await completeDiagnosis(analysisId, Number(area), resolvedProperty);
-      }
-    } catch (error) {
-      const status = error?.response?.status ? ' (HTTP ' + error.response.status + ')' : '';
-      setSubmitError({
-        title: currentStep + '하는 단계에서 실패했습니다',
-        message: errorMessage(error, '잠시 후 다시 시도해 주세요.'),
-        status,
+      setProgressMessage('주소와 건축물 정보를 확인하고 있습니다.');
+      const resolved = await resolveProperty({
+        address: normalizedAddress,
+        dongName: selectedCandidate.dongName,
+        hoName: unitFieldsEnabled ? hoName.trim() : null,
+        anonymous,
       });
+      const usesContractArea = resolved.contractAreaRequired;
+      setProgressMessage('입력한 계약 조건을 저장하고 있습니다.');
+      await updateDiagnosisDetails(analysisId, {
+        address: resolved.normalizedAddress,
+        dongName: resolved.dongName || selectedCandidate.dongName || null,
+        hoName: usesContractArea ? null : (resolved.hoName || hoName.trim()),
+        deposit: Number(deposit.replaceAll(',', '')),
+        contractDate,
+        contractArea: usesContractArea ? Number(area) : null,
+        exclusiveArea: usesContractArea ? null : Number(area),
+        floor: usesContractArea ? null : Number(floor),
+        landlordName: mode === 'DETAILED' ? landlordName.trim() : null,
+        propertySnapshot: resolved.propertySnapshot,
+      });
+      setProgressMessage('시세와 계약 조건을 바탕으로 위험도를 계산하고 있습니다.');
+      await analyzeDiagnosis(analysisId);
+      if (isAuthenticated) setLastRiskAnalysisId(user?.email, analysisId);
+      navigate(`/risk/${analysisId}`);
+    } catch (error) {
+      setErrors((current) => ({
+        ...current,
+        page: errorMessage(error, '진단을 완료하지 못했습니다.'),
+      }));
+    } finally {
+      setIsSubmitting(false);
       setProgressMessage('');
-    } finally { setIsSubmitting(false); }
-  };
-  const motionVariants = {
-    hidden: { opacity: 0, y: prefersReducedMotion ? 0 : 28, scale: prefersReducedMotion ? 1 : 0.988 },
-    visible: { opacity: 1, y: 0, scale: 1 },
+    }
   };
 
-  return (
-    <div className={styles.root}>
-      <form className={styles.form} onSubmit={handleSubmit} noValidate>
-        <motion.header className={styles.hero} initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 34 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: prefersReducedMotion ? 0.35 : 1.05, ease: ENTRY_EASE }}>
-          <span className={styles.heroBadge}>HUGME 위험도 진단</span>
-          <h1 className={styles.title}>매물 위험도 진단</h1>
-          <p className={styles.subtitle}>계약 전 매물 정보를 입력하고 등기부등본을 첨부해 위험 요소를 확인하세요.</p>
-        </motion.header>
+  if (isAuthLoading) {
+    return <div className={styles.root}><div className={styles.stateCard}>사용자 정보를 확인하고 있습니다.</div></div>;
+  }
 
-        <motion.div className={styles.card} initial="hidden" animate="visible" variants={{ hidden: {}, visible: { transition: { staggerChildren: prefersReducedMotion ? 0 : 0.14 } } }}>
-          <motion.div className={styles.primaryColumn} variants={motionVariants}>
-            <div className={styles.field}>
-              <FieldLabel htmlFor="risk-address" label="주소" error={errors.address} />
-              <div className={styles.inlineRow}>
-                <input id="risk-address" className={styles.input} placeholder="도로명, 지번, 건물명 등으로 검색하세요" value={address} disabled={stage === 'details'} onChange={(event) => { setAddress(event.target.value); resetAddressResult(); }} />
-                <button type="button" className={styles.searchButton} disabled={isSearching || stage === 'details'} onClick={handleAddressSearch}>{isSearching ? '검색 중' : '주소 검색'}</button>
-              </div>
-            </div>
-            {unitFieldsEnabled && <TextField id="risk-ho" label="호수" value={hoName} setValue={setHoName} error={errors.hoName} placeholder="예: 1301" disabled={stage === 'details'} />}
-            {stage === 'details' && <UnitField id="risk-area" label={contractAreaRequired ? '계약 면적' : '전용 면적'} unit="m²" value={area} setValue={setArea} error={errors.area} inputMode="decimal" placeholder="예: 33.12" />}
-            {unitFieldsEnabled && <UnitField id="risk-floor" label="해당 층" unit="층" value={floor} setValue={setFloor} error={errors.floor} inputMode="numeric" placeholder="예: 13" disabled={stage === 'details'} />}
-            <TextField id="risk-landlord" label="계약 상대방(임대인) 이름" value={landlordName} setValue={setLandlordName} error={errors.landlordName} placeholder="계약서에 적힌 임대인 이름" disabled={stage === 'details'} />
-            <UnitField id="risk-deposit" label="전세보증금" unit="원" value={deposit} setValue={(value) => setDeposit(formatMoneyInput(value))} error={errors.deposit} inputMode="numeric" placeholder="예: 50,000,000" disabled={stage === 'details'} />
-            <div className={styles.field}><FieldLabel htmlFor="risk-contract-date" label="계약 예정일" error={errors.contractDate} /><div className={styles.unitInputWrapper} onClick={stage === 'registry' ? openContractDatePicker : undefined}><input ref={contractDateInputRef} id="risk-contract-date" type="date" className={styles.unitInput} value={contractDate} disabled={stage === 'details'} onChange={(event) => setContractDate(event.target.value)} /></div></div>          </motion.div>
-
-          <motion.div className={styles.sideColumn} variants={motionVariants}>
-            <SearchResultPanel
-              addressCandidates={addressCandidates}
-              candidates={candidates}
-              disabled={stage === 'details'}
-              onSelectAddress={handleAddressCandidateSelect}
-              error={errors.candidate}
-              housingType={housingType}
-              normalizedAddress={normalizedAddress}
-              selectedCandidate={selectedCandidate}
-              selectedIndex={selectedIndex}
-              setSelectedIndex={setSelectedIndex}
-            />
-            <div className={`${styles.field} ${styles.fileField}`}>
-              <FieldLabel label="등기부등본 파일" error={fileError || errors.file} />
-              <div className={styles.dropzone}><div className={styles.dropzoneInfo}><span className={styles.uploadIcon}><FaArrowUp /></span><div><p className={styles.dropzoneTitle}>{file?.name ?? 'PDF 파일 업로드'}</p><p className={styles.dropzoneDescription}>PDF · 최대 10MB · 최근 1개월 이내 발급본 권장</p></div></div><input ref={fileInputRef} type="file" accept={ACCEPTED_TYPE} disabled={stage === 'details'} onChange={handleFileChange} className={styles.hiddenInput} /><button type="button" className={styles.fileSelectButton} disabled={stage === 'details'} onClick={() => fileInputRef.current?.click()}>파일 선택</button></div>
-            </div>
-            <div className={styles.infoBanner}><span className={styles.infoIcon}><FaCircleInfo /></span><span>주소와 주택유형에 따라 동·호 또는 계약면적 입력 항목이 자동으로 달라집니다.</span></div>
-            <div className={styles.agreeField}>
-              <label className={styles.agreeRow}><input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} /><span>입력 정보가 실제 계약 조건과 일치함을 확인하고 서비스 이용에 동의합니다. <button type="button" className={styles.agreeLink} onClick={(event) => { event.preventDefault(); setIsConsentModalOpen(true); }}>자세히 보기</button></span></label>
-              <p className={styles.agreeError} aria-live="polite">{errors.agreed || ''}</p>
-            </div>
-          </motion.div>
-        </motion.div>
-
-        <motion.div className={styles.actionRow} initial={{ opacity: 0 }} animate={{ opacity: 1 }}><Button type="submit" disabled={isSubmitting} className={styles.submitButton}>{isSubmitting ? '처리 중...' : stage === 'registry' ? '등기 분석 및 위험도 진단' : '면적 입력 후 위험도 진단'}</Button></motion.div>
-      </form>
-
-      <Modal isOpen={isConsentModalOpen} onClose={() => setIsConsentModalOpen(false)}><div className={styles.consentModal}><h2 className={styles.consentModalTitle}>매물 위험도 진단 이용 동의</h2><div className={styles.consentModalBody}><ConsentSection title="입력 정보 확인">입력한 주소, 계약 조건, 계약 상대방 이름과 등기부등본은 위험도 진단에 사용됩니다.</ConsentSection><ConsentSection title="파일 이용 범위">업로드한 등기부등본은 매물의 권리관계와 위험 요소 확인 목적으로만 사용됩니다.</ConsentSection><ConsentSection title="진단 결과 안내">진단 결과는 계약 전 참고용 정보이며 최종 판단과 법적 책임은 이용자 본인에게 있습니다.</ConsentSection></div></div></Modal>
-      <AreaRequiredModal isOpen={isAreaRequiredModalOpen} onClose={() => setIsAreaRequiredModalOpen(false)} contractAreaRequired={contractAreaRequired} />
-      <SubmitErrorModal error={submitError} onClose={() => setSubmitError(null)} />
-      <RiskProgressModal isOpen={isSubmitting} activeStep={progressStep} message={progressMessage} />
-    </div>
-  );
-}
-
-/** 건축물대장 dongNm은 '101동'처럼 이미 동이 붙어 오는 경우가 많다. */
-function dongLabel(dongName) {
-  const name = String(dongName ?? '').trim();
-  if (!name) return '';
-  return name.endsWith('동') ? name : `${name}동`;
-}
-
-function FieldLabel({ htmlFor, label, error }) {
-  return (
-    <div className={styles.labelRow}>
-      <label className={styles.label} htmlFor={htmlFor}>{label} <span className={styles.required}>•</span></label>
-      {error && <span className={styles.labelError}>{error}</span>}
-    </div>
-  );
-}
-
-function SearchResultPanel({
-  addressCandidates,
-  candidates,
-  disabled,
-  error,
-  housingType,
-  normalizedAddress,
-  onSelectAddress,
-  selectedCandidate,
-  selectedIndex,
-  setSelectedIndex,
-}) {
-  if (addressCandidates.length > 0) {
+  if (stage === 'mode') {
     return (
-      <div className={styles.searchResultPanel}>
-        <FieldLabel label="주소 검색 결과" error={error} />
-        <select className={styles.input} disabled={disabled} value="" onChange={(event) => { if (event.target.value !== '') onSelectAddress(addressCandidates[Number(event.target.value)].roadAddress); }}>
-          <option value="">검색된 주소 {addressCandidates.length}건 중에서 선택해 주세요</option>
-          {addressCandidates.map((candidate, index) => <option key={`${candidate.roadAddress}-${index}`} value={index}>{[candidate.roadAddress, candidate.buildingName].filter(Boolean).join(' · ')}</option>)}
-        </select>
-        <div className={styles.searchEmptyBox}>
-          <span className={styles.infoIcon}><FaCircleInfo /></span>
-          <span>입력한 주소로 여러 건물이 검색되었습니다. 진단할 건물의 주소를 선택하면 다시 검색합니다.</span>
-        </div>
+      <div className={styles.root}>
+        <section className={styles.modePanel}>
+          <span className={styles.eyebrow}><LuSparkles /> 전세 위험도 진단</span>
+          <h1>어떤 방식으로 확인할까요?</h1>
+          <p className={styles.lead}>간편진단은 가격·시장 중심, 정밀진단은 등기 권리관계까지 함께 확인합니다.</p>
+          <div className={styles.modeGrid}>
+            <button
+              type="button"
+              className={`${styles.modeCard} ${mode === 'QUICK' ? styles.selectedMode : ''}`}
+              onClick={() => setMode('QUICK')}
+            >
+              <span className={styles.modeIcon}><LuSparkles /></span>
+              <strong>간편진단</strong>
+              <span>등기부 없이 시세와 계약 조건을 빠르게 비교합니다.</span>
+              <em>비로그인·로그인 모두 이용 가능</em>
+            </button>
+            {isAuthenticated && (
+              <button
+                type="button"
+                className={`${styles.modeCard} ${mode === 'DETAILED' ? styles.selectedMode : ''}`}
+                onClick={() => setMode('DETAILED')}
+              >
+                <span className={styles.modeIcon}><LuShieldCheck /></span>
+                <strong>정밀진단</strong>
+                <span>등기부의 소유자와 권리관계, 담보 부담까지 확인합니다.</span>
+                <em>로그인 및 등기부등본 필수</em>
+              </button>
+            )}
+          </div>
+          {!isAuthenticated && (
+            <p className={styles.loginHint}>정밀진단은 로그인 후 이용할 수 있습니다.</p>
+          )}
+          {errors.page && <p className={styles.pageError}>{errors.page}</p>}
+          <Button className={styles.startButton} disabled={!mode || isStarting} onClick={startDiagnosis}>
+            {isStarting ? '진단을 준비하고 있습니다.' : '선택한 진단 시작'}
+            {!isStarting && <LuChevronRight />}
+          </Button>
+        </section>
       </div>
     );
   }
 
   return (
-    <div className={styles.searchResultPanel}>
-      <FieldLabel label="주소 검색 결과" error={error} />
-      {candidates.length > 0 ? (
-        <>
-          <select className={styles.input} disabled={disabled} value={selectedIndex} onChange={(event) => setSelectedIndex(event.target.value)}>
-            <option value="">건물 또는 동을 선택해 주세요</option>
-            {candidates.map((candidate, index) => <option key={`${candidate.buildingName}-${candidate.dongName}-${index}`} value={index}>{[candidate.buildingName, dongLabel(candidate.dongName)].filter(Boolean).join(' · ') || HOUSING_LABEL[candidate.housingType]}</option>)}
-          </select>
-          {selectedCandidate && <div className={styles.housingTypeBox}><span className={styles.housingTypeInfo}><span className={styles.infoIcon}><FaCircleInfo /></span>{HOUSING_LABEL[housingType]}</span><span className={styles.housingTypeConfirmed}><FaCircleCheck /> {normalizedAddress}</span></div>}
-        </>
-      ) : (
-        <div className={styles.searchEmptyBox}>
-          <span className={styles.infoIcon}><FaCircleInfo /></span>
-          <span>주소 검색 후 건물 또는 동 선택 항목이 여기에 표시됩니다.</span>
-        </div>
-      )}
+    <div className={styles.root}>
+      <div className={styles.formShell}>
+        <header className={styles.formHeader}>
+          <div>
+            <span className={styles.modeBadge}>{mode === 'QUICK' ? '간편진단' : '정밀진단'}</span>
+            <h1>전세 계약 정보를 확인해 주세요</h1>
+            <p>자동으로 채워진 값도 계약서와 비교해 수정할 수 있습니다.</p>
+          </div>
+          <span className={styles.analysisId}>진단번호 {analysisId}</span>
+        </header>
+
+        {mode === 'DETAILED' && (
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeading}>
+              <span className={styles.step}>1</span>
+              <div><h2>등기부등본 분석</h2><p>집합건물은 PDF 1개, 토지·건물은 PDF 2개를 함께 첨부할 수 있습니다.</p></div>
+            </div>
+            <button type="button" className={styles.uploadBox} onClick={() => fileInputRef.current?.click()} disabled={registryStatus === 'uploading'}>
+              <LuUpload />
+              <strong>{registryStatus === 'uploading' ? '등기부 내용을 확인하고 있습니다.' : '등기부등본 PDF 선택'}</strong>
+              <span>파일당 10MB 이하 · 최대 2개</span>
+            </button>
+            <input ref={fileInputRef} className={styles.hiddenInput} type="file" accept="application/pdf,.pdf" multiple onChange={handleRegistryFiles} />
+            {files.length > 0 && <ul className={styles.fileList}>{files.map((file) => <li key={`${file.name}-${file.size}`}>{file.name}</li>)}</ul>}
+            {registryStatus === 'success' && (
+              <div className={styles.successBox}>
+                <LuCheck />
+                <div>
+                  <strong>등기부등본을 확인했습니다.</strong>
+                  <span>추출된 주소와 면적은 아래 입력칸에 후보값으로 채웠습니다.</span>
+                </div>
+              </div>
+            )}
+            {registryResult?.currentOwners?.length > 0 && (
+              <p className={styles.ownerInfo}>등기부상 현재 소유자: {registryResult.currentOwners.map((owner) => owner.name).join(', ')}</p>
+            )}
+            {errors.files && <p className={styles.fieldError}>{errors.files}</p>}
+          </section>
+        )}
+
+        <form onSubmit={(event) => event.preventDefault()}>
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeading}>
+              <span className={styles.step}>{mode === 'DETAILED' ? '2' : '1'}</span>
+              <div><h2>주소 확정</h2><p>검색 결과에서 주소를 선택하거나 입력된 주소를 검색해 확정해 주세요.</p></div>
+            </div>
+            <div className={styles.addressControl}>
+              <LuMapPin aria-hidden="true" />
+              <input
+                value={address}
+                onChange={(event) => resetConfirmedAddress(event.target.value)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter') {
+                    event.preventDefault();
+                    confirmAddress();
+                  }
+                }}
+                placeholder="도로명, 지번 또는 건물명을 입력해 주세요"
+                autoComplete="off"
+              />
+              <button type="button" onClick={() => confirmAddress()} disabled={isSearching}>
+                <LuSearch /> {isSearching ? '확인 중' : '주소 확인'}
+              </button>
+            </div>
+            {suggestions.length > 0 && (
+              <div className={styles.suggestionList}>
+                {suggestions.map((candidate) => (
+                  <button key={`${candidate.roadAddress}-${candidate.jibunAddress}`} type="button" onClick={() => selectSuggestion(candidate)}>
+                    <strong>{candidate.roadAddress}</strong>
+                    <span>{candidate.jibunAddress}{candidate.buildingName ? ` · ${candidate.buildingName}` : ''}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {addressConfirmed && <p className={styles.confirmedAddress}><LuCheck /> {normalizedAddress}</p>}
+            {errors.address && <p className={styles.fieldError}>{errors.address}</p>}
+
+            {candidates.length > 0 && (
+              <label className={styles.field}>
+                <span>건물 또는 동</span>
+                <select value={selectedIndex} onChange={(event) => setSelectedIndex(event.target.value)}>
+                  {candidates.map((candidate, index) => (
+                    <option key={`${candidate.dongName}-${index}`} value={String(index)}>
+                      {[candidate.buildingName, candidate.dongName, HOUSING_LABEL[candidate.housingType]].filter(Boolean).join(' · ')}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            )}
+            {errors.candidate && <p className={styles.fieldError}>{errors.candidate}</p>}
+          </section>
+
+          <section className={styles.sectionCard}>
+            <div className={styles.sectionHeading}>
+              <span className={styles.step}>{mode === 'DETAILED' ? '3' : '2'}</span>
+              <div><h2>계약 조건</h2><p>주소가 확정되면 주택유형에 필요하지 않은 항목은 자동으로 사라집니다.</p></div>
+            </div>
+            <div className={styles.fieldGrid}>
+              {unitFieldsEnabled && (
+                <>
+                  <label className={styles.field}><span>호수</span><input value={hoName} onChange={(event) => setHoName(event.target.value)} placeholder="예: 302호" />{errors.hoName && <small>{errors.hoName}</small>}</label>
+                  <label className={styles.field}><span>층</span><input type="number" value={floor} onChange={(event) => setFloor(event.target.value)} placeholder="예: 3" />{errors.floor && <small>{errors.floor}</small>}</label>
+                </>
+              )}
+              <label className={styles.field}><span>{contractAreaRequired ? '계약면적' : '전용면적'} (㎡)</span><input type="number" min="0" step="0.01" value={area} onChange={(event) => setArea(event.target.value)} />{errors.area && <small>{errors.area}</small>}</label>
+              <label className={styles.field}><span>전세보증금</span><input value={deposit} onChange={(event) => setDeposit(moneyInput(event.target.value))} inputMode="numeric" placeholder="원 단위" />{errors.deposit && <small>{errors.deposit}</small>}</label>
+              <label className={styles.field}><span>계약 예정일</span><input type="date" value={contractDate} onChange={(event) => setContractDate(event.target.value)} />{errors.contractDate && <small>{errors.contractDate}</small>}</label>
+              {mode === 'DETAILED' && (
+                <label className={styles.field}><span>계약 상대방 이름</span><input value={landlordName} onChange={(event) => setLandlordName(event.target.value)} placeholder="계약서에 적힌 임대인 이름" />{errors.landlordName && <small>{errors.landlordName}</small>}</label>
+              )}
+            </div>
+          </section>
+
+          {mode === 'QUICK' && (
+            <div className={styles.infoBox}>
+              <LuInfo />
+              <p><strong>간편진단에는 등기 권리관계가 포함되지 않습니다.</strong><span>결과에서 정밀진단으로 추가 확인할 항목을 안내해 드립니다.</span></p>
+            </div>
+          )}
+
+          <label className={styles.consent}>
+            <input type="checkbox" checked={agreed} onChange={(event) => setAgreed(event.target.checked)} />
+            <span>입력한 정보를 전세 위험도 분석에 사용하는 데 동의합니다.</span>
+          </label>
+          {errors.agreed && <p className={styles.fieldError}>{errors.agreed}</p>}
+          {errors.page && <p className={styles.pageError}>{errors.page}</p>}
+          <Button className={styles.submitButton} disabled={isSubmitting} onClick={submitDiagnosis}>
+            {isSubmitting ? progressMessage : '진단 시작'}
+            {!isSubmitting && <LuFileSearch />}
+          </Button>
+        </form>
+      </div>
     </div>
   );
-}
-
-function TextField({ id, label, value, setValue, error, placeholder, disabled = false }) {
-  return <div className={styles.field}><FieldLabel htmlFor={id} label={label} error={error} /><input id={id} className={styles.input} placeholder={placeholder} value={value} disabled={disabled} onChange={(event) => setValue(event.target.value)} /></div>;
-}
-
-function UnitField({ id, label, unit, value, setValue, error, inputMode, placeholder, disabled = false }) {
-  return <div className={styles.field}><FieldLabel htmlFor={id} label={label} error={error} /><div className={styles.unitInputWrapper}><input id={id} className={styles.unitInput} inputMode={inputMode} placeholder={placeholder} value={value} disabled={disabled} onChange={(event) => setValue(event.target.value)} /><span className={styles.unit}>{unit}</span></div></div>;
-}
-
-function RiskProgressModal({ isOpen, activeStep, message }) {
-  const activeIndex = Math.max(PROGRESS_STEPS.findIndex((step) => step.key === activeStep), 0);
-  const active = PROGRESS_STEPS[activeIndex];
-
-  return (
-    <Modal isOpen={isOpen} onClose={() => {}} panelClassName={styles.progressModal}>
-      <p className={styles.progressEyebrow}>매물 위험도 진단</p>
-      <div className={styles.progressHeader}>
-        <div>
-          <h2 className={styles.progressTitle}>{active.label}</h2>
-          <p className={styles.progressDescription}>{message || active.description}</p>
-        </div>
-        <span className={styles.loadingSpinner} aria-hidden="true" />
-      </div>
-      <div className={styles.progressSteps} aria-label="진단 진행 상태">
-        {PROGRESS_STEPS.map((step, index) => {
-          const isDone = index < activeIndex;
-          const isActive = index === activeIndex;
-          return (
-            <div key={step.key} className={styles.progressStep} data-active={isActive} data-done={isDone}>
-              <span className={styles.progressNumber}>
-                {isDone ? <FaCircleCheck aria-hidden="true" /> : index + 1}
-              </span>
-              <span className={styles.progressLabel}>{step.label}</span>
-              {index < PROGRESS_STEPS.length - 1 && <span className={styles.progressBar} aria-hidden="true" />}
-            </div>
-          );
-        })}
-      </div>
-    </Modal>
-  );
-}
-
-function SubmitErrorModal({ error, onClose }) {
-  return (
-    <Modal isOpen={Boolean(error)} onClose={onClose} panelClassName={styles.submitErrorModal}>
-      <div className={styles.submitErrorIcon} aria-hidden="true">
-        <FaCircleInfo />
-      </div>
-      <h2 className={styles.submitErrorTitle}>{error?.title}</h2>
-      <p className={styles.submitErrorDescription}>
-        {error?.message}
-        {error?.status}
-      </p>
-      <div className={styles.submitErrorActions}>
-        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
-          확인
-        </Button>
-      </div>
-    </Modal>
-  );
-}
-
-function AreaRequiredModal({ isOpen, onClose, contractAreaRequired }) {
-  const areaLabel = contractAreaRequired ? '계약면적' : '전용면적';
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.submitErrorModal}>
-      <div className={styles.submitErrorIcon} aria-hidden="true">
-        <FaCircleInfo />
-      </div>
-      <h2 className={styles.submitErrorTitle}>{areaLabel} 입력이 필요합니다</h2>
-      <p className={styles.submitErrorDescription}>
-        등기부등본에서 {areaLabel}을 자동으로 확인하지 못했습니다. 폼에 표시된 {areaLabel}을 추가로 입력한 뒤 다시 진단해 주세요.
-      </p>
-      <div className={styles.submitErrorActions}>
-        <Button type="button" onClick={onClose} className={styles.submitErrorButton}>
-          확인
-        </Button>
-      </div>
-    </Modal>
-  );
-}
-
-function ConsentSection({ title, children }) {
-  return <section className={styles.consentSection}><h3>{title}</h3><p>{children}</p></section>;
 }

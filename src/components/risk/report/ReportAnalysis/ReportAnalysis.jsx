@@ -50,11 +50,13 @@ export default function ReportAnalysis({ report, motionSet }) {
         <PriceRiskSection report={report} />
       </ReportSection>
 
-      <ReportSection index="02" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
-        <RecoveryRegistrySection report={report} />
-      </ReportSection>
+      {report.isDetailed && (
+        <ReportSection index="02" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
+          <RecoveryRegistrySection report={report} />
+        </ReportSection>
+      )}
 
-      <ReportSection index="03" icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
+      <ReportSection index={report.isDetailed ? '03' : '02'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
@@ -113,24 +115,26 @@ function PriceRiskSection({ report }) {
           </div>
         </div>
 
-        <div className={styles.scenarioArea}>
-          <h3>가격 하락 시나리오</h3>
-          <div className={styles.scenarioRows}>
-            {report.scenarios.map((scenario) => (
-              <div key={scenario.label} className={styles.scenarioRow}>
-                <div>
-                  <strong>{scenario.label}</strong>
-                  <span>{scenario.price}</span>
+        {report.scenarios.length > 0 && (
+          <div className={styles.scenarioArea}>
+            <h3>가격 하락 시나리오</h3>
+            <div className={styles.scenarioRows}>
+              {report.scenarios.map((scenario) => (
+                <div key={scenario.label} className={styles.scenarioRow}>
+                  <div>
+                    <strong>{scenario.label}</strong>
+                    <span>{scenario.price}</span>
+                  </div>
+                  <span className={styles.scenarioRate}>{scenario.rate}</span>
+                  <span className={`${styles.verdict} ${styles[scenario.verdictTone]}`}>{scenario.verdictLabel}</span>
+                  <span className={styles.scenarioProgress} aria-hidden="true">
+                    <span style={{ width: `${scenario.progressWidth}%` }} />
+                  </span>
                 </div>
-                <span className={styles.scenarioRate}>{scenario.rate}</span>
-                <span className={`${styles.verdict} ${styles[scenario.verdictTone]}`}>{scenario.verdictLabel}</span>
-                <span className={styles.scenarioProgress} aria-hidden="true">
-                  <span style={{ width: `${scenario.progressWidth}%` }} />
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       <InsightList insights={report.priceInsights} />
@@ -214,7 +218,9 @@ function RiskBreakdownSection({ report }) {
   return (
     <>
       <p className={styles.sectionLead}>
-        총 {report.totalScore ?? '-'}점은 아래 네 가지 위험요소를 합한 값이며, 막대는 각 항목이 해당 요소의 최대 위험 대비 몇 %인지 보여줍니다.
+        {report.hasScoreAdjustments
+          ? `최종 ${report.totalScore ?? '-'}점은 기본 위험요소와 최종 판정 조정을 반영한 값입니다. 기본 항목은 만점 대비 비율로, 조정 항목은 최종점수에 더해진 점수로 표시합니다.`
+          : `총 ${report.totalScore ?? '-'}점은 아래 위험요소를 반영한 값이며, 막대는 항목별 만점 대비 비율을 보여줍니다.`}
       </p>
       <div className={styles.breakdownChart}>
         <ResponsiveContainer width="100%" height="100%">
@@ -223,7 +229,10 @@ function RiskBreakdownSection({ report }) {
             <XAxis type="number" domain={[0, 100]} hide />
             <YAxis dataKey="label" type="category" tick={{ fontSize: 14, fill: '#374151' }} axisLine={false} tickLine={false} width={88} />
             <Tooltip formatter={(value, name, props) => [`${props.payload.ratioLabel} (${props.payload.scoreLabel})`, props.payload.label]} contentStyle={{ fontSize: '14px', borderRadius: '10px', borderColor: '#dfe5eb' }} />
-            <Bar dataKey="ratio" fill="#0F75BD" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
+            <Bar dataKey="ratio" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
+              {report.contribution.map((entry) => (
+                <Cell key={entry.label} fill={entry.color} />
+              ))}
               <LabelList dataKey="ratioLabel" position="right" fill="#111827" fontSize={14} fontWeight={700} />
             </Bar>
           </BarChart>
@@ -233,21 +242,26 @@ function RiskBreakdownSection({ report }) {
   );
 }
 
+const PRIMARY_REASON_COUNT = 4;
+
 function BottomAnalysis({ report, motionSet }) {
   const evidence = report.reasonGroups?.evidence ?? [];
+  const overflow = evidence.slice(PRIMARY_REASON_COUNT);
 
   return (
     <motion.div
-      className={styles.bottomAnalysisGrid}
+      className={`${styles.bottomAnalysisGrid} ${overflow.length ? '' : styles.singleColumn}`}
       initial="hidden"
       whileInView="visible"
       viewport={VIEWPORT}
       variants={motionSet.section}
     >
       <InsightSection
-        evidence={evidence}
+        index={report.isDetailed ? '04' : '03'}
+        evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
         cautions={report.reasonGroups?.cautions ?? []}
       />
+      {overflow.length > 0 && <MoreInsightSection reasons={overflow} />}
     </motion.div>
   );
 }
@@ -268,12 +282,22 @@ function ReasonList({ reasons }) {
   );
 }
 
-function InsightSection({ evidence, cautions }) {
+function MoreInsightSection({ reasons }) {
   return (
-    <section className={styles.primaryReasonSection}>
-      <SectionTitle index="04" icon={<LuTriangleAlert />} title="주요 분석 근거" />
+    <section className={styles.actionsColumn}>
+      <h3 className={styles.reasonGroupTitle}>그 밖의 분석 근거</h3>
+      <ReasonList reasons={reasons} />
+    </section>
+  );
+}
+
+function InsightSection({ index, evidence, cautions }) {
+  return (
+    <section>
+      <SectionTitle index={index} icon={<LuTriangleAlert />} title="왜 위험한가요?" />
       <div className={styles.reasonGroups}>
-        <div className={`${styles.reasonGroup} ${styles.primaryReasonGroup}`}>
+        <div className={styles.reasonGroup}>
+          <h3 className={styles.reasonGroupTitle}>주요 분석 근거</h3>
           <ReasonList reasons={evidence} />
         </div>
 
