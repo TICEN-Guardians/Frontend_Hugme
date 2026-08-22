@@ -8,6 +8,7 @@ import {
   LuSearch,
   LuShieldCheck,
   LuSparkles,
+  LuTriangleAlert,
   LuUpload,
 } from 'react-icons/lu';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +34,10 @@ const HOUSING_LABEL = {
   OFFICETEL: '오피스텔',
   DETACHED_MULTI: '단독·다가구',
 };
+const errorCode = (error) => (
+  error?.response?.data?.code
+  ?? error?.response?.data?.detail?.code
+);
 
 const errorMessage = (error, fallback) => (
   error?.response?.data?.message
@@ -56,6 +61,7 @@ export default function RiskFormPage() {
   const [address, setAddress] = useState('');
   const [normalizedAddress, setNormalizedAddress] = useState('');
   const [addressConfirmed, setAddressConfirmed] = useState(false);
+  const [propertySnapshot, setPropertySnapshot] = useState(null);
   const [suggestions, setSuggestions] = useState([]);
   const [candidates, setCandidates] = useState([]);
   const [selectedIndex, setSelectedIndex] = useState('');
@@ -69,6 +75,7 @@ export default function RiskFormPage() {
   const [files, setFiles] = useState([]);
   const [registryResult, setRegistryResult] = useState(null);
   const [registryStatus, setRegistryStatus] = useState('idle');
+  const [registryAddressReviewConfirmed, setRegistryAddressReviewConfirmed] = useState(false);
   const [agreed, setAgreed] = useState(false);
   const [errors, setErrors] = useState({});
   const [isSearching, setIsSearching] = useState(false);
@@ -80,6 +87,7 @@ export default function RiskFormPage() {
   const housingType = selectedCandidate?.housingType ?? null;
   const unitFieldsEnabled = !addressConfirmed || housingType !== 'DETACHED_MULTI';
   const contractAreaRequired = addressConfirmed && housingType === 'DETACHED_MULTI';
+  const registryAddressMatchStatus = registryResult?.addressMatchStatus ?? null;
 
   useEffect(() => {
     if (!isAuthLoading && !isAuthenticated) setMode('QUICK');
@@ -128,9 +136,18 @@ export default function RiskFormPage() {
     setAddress(nextAddress);
     setNormalizedAddress('');
     setAddressConfirmed(false);
+    setPropertySnapshot(null);
     setCandidates([]);
     setSelectedIndex('');
     setErrors((current) => ({ ...current, address: '', candidate: '' }));
+    setRegistryAddressReviewConfirmed(false);
+    if (registryResult?.parseStatus === 'SUCCESS') {
+      setRegistryResult((current) => ({
+        ...current,
+        addressMatchStatus: 'PENDING_ADDRESS_CONFIRMATION',
+      }));
+      setRegistryStatus('addressPending');
+    }
   };
 
   const confirmAddress = async (value = address) => {
@@ -161,34 +178,109 @@ export default function RiskFormPage() {
         (candidate) => preferredDongName && candidate.dongName === preferredDongName,
       );
       const nextIndex = preferredIndex >= 0 ? preferredIndex : 0;
+      const confirmedDongName = nextCandidates[nextIndex]?.dongName || null;
       const confirmedAddress = result.normalizedAddress || keyword;
-      await updateDiagnosisAddress(analysisId, {
-        address: confirmedAddress,
-        dongName: preferredDongName || null,
-        hoName: hoName.trim() || null,
-        propertySnapshot: {
-          roadAddress: result.roadAddress || confirmedAddress,
-          jibunAddress: result.jibunAddress || null,
-        },
-      });
+      const nextPropertySnapshot = {
+        roadAddress: result.roadAddress || confirmedAddress,
+        jibunAddress: result.jibunAddress || null,
+      };
       setAddress(confirmedAddress);
       setNormalizedAddress(confirmedAddress);
       setSuggestions([]);
       setCandidates(nextCandidates);
       setSelectedIndex(String(nextIndex));
       setAddressConfirmed(true);
+      setPropertySnapshot(nextPropertySnapshot);
+      await updateDiagnosisAddress(analysisId, {
+        address: confirmedAddress,
+        dongName: confirmedDongName,
+        hoName: hoName.trim() || null,
+        propertySnapshot: nextPropertySnapshot,
+        registryAddressReviewConfirmed: false,
+      });
+      setRegistryAddressReviewConfirmed(false);
       if (registryResult?.parseStatus === 'SUCCESS') {
+        setRegistryResult((current) => ({
+          ...current,
+          addressMatchStatus: 'MATCH',
+        }));
         setRegistryStatus('success');
         setErrors((current) => ({ ...current, files: '' }));
       }
     } catch (error) {
+      const code = errorCode(error);
+      if (code === 'REGISTRY_ADDRESS_PARTIAL_MATCH') {
+        setRegistryResult((current) => ({
+          ...current,
+          addressMatchStatus: 'PARTIAL_MATCH_REVIEW_REQUIRED',
+        }));
+        setRegistryStatus('review');
+        setRegistryAddressReviewConfirmed(false);
+        setErrors((current) => ({
+          ...current,
+          address: '',
+          files: '건물 주소는 일치하지만 등기부의 동·호를 확인하지 못했습니다.',
+        }));
+        return;
+      }
+      if (code === 'REGISTRY_ADDRESS_MISMATCH') {
+        setRegistryResult((current) => ({
+          ...current,
+          addressMatchStatus: 'MISMATCH',
+        }));
+        setRegistryStatus('review');
+        setRegistryAddressReviewConfirmed(false);
+        setAddressConfirmed(false);
+        setPropertySnapshot(null);
+        setCandidates([]);
+        setSelectedIndex('');
+        setErrors((current) => ({
+          ...current,
+          address: '',
+          files: errorMessage(error, '확정한 주소와 등기부 주소가 다릅니다.'),
+        }));
+        return;
+      }
       setAddressConfirmed(false);
+      setNormalizedAddress('');
+      setPropertySnapshot(null);
       setCandidates([]);
       setSelectedIndex('');
+      setRegistryAddressReviewConfirmed(false);
       if (registryResult?.parseStatus === 'SUCCESS') setRegistryStatus('review');
       setErrors((current) => ({
         ...current,
         address: errorMessage(error, '주소를 확인하지 못했습니다.'),
+      }));
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  const confirmPartialRegistryAddress = async () => {
+    if (!addressConfirmed || !normalizedAddress || !propertySnapshot) return;
+    setIsSearching(true);
+    setErrors((current) => ({ ...current, files: '' }));
+    try {
+      await updateDiagnosisAddress(analysisId, {
+        address: normalizedAddress,
+        dongName: selectedCandidate?.dongName || preferredDongName || null,
+        hoName: hoName.trim() || null,
+        propertySnapshot,
+        registryAddressReviewConfirmed: true,
+      });
+      setRegistryAddressReviewConfirmed(true);
+      setRegistryResult((current) => ({
+        ...current,
+        addressMatchStatus: 'PARTIAL_MATCH_REVIEW_REQUIRED',
+      }));
+      setRegistryStatus('success');
+    } catch (error) {
+      setRegistryAddressReviewConfirmed(false);
+      setRegistryStatus('review');
+      setErrors((current) => ({
+        ...current,
+        files: errorMessage(error, '주소와 등기부를 다시 확인해 주세요.'),
       }));
     } finally {
       setIsSearching(false);
@@ -237,23 +329,28 @@ export default function RiskFormPage() {
     setRegistryStatus('uploading');
     setRegistryResult(null);
     setErrors((current) => ({ ...current, files: '' }));
+    setRegistryAddressReviewConfirmed(false);
     try {
       const result = await uploadRegistry({ analysisId, files: picked });
       setRegistryResult(result);
       applyRegistryResult(result);
-      const addressAccepted = [
-        'MATCH',
-        'PENDING_ADDRESS_CONFIRMATION',
-      ].includes(result.addressMatchStatus);
-      if (result.parseStatus === 'SUCCESS' && addressAccepted) {
+      if (result.parseStatus !== 'SUCCESS') {
+        setRegistryStatus('review');
+        setErrors((current) => ({
+          ...current,
+          files: '등기부 내용을 정상적으로 확인하지 못했습니다. 파일을 다시 첨부해 주세요.',
+        }));
+      } else if (result.addressMatchStatus === 'MATCH') {
         setRegistryStatus('success');
+      } else if (result.addressMatchStatus === 'PENDING_ADDRESS_CONFIRMATION') {
+        setRegistryStatus('addressPending');
       } else {
         setRegistryStatus('review');
-        const message = result.addressMatchStatus === 'MISMATCH'
+        const message = result.addressMatchStatus === 'UNREADABLE'
+          ? '등기부에서 비교할 부동산 주소를 읽지 못했습니다.'
+          : result.addressMatchStatus === 'MISMATCH'
           ? '확정한 주소와 등기부의 부동산 주소가 다릅니다.'
-          : result.addressMatchStatus === 'PARTIAL_MATCH_REVIEW_REQUIRED'
-            ? '건물 주소는 일치하지만 등기부의 동·호를 확인하지 못했습니다.'
-            : '등기부 내용을 정상적으로 확인하지 못했습니다. 파일을 다시 첨부해 주세요.';
+          : '건물 주소는 일치하지만 등기부의 동·호를 확인하지 못했습니다.';
         setErrors((current) => ({ ...current, files: message }));
       }
     } catch (error) {
@@ -301,6 +398,10 @@ export default function RiskFormPage() {
         anonymous,
       });
       const usesContractArea = resolved.contractAreaRequired;
+      if (mode === 'DETAILED') {
+        setNormalizedAddress(resolved.normalizedAddress);
+        setPropertySnapshot(resolved.propertySnapshot);
+      }
       setProgressMessage('입력한 계약 조건을 저장하고 있습니다.');
       await updateDiagnosisDetails(analysisId, {
         address: resolved.normalizedAddress,
@@ -313,12 +414,31 @@ export default function RiskFormPage() {
         floor: usesContractArea ? null : Number(floor),
         landlordName: mode === 'DETAILED' ? landlordName.trim() : null,
         propertySnapshot: resolved.propertySnapshot,
+        registryAddressReviewConfirmed,
       });
       setProgressMessage('시세와 계약 조건을 바탕으로 위험도를 계산하고 있습니다.');
       await analyzeDiagnosis(analysisId);
       if (isAuthenticated) setLastRiskAnalysisId(user?.email, analysisId);
       navigate(`/risk/${analysisId}`);
     } catch (error) {
+      const code = errorCode(error);
+      if ([
+        'REGISTRY_ADDRESS_PARTIAL_MATCH',
+        'REGISTRY_ADDRESS_MISMATCH',
+      ].includes(code)) {
+        const matchStatus = code === 'REGISTRY_ADDRESS_MISMATCH'
+          ? 'MISMATCH'
+          : 'PARTIAL_MATCH_REVIEW_REQUIRED';
+        setRegistryResult((current) => ({ ...current, addressMatchStatus: matchStatus }));
+        setRegistryStatus('review');
+        setRegistryAddressReviewConfirmed(false);
+        setErrors((current) => ({
+          ...current,
+          page: '',
+          files: errorMessage(error, '주소와 등기부를 다시 확인해 주세요.'),
+        }));
+        return;
+      }
       setErrors((current) => ({
         ...current,
         page: errorMessage(error, '진단을 완료하지 못했습니다.'),
@@ -407,8 +527,54 @@ export default function RiskFormPage() {
                 <LuCheck />
                 <div>
                   <strong>등기부등본을 확인했습니다.</strong>
-                  <span>추출된 주소와 면적은 아래 입력칸에 후보값으로 채웠습니다.</span>
+                  <span>{registryAddressReviewConfirmed
+                    ? '부분 일치한 동·호를 사용자가 확인했습니다.'
+                    : '추출된 주소와 면적은 아래 입력칸에 후보값으로 채웠습니다.'}</span>
                 </div>
+              </div>
+            )}
+            {registryStatus === 'addressPending' && (
+              <div className={styles.pendingBox}>
+                <LuInfo />
+                <div>
+                  <strong>등기부 주소 확인이 남았습니다.</strong>
+                  <span>추출된 주소를 아래 검색창에서 확인하거나 수정한 뒤 주소 확인을 눌러 주세요.</span>
+                </div>
+              </div>
+            )}
+            {[
+              'PARTIAL_MATCH_REVIEW_REQUIRED',
+              'MISMATCH',
+            ].includes(registryAddressMatchStatus) && !registryAddressReviewConfirmed && (
+              <div className={styles.addressReviewBox}>
+                <div className={styles.addressReviewTitle}>
+                  <LuTriangleAlert />
+                  <strong>
+                    {registryAddressMatchStatus === 'MISMATCH'
+                      ? '입력 주소와 등기부 주소가 다릅니다.'
+                      : '동·호 정보가 부분 일치합니다.'}
+                  </strong>
+                </div>
+                <dl className={styles.addressCompare}>
+                  <div>
+                    <dt>사용자가 확인한 주소</dt>
+                    <dd>{normalizedAddress || '주소 확정 필요'}</dd>
+                  </div>
+                  <div>
+                    <dt>등기부에서 추출한 주소</dt>
+                    <dd>{registryResult?.propertyAddress || '판독 불가'}</dd>
+                  </div>
+                </dl>
+                {registryAddressMatchStatus === 'PARTIAL_MATCH_REVIEW_REQUIRED' && (
+                  <button
+                    type="button"
+                    className={styles.reviewConfirmButton}
+                    onClick={confirmPartialRegistryAddress}
+                    disabled={isSearching || !propertySnapshot}
+                  >
+                    두 주소를 확인했으며 이 등기부로 진행
+                  </button>
+                )}
               </div>
             )}
             {registryResult?.currentOwners?.length > 0 && (

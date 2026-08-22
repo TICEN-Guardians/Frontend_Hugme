@@ -70,6 +70,79 @@ const REGISTRY_FLAGS = [
   { key: 'leaseholdRegistration', label: '임차권등기' },
 ];
 
+const REGISTRY_PARSE_STATUS = {
+  SUCCESS: '정상 판독',
+  PARTIAL: '일부 판독',
+  NEEDS_REVIEW: '재확인 필요',
+  FAILED: '판독 실패',
+};
+
+const REGISTRY_CONFIDENCE = {
+  HIGH: '높음',
+  MEDIUM: '보통',
+  LOW: '낮음',
+  UNKNOWN: '확인 불가',
+};
+
+const REGISTRY_ADDRESS_MATCH = {
+  MATCH: '일치',
+  PARTIAL_MATCH_REVIEW_REQUIRED: '부분 일치',
+  MISMATCH: '불일치',
+  UNREADABLE: '판독 불가',
+  PENDING_ADDRESS_CONFIRMATION: '주소 확정 대기',
+};
+
+const REGISTRY_OWNER_MATCH = {
+  TRUE: '일치',
+  FALSE: '불일치',
+  UNKNOWN: '확인 불가',
+};
+
+const REGISTRY_RIGHT_TYPE = {
+  OWNERSHIP: '소유권',
+  MORTGAGE: '근저당권',
+  MORTGAGE_AMEND: '근저당권 변경',
+  MORTGAGE_TRANSFER: '근저당권 이전',
+  SEIZURE: '압류',
+  PROVISIONAL_SEIZURE: '가압류',
+  PROVISIONAL_DISPOSITION: '가처분',
+  AUCTION: '경매개시',
+  TRUST: '신탁등기',
+  JEONSE_RIGHT: '전세권',
+  LEASEHOLD_REGISTRATION: '임차권등기',
+  CANCELLATION: '말소',
+  OTHER: '기타 권리',
+};
+const REGISTRY_SECTION = {
+  GAP: '갑구',
+  EUL: '을구',
+};
+
+const WATCHLIST_MATCH_STATUS = {
+  MATCH_HIGH: '명단 일치',
+  MATCH_NAME_ONLY: '이름 일치 · 추가 확인 필요',
+  NO_MATCH: '일치 없음',
+  UNKNOWN: '확인 불가',
+};
+
+const WATCHLIST_MATCH_TYPE = {
+  EXACT: '정확 일치',
+  MANUAL_REVIEW: '수동 확인 필요',
+};
+const MARKET_COMPARABLE_SCOPE = {
+  SAME_BUILDING: '같은 건물 · 유사 면적',
+  SAME_LEGAL_DONG: '같은 법정동 · 유사 면적',
+  SAME_DISTRICT: '같은 시군구 · 유사 면적',
+};
+
+const MARKET_COMPARABLE_WARNING = {
+  RTMS_PERIOD_EXPANDED: '최근 6개월 표본이 부족해 비교 기간을 12개월로 넓혔습니다.',
+  RTMS_SCOPE_EXPANDED_TO_DISTRICT: '같은 법정동 표본이 부족해 같은 시군구의 유사 면적 거래까지 포함했습니다.',
+  RTMS_AREA_AND_PERIOD_EXPANDED: '표본 확보를 위해 비교 기간과 면적 범위를 함께 넓혔습니다.',
+};
+
+
+
 export default function RiskReportPage() {
   const { reportId } = useParams();
   const navigate = useNavigate();
@@ -198,6 +271,7 @@ function toReportViewModel(data) {
   const property = data.property ?? {};
   const indicators = data.indicators ?? {};
   const registry = data.registry ?? null;
+  const registryVerification = registryVerificationViewModel(data.registryVerification);
   const isDetailed = data.mode === 'DETAILED';
   const reportDetail = data.reportDetail ?? {};
   const explanation = reportDetail.explanation ?? {};
@@ -210,6 +284,7 @@ function toReportViewModel(data) {
     findMetric(data, 'valuation', 'deposit')?.value
     ?? findMetric(data, 'collateral', 'deposit')?.value,
   );
+  const marketComparables = marketComparableViewModel(data.marketComparables, deposit);
   const mortgage = numberOrNull(registry?.totalActiveMaxClaimAmount);
   const recoverableAmount = numberOrNull(indicators.recoverableAmount);
   const remaining = numberOrNull(indicators.remainingCollateralCapacity);
@@ -287,6 +362,7 @@ function toReportViewModel(data) {
       isDetailed ? { label: '담보부담률', value: ratio(collateralBurdenRate) } : null,
     ].filter(Boolean),
     priceBars,
+    marketComparables,
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
     scenarios: scenarios.map((item) => ({
       ...item,
@@ -312,12 +388,117 @@ function toReportViewModel(data) {
     registrySummary: registrySummary(registryChecks(registry)).label,
     registrySummaryTone: registrySummary(registryChecks(registry)).tone,
     registryChecks: registryChecks(registry),
+    registryVerification,
     contribution,
     hasScoreAdjustments: contribution.some((item) => item.isAdjustment),
     riskReasons,
     reasonGroups: riskReasons,
     recommendedActions: recommendedActions(explanation.recommendedActions ?? []),
   };
+}
+
+function marketComparableViewModel(value, deposit) {
+  const sourceLabel = '국토교통부 실거래 공개시스템';
+  const warningCode = value?.warnings?.[0];
+  const bins = (value?.bins ?? [])
+    .map((item) => {
+      const lower = numberOrNull(item.lowerBound);
+      const upper = numberOrNull(item.upperBound);
+      const count = numberOrNull(item.count);
+      if (lower == null || upper == null || count == null) return null;
+      return {
+        lower,
+        upper,
+        midpoint: (lower + upper) / 2,
+        count,
+        rangeLabel: `${shortMoney(lower)} ~ ${shortMoney(upper)}`,
+      };
+    })
+    .filter(Boolean);
+  const available = value?.status === 'AVAILABLE' && bins.length > 0 && deposit != null;
+
+  if (!available) {
+    let statusTitle = '주변 실거래 분포를 표시할 수 없습니다.';
+    let statusDescription = '이 분석에는 주변 전세 실거래 분포가 저장되지 않았습니다. 다시 진단하면 최신 비교 데이터 조회를 시도합니다.';
+
+    if (warningCode === 'RTMS_API_NOT_CONFIGURED') {
+      statusTitle = '국토부 실거래 API 연결 승인이 필요합니다.';
+      statusDescription = '실거래 서비스 사용 승인이 연결되면 같은 지역의 유사 면적 전세 계약을 조회해 분포를 제공합니다.';
+    } else if (warningCode === 'RTMS_API_UNAVAILABLE') {
+      statusTitle = '국토부 실거래 데이터를 불러오지 못했습니다.';
+      statusDescription = '외부 실거래 서비스가 응답하지 않아 이번 분석에는 분포를 포함하지 않았습니다. 잠시 후 다시 진단해 주세요.';
+    } else if (value?.status === 'INSUFFICIENT') {
+      statusTitle = '비교 가능한 실거래 표본이 부족합니다.';
+      statusDescription = '최근 12개월 동안 같은 지역의 유사 면적 전세 계약이 5건 미만이라 왜곡될 수 있는 그래프는 표시하지 않았습니다.';
+    } else if (value?.status === 'AVAILABLE') {
+      statusDescription = '저장된 실거래 분포 값이 완전하지 않아 그래프를 표시하지 않았습니다.';
+    }
+
+    return {
+      available: false,
+      statusTitle,
+      statusDescription,
+      sourceLabel,
+    };
+  }
+
+  const minimum = numberOrNull(value.minimum) ?? Math.min(...bins.map((item) => item.lower));
+  const maximum = numberOrNull(value.maximum) ?? Math.max(...bins.map((item) => item.upper));
+  const rawMin = Math.min(minimum, deposit);
+  const rawMax = Math.max(maximum, deposit);
+  const padding = Math.max((rawMax - rawMin) * 0.06, 5_000_000);
+  const percentile = numberOrNull(value.userDepositPercentile);
+  const scopeLabel = MARKET_COMPARABLE_SCOPE[value.scope] ?? '같은 시군구 · 유사 면적';
+
+  return {
+    available: true,
+    sourceLabel,
+    scopeLabel,
+    sampleCount: numberOrNull(value.sampleCount) ?? bins.reduce((sum, item) => sum + item.count, 0),
+    description: `${scopeLabel}의 전세 실거래를 비교했습니다. 공개 실거래에는 동·호 정보가 없어 건물 또는 법정동과 면적을 기준으로 선별했습니다.`,
+    periodLabel: dateRange(value.periodStart, value.periodEnd),
+    areaRangeLabel: areaRange(value.areaMin, value.areaMax),
+    depositValue: deposit,
+    depositShortLabel: shortMoney(deposit),
+    domain: [Math.max(0, rawMin - padding), rawMax + padding],
+    bins,
+    statistics: [
+      {
+        label: 'P25',
+        value: shortMoney(numberOrNull(value.percentile25)),
+        help: '비교 표본의 25%가 이 금액 이하에서 계약됐다는 뜻입니다.',
+      },
+      {
+        label: '중앙값',
+        value: shortMoney(numberOrNull(value.median)),
+        help: '비교 표본을 보증금 순서로 놓았을 때 가운데에 있는 계약금액입니다.',
+      },
+      {
+        label: 'P75',
+        value: shortMoney(numberOrNull(value.percentile75)),
+        help: '비교 표본의 75%가 이 금액 이하에서 계약됐다는 뜻입니다.',
+      },
+      {
+        label: '내 보증금 위치',
+        value: percentile == null ? '확인 필요' : `${percentile.toFixed(1)} 백분위`,
+        help: '입력한 보증금이 비교 표본 중 몇 퍼센트의 계약금액 이상인지 나타냅니다.',
+        emphasis: true,
+      },
+    ],
+    warning: MARKET_COMPARABLE_WARNING[warningCode] ?? null,
+  };
+}
+
+function dateRange(start, end) {
+  if (!start || !end) return '확인 필요';
+  return `${String(start).replaceAll('-', '.')} ~ ${String(end).replaceAll('-', '.')}`;
+}
+
+function areaRange(minimum, maximum) {
+  const min = numberOrNull(minimum);
+  const max = numberOrNull(maximum);
+  if (min == null || max == null) return '확인 필요';
+  return `${min.toFixed(1)}㎡ ~ ${max.toFixed(1)}㎡`;
 }
 
 function riskContributions({ breakdown, weights, isDetailed }) {
@@ -635,6 +816,112 @@ function registrySummary(items) {
   const unknownCount = items.filter((item) => item.state === 'unknown').length;
   if (riskCount === 0 && unknownCount === 0) return { label: `${items.length}개 항목 모두 안전`, tone: 'safe' };
   return { label: `위험 ${riskCount} · 확인 필요 ${unknownCount}`, tone: riskCount > 0 ? 'risk' : 'unknown' };
+}
+
+function registryVerificationViewModel(value) {
+  if (!value) return null;
+
+  const owners = (value.currentOwners ?? []).map((owner) => (
+    owner.share ? `${owner.name} (지분 ${owner.share})` : owner.name
+  ));
+  const addressMatch = REGISTRY_ADDRESS_MATCH[value.addressMatchStatus] ?? '확인 불가';
+  const ownerMatch = REGISTRY_OWNER_MATCH[value.ownerMatchStatus] ?? '확인 불가';
+  const watchlist = value.badLandlordMatched === true
+    ? '명단 일치'
+    : value.badLandlordMatched === false
+      ? '조회 완료 · 일치 없음'
+      : value.watchlistCheckStatus === 'ERROR'
+        ? '조회 오류'
+        : '확인 불가';
+  const ownerChecks = (value.watchlistChecks ?? []).map((check) => {
+    const target = check.ownerName || '소유자 미확인';
+    const status = check.checkStatus === 'ERROR'
+      ? '조회 오류'
+      : check.checkStatus === 'NOT_CHECKED'
+        ? '조회하지 못함'
+        : WATCHLIST_MATCH_STATUS[check.matchStatus]
+          ?? (check.matched === true ? '명단 일치' : check.matched === false ? '일치 없음' : '확인 불가');
+    const matchType = WATCHLIST_MATCH_TYPE[check.matchType] ?? null;
+    const checkedAt = check.checkStatus === 'NOT_CHECKED'
+      ? null
+      : registryCheckedAt(check.checkedAt);
+    return [`${target}: ${status}`, matchType, checkedAt ? `${checkedAt} 조회` : null]
+      .filter(Boolean)
+      .join(' · ');
+  });
+
+  return {
+    rows: [
+      { label: '등기 문서 발급일', value: registryIssueDate(value.issueDate) },
+      {
+        label: '문서 판독',
+        value: `${REGISTRY_PARSE_STATUS[value.parseStatus] ?? '확인 불가'} · 신뢰도 ${REGISTRY_CONFIDENCE[value.parseConfidence] ?? '확인 불가'}`,
+      },
+      { label: '등기부 주소', value: value.registryAddress || '판독 불가' },
+      {
+        label: '주소 일치',
+        value: value.addressMatchReviewConfirmed
+          ? `${addressMatch} · 사용자 확인 완료`
+          : addressMatch,
+      },
+      { label: '현재 소유자', value: owners.length ? owners.join(', ') : '확인 불가' },
+      {
+        label: '계약 상대방과 소유자',
+        value: `${value.contractPartyName || '계약 상대방 미입력'} · ${ownerMatch}`,
+      },
+      { label: '악성임대인 조회', value: watchlist },
+      {
+        label: '소유자별 조회',
+        value: ownerChecks.length ? ownerChecks.join(', ') : '조회 내역 없음',
+      },
+    ],
+    evidence: (value.rightEvidence ?? []).map((item, index) => ({
+      key: `${item.section}-${item.rankNo}-${item.rightType}-${index}`,
+      title: [
+        REGISTRY_SECTION[item.section] ?? item.section,
+        REGISTRY_RIGHT_TYPE[item.rightType] ?? item.rightType,
+        item.rankNo ? `${item.rankNo}번` : null,
+      ].filter(Boolean).join(' · '),
+      detail: [
+        registryRightStatus(item),
+        item.holder ? `권리자 ${item.holder}` : null,
+        item.debtor ? `채무자 ${item.debtor}` : null,
+        item.amount == null ? null : money(item.amount),
+      ].filter(Boolean).join(' · '),
+      sources: (item.sources ?? []).map((source) => (
+        `${source.fileName ? `${source.fileName} · ` : ''}${source.page}페이지`
+      )).join(', ') || '근거 위치 확인 필요',
+    })),
+  };
+}
+
+function registryRightStatus(item) {
+  if (item.rightType === 'CANCELLATION') return '말소 처리 이력';
+  if (item.rightType === 'MORTGAGE_AMEND') return '근저당 변경 이력';
+  if (item.rightType === 'MORTGAGE_TRANSFER') return '근저당 이전 이력';
+  return item.status === 'CANCELLED' ? '말소됨' : '현재 유효';
+}
+
+function registryIssueDate(value) {
+  if (!value) return '확인 불가';
+  const [year, month, day] = String(value).split('-');
+  return year && month && day
+    ? `${year}. ${month}. ${day}.`
+    : String(value);
+}
+
+function registryCheckedAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return String(value);
+  return new Intl.DateTimeFormat('ko-KR', {
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  }).format(date);
 }
 
 function findMetric(data, sectionKey, metricKey) {

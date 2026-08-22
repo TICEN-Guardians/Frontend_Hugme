@@ -277,6 +277,91 @@
   font-size: 1.25rem;
 }
 
+.pendingBox {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.2rem;
+  margin-top: 1.6rem;
+  padding: 1.6rem;
+  border-radius: 1.2rem;
+  background: #eaf5fc;
+  color: #0875bd;
+}
+
+.pendingBox div {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.pendingBox span {
+  color: #526f83;
+  font-size: 1.25rem;
+}
+
+.addressReviewBox {
+  display: grid;
+  gap: 1.4rem;
+  margin-top: 1.6rem;
+  padding: 1.8rem;
+  border: 0.1rem solid #f0b8b3;
+  border-radius: 1.2rem;
+  background: #fff8f7;
+}
+
+.addressReviewTitle {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  color: #b63f37;
+  font-size: 1.4rem;
+}
+
+.addressCompare {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0;
+}
+
+.addressCompare div {
+  min-width: 0;
+  padding: 1.2rem;
+  border-radius: 0.9rem;
+  background: #fff;
+}
+
+.addressCompare dt {
+  margin-bottom: 0.5rem;
+  color: #778797;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+
+.addressCompare dd {
+  margin: 0;
+  color: #2f3f4e;
+  font-size: 1.3rem;
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+}
+
+.reviewConfirmButton {
+  justify-self: start;
+  padding: 1rem 1.4rem;
+  border: 0;
+  border-radius: 0.9rem;
+  background: #0875bd;
+  color: #fff;
+  font-size: 1.3rem;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.reviewConfirmButton:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
 .ownerInfo {
   margin: 1.2rem 0 0;
   color: #526272;
@@ -456,6 +541,10 @@
 
   .modeGrid,
   .fieldGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .addressCompare {
     grid-template-columns: 1fr;
   }
 
