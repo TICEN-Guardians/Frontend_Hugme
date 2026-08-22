@@ -98,9 +98,21 @@ export async function getChecklistCompletion(productCode = null) {
   );
 }
 
-export async function getCurrentApplication() {
-  const res = await axiosInstance.get('/api/applications/current');
+export async function getCurrentApplication(productCode) {
+  const res = await axiosInstance.get(
+    '/api/applications/current',
+    {
+      params: { productCode },
+    },
+  );
+
   return res.data;
+}
+
+/** 로그인 사용자의 완료된 체크리스트를 최신순으로 조회한다. */
+export async function getCompletedApplications() {
+  const res = await axiosInstance.get('/api/applications/completed');
+  return Array.isArray(res.data) ? res.data : [];
 }
 
 /**
