@@ -125,6 +125,22 @@
   height: auto;
 }
 
+@media (max-width: 140rem) {
+  .visual {
+    width: 46%;
+  }
+
+  .content {
+    width: 54%;
+    padding-right: var(--space-8);
+    padding-left: var(--space-8);
+  }
+
+  .mainCopy {
+    font-size: clamp(3.8rem, 3vw, 5rem);
+  }
+}
+
 @media (max-width: 76.7rem) {
   .shell {
     display: block;
@@ -147,5 +163,23 @@
 
   .contentInner {
     max-width: 44rem;
+  }
+}
+
+@media (max-width: 44rem) {
+  .content {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+
+  .headerRow {
+    align-items: flex-start;
+    flex-direction: column-reverse;
+    gap: var(--space-4);
+    margin-bottom: var(--space-6);
+  }
+
+  .title {
+    font-size: var(--text-xl);
   }
 }

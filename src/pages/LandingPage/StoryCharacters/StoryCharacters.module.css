@@ -1,0 +1,45 @@
+.assistantLayer {
+  position: fixed;
+  inset: 1.6rem;
+  z-index: 100;
+  pointer-events: none;
+}
+
+.assistant {
+  position: absolute;
+  bottom: 6vh;
+  right: 4vw;
+  display: flex;
+  width: max-content;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+
+.assistant:active {
+  cursor: grabbing;
+}
+
+.assistantMount {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@media (max-width: 76.7rem) {
+  .assistant {
+    bottom: 2rem;
+    right: 0;
+  }
+}
+
+@media (max-width: 42rem) {
+  .assistantLayer {
+    inset: 1.2rem;
+  }
+}

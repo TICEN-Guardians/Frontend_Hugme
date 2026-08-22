@@ -295,7 +295,24 @@
   word-break: keep-all;
 }
 
-@media (max-width: 480px) {
+@media (max-width: 48rem) {
+  .labelRow,
+  .termsRow {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: var(--space-1);
+  }
+
+  .fieldError,
+  .emailFeedback {
+    text-align: left;
+    white-space: normal;
+  }
+
+  .checkboxLabel {
+    white-space: normal;
+  }
+
   .emailInputRow {
     grid-template-columns: 1fr;
   }

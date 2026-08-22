@@ -9,14 +9,20 @@ import styles from './ChecklistBanner.module.css';
 const ACCEPT_ATTR = 'image/*';
 const MAX_FILE_SIZE = 20 * 1024 * 1024; // 20MB, 명세에 없어서 임의 값
 
-export default function ChecklistBanner({ onFileSelected }) {
+export default function ChecklistBanner({ onFileSelected, onBeforeUpload, isPreparingUpload = false }) {
   const { isAuthenticated, isAuthLoading } = useAuth();
   const location = useLocation();
   const fileInputRef = useRef(null);
   const [fileError, setFileError] = useState('');
 
-  const handleUploadClick = () => {
+  const handleUploadClick = async () => {
     setFileError('');
+
+    const shouldOpenFilePicker = onBeforeUpload
+      ? await onBeforeUpload()
+      : true;
+
+    if (!shouldOpenFilePicker) return;
     fileInputRef.current?.click();
   };
 
@@ -65,8 +71,13 @@ export default function ChecklistBanner({ onFileSelected }) {
             onChange={handleFileChange}
             className={styles.hiddenInput}
           />
-          <Button type="button" onClick={handleUploadClick} className={styles.uploadButton}>
-            계약서 업로드
+          <Button
+            type="button"
+            onClick={handleUploadClick}
+            disabled={isPreparingUpload}
+            className={styles.uploadButton}
+          >
+            {isPreparingUpload ? '기존 내역 확인 중...' : '계약서 업로드'}
           </Button>
         </div>
         {fileError && <p className={styles.fileError}>{fileError}</p>}

@@ -74,68 +74,130 @@ export function useQuestionFlow(applicationId) {
       try {
         // STEP1은 제출하지 않고 답변을 저장한 뒤 STEP2 질문을 별도로 조회한다.
         if (questionStep === FIRST_STEP) {
-          const data = await getQuestions(applicationId, SECOND_STEP);
-          setSelectedOptionIds(accumulatedOptionIds);
-          setCurrentAnswerIds([]);
-          setStepHistory((prev) => [...prev, currentSnapshot]);
-          setQuestionStep(data.questionStep);
-          setQuestions(data.questions ?? []);
-          setIsFinalStep(false);
-          setVisitedSteps((prev) => [...prev, data.questionStep]);
+          const step2Data = await getQuestions(
+            applicationId,
+            SECOND_STEP,
+          );
+
+          // STEP2 질문이 있으면 일반·특례 갱신 흐름으로 진행
+          if (step2Data.questions?.length > 0) {
+            setSelectedOptionIds(accumulatedOptionIds);
+            setCurrentAnswerIds([]);
+            setStepHistory((prev) => [...prev, currentSnapshot]);
+            setQuestionStep(SECOND_STEP);
+            setQuestions(step2Data.questions);
+            setIsFinalStep(false);
+            setVisitedSteps((prev) => [...prev, SECOND_STEP]);
+
+            return false;
+          }
+
+          /*
+           * STEP2 질문이 없으면 특례 신규계약이다.
+           * STEP1 답변을 최종 제출하면 서버가 다음 중 하나를 반환한다.
+           *
+           * 1. 추가 질문 있음: nextStep = STEP3
+           * 2. 추가 질문 없음: questionnaireCompleted = true
+           */
+          const result = await submitAnswers(
+            applicationId,
+            FIRST_STEP,
+            accumulatedOptionIds,
+            true,
+          );
+
+          // 추가 질문 없이 바로 완료
+          if (result.done) {
+            setSelectedOptionIds(accumulatedOptionIds);
+            return true;
+          }
+
+          // 추가 질문이 있으면 STEP3으로 이동
+          if (
+            result.questionStep === THIRD_STEP &&
+            result.questions?.length > 0
+          ) {
+            setSelectedOptionIds(accumulatedOptionIds);
+            setCurrentAnswerIds([]);
+            setStepHistory((prev) => [...prev, currentSnapshot]);
+            setQuestionStep(THIRD_STEP);
+            setQuestions(result.questions);
+            setIsFinalStep(true);
+            setVisitedSteps((prev) => [...prev, THIRD_STEP]);
+
+            return false;
+          }
+
+          setError(new Error('특례 신규계약의 다음 질문 데이터가 없습니다.'));
           return false;
         }
 
         // STEP2부터는 지금까지 고른 답변 전체를 매번 함께 보낸다.
         const finalSubmission = questionStep !== SECOND_STEP;
-        const result = await submitAnswers(
+        let result = await submitAnswers(
           applicationId,
           questionStep,
           accumulatedOptionIds,
           finalSubmission,
         );
+        // 서버가 이미 완료로 반환한 경우
+if (result.done) {
+  setSelectedOptionIds(accumulatedOptionIds);
+  return true;
+}
 
-        if (questionStep === SECOND_STEP) {
-          const step3Data =
-            result.questionStep === THIRD_STEP && result.questions?.length > 0
-              ? result
-              : await getQuestions(applicationId, THIRD_STEP);
+        // STEP2 제출 결과로 STEP3 질문이 반환된 경우
+if (
+  questionStep === SECOND_STEP &&
+  result.questionStep === THIRD_STEP &&
+  result.questions?.length > 0
+) {
+  setSelectedOptionIds(accumulatedOptionIds);
+  setCurrentAnswerIds([]);
+  setStepHistory((prev) => [...prev, currentSnapshot]);
+  setQuestionStep(THIRD_STEP);
+  setQuestions(result.questions);
+  setIsFinalStep(true);
+  setVisitedSteps((prev) => [...prev, THIRD_STEP]);
 
-          if (step3Data.questions?.length > 0) {
-            setSelectedOptionIds(accumulatedOptionIds);
-            setCurrentAnswerIds([]);
-            setStepHistory((prev) => [...prev, currentSnapshot]);
-            setQuestionStep(step3Data.questionStep ?? THIRD_STEP);
-            setQuestions(step3Data.questions);
-            setIsFinalStep(true);
-            setVisitedSteps((prev) => [...prev, step3Data.questionStep ?? THIRD_STEP]);
-            return false;
-          }
-        }
+  return false;
+}
+// STEP2에 추가 질문이 없으면 이때 최종 제출한다.
+if (
+  questionStep === SECOND_STEP &&
+  !result.questionStep &&
+  !result.questions?.length
+) {
+  result = await submitAnswers(
+    applicationId,
+    questionStep,
+    accumulatedOptionIds,
+    true,
+  );
 
-        if (result.done) {
-          setSelectedOptionIds(accumulatedOptionIds);
-          return true;
-        }
+  if (result.done) {
+    setSelectedOptionIds(accumulatedOptionIds);
+    return true;
+  }
+}
 
-        if (!result.questionStep) {
-          setError(new Error('다음 질문 단계가 응답에 없습니다.'));
-          return false;
-        }
+// 완료도 아니고 다음 질문도 없는 비정상 응답
+if (!result.questionStep || !result.questions?.length) {
+  setError(new Error('다음 질문 데이터가 없습니다.'));
+  return false;
+}
 
-        setSelectedOptionIds(accumulatedOptionIds);
-        setCurrentAnswerIds([]);
-        setStepHistory((prev) => [...prev, currentSnapshot]);
+setSelectedOptionIds(accumulatedOptionIds);
+setCurrentAnswerIds([]);
+setStepHistory((prev) => [...prev, currentSnapshot]);
+setQuestionStep(result.questionStep);
+setQuestions(result.questions);
+setIsFinalStep(result.isFinalStep);
+setVisitedSteps((prev) => [...prev, result.questionStep]);
 
-        const nextQuestions =
-          result.questions?.length > 0
-            ? result.questions
-            : (await getQuestions(applicationId, result.questionStep)).questions ?? [];
+return false;
 
-        setQuestionStep(result.questionStep);
-        setQuestions(nextQuestions);
-        setIsFinalStep(result.isFinalStep);
-        setVisitedSteps((prev) => [...prev, result.questionStep]);
-        return false;
+
       } catch (err) {
         setError(err);
         return false;

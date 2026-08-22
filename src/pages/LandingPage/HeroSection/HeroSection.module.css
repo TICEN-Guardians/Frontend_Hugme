@@ -266,3 +266,67 @@
 .imageHeroNote .availableIcon {
   color: #72c676;
 }
+
+@media (max-width: 140rem) {
+  .hero {
+    padding: var(--space-8) var(--space-6);
+  }
+
+  .content {
+    min-height: 21rem;
+  }
+
+  .imageHeroContent .title {
+    font-size: 3.4rem;
+  }
+}
+
+@media (max-width: 90rem) {
+  .hero {
+    padding: var(--space-8) var(--space-5);
+  }
+
+  .title {
+    min-height: auto;
+    font-size: var(--text-2xl);
+  }
+
+  .imageHeroContent .title {
+    font-size: 3rem;
+  }
+
+  .subtitle {
+    min-height: auto;
+  }
+}
+
+@media (max-width: 56rem) {
+  .hero {
+    padding: var(--space-8) var(--space-4);
+  }
+
+  .imageHeroBadge {
+    font-size: var(--text-xs);
+  }
+
+  .imageHeroContent .title {
+    font-size: 2.6rem;
+  }
+
+  .imageHeroContent .subtitle {
+    font-size: var(--text-sm);
+  }
+
+  .actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .actions .imageHeroPrimaryCta {
+    width: 100%;
+  }
+
+  .imageHeroNote {
+    flex-wrap: wrap;
+  }
+}

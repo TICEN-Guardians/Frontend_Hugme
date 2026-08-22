@@ -1,182 +1,639 @@
-import { useState } from 'react';
-import { useAuth } from '../../context/auth/AuthContext.jsx';
-import useLastRiskAnalysis from '../../hooks/useLastRiskAnalysis.js';
-import FeatureCarousel from './FeatureCarousel/FeatureCarousel.jsx';
-import HeroSection from './HeroSection/HeroSection.jsx';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
+import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
+import { FiCheck, FiFileText, FiShield } from 'react-icons/fi';
+import { Link } from 'react-router-dom';
+import Xarrow, { Xwrapper, useXarrow } from 'react-xarrows';
+import LandingIntro from './LandingIntro/LandingIntro.jsx';
 import styles from './LandingPage.module.css';
 
-const SLIDES = [
+const INTRO_DURATION_MS = 4000;
+const SCENE_EASE = [0.65, 0, 0.35, 1];
+const FEATURE_REVEAL_DURATION = 0.62;
+const FEATURE_HOLD_DURATION = 1.2;
+const ROUTE_DRAW_DURATION = 2.35;
+const TABLET_ROUTE_DRAW_DURATION = 3.6;
+
+const RISK_REVEAL_DELAY = 1.15;
+const RISK_ROUTE_DELAY = RISK_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const CHECKLIST_REVEAL_DELAY = RISK_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const CHECKLIST_ROUTE_DELAY = CHECKLIST_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const GUIDE_REVEAL_DELAY = CHECKLIST_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const GUIDE_ROUTE_DELAY = GUIDE_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const STATUS_REVEAL_DELAY = GUIDE_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const STATUS_ROUTE_DELAY = STATUS_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const COMPLETE_REVEAL_DELAY = STATUS_ROUTE_DELAY + ROUTE_DRAW_DURATION;
+const TABLET_RISK_ROUTE_DELAY = RISK_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const TABLET_CHECKLIST_REVEAL_DELAY = TABLET_RISK_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_CHECKLIST_ROUTE_DELAY = TABLET_CHECKLIST_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const TABLET_GUIDE_REVEAL_DELAY = TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_GUIDE_ROUTE_DELAY = TABLET_GUIDE_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const TABLET_STATUS_REVEAL_DELAY = TABLET_GUIDE_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_STATUS_ROUTE_DELAY = TABLET_STATUS_REVEAL_DELAY + FEATURE_REVEAL_DURATION + FEATURE_HOLD_DURATION;
+const TABLET_COMPLETE_REVEAL_DELAY = TABLET_STATUS_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION;
+const TABLET_JOURNEY_QUERY = '(min-width: 768px) and (max-width: 1439px)';
+
+const FEATURES = [
   {
-    id: 'risk',
-    label: '① 매물 위험도 진단',
-    title: '여러 정보를 분석해 매물의 위험 신호를 확인해요',
-    heroTitle: ['계약하기 전,', '이 집의 위험 요소를 먼저 확인하세요'],
-    heroSubtitle: [
-      '등기부등본 등 매물 정보를 바탕으로',
-      '계약 전에 확인해야 할 여러 위험 요소를 분석해드려요',
-    ],
-    primaryCtaLabel: '매물 위험도 진단하기',
-    heroNote: '로그인 후 이용 가능',
-    description: [
-      '입력한 매물 정보를 바탕으로',
-      '계약 전에 확인해야 할 여러 위험 요소와 진단 결과를 보여드려요',
-    ],
-    featurePoints: ['매물 정보 분석', '여러 위험 요소 진단', '종합 결과 제공'],
-    cardCtaLabel: '로그인하고 진단하기',
-    image: '/images/landing/Carousel1.png',
-    to: '/auth/login',
+    key: 'risk',
+    type: 'house',
+    icon: 'shield',
+    className: styles.riskPoint,
+    to: '/risk/new',
+    label: '전세 위험도 진단',
+    description: '계약 전 집의 위험을 확인해요.',
+    delay: RISK_REVEAL_DELAY,
+    tabletDelay: RISK_REVEAL_DELAY,
+    exitAnchor: 'riskExit',
   },
   {
-    id: 'doc-chat',
-    label: '② 서류안내 챗봇',
-    title: '필요한 서류에 대해 자세하게 질문해보세요',
-    heroTitle: ['궁금한 서류가 있다면,', '챗봇에게 바로 물어보세요'],
-    heroSubtitle: [
-      '준비해야 할 서류에 대해 궁금한 내용을',
-      '대화하면서 자세하게 안내받을 수 있어요',
-    ],
-    primaryCtaLabel: '서류 질문하기',
-    secondaryCtaLabel: '체크리스트 보기',
-    heroNote: '로그인 후 이용 가능',
-    description: [
-      '특정 서류가 무엇인지 궁금하거나 추가로 확인하고 싶은 내용을',
-      '챗봇과 대화하며 계속 질문할 수 있어요',
-    ],
-    featurePoints: ['서류별 상세 안내', '궁금한 내용 추가 질문', '대화로 계속 확인'],
-    cardCtaLabel: '로그인하고 질문하기',
-    image: '/images/landing/Carousel2.png',
-    to: '/auth/login',
-  },
-  {
-    id: 'user-chat',
-    label: '③ 조건상담 챗봇',
-    title: '내 조건으로 HUG 보증 가입이 가능한지 상담해보세요',
-    heroTitle: ['내 조건으로 HUG 보증 가입이 가능한지', '챗봇에게 바로 물어보세요'],
-    heroSubtitle: [
-      '내 상황과 조건을 바탕으로',
-      'HUG 보증 가입 가능 여부를 대화로 확인할 수 있어요',
-    ],
-    primaryCtaLabel: '조건 상담 시작',
-    secondaryCtaLabel: '보증 조건 알아보기',
-    heroNote: '로그인 없이 바로 이용 가능',
-    description: [
-      '보증금, 전세가율 등 내 상황과 조건을 바탕으로',
-      '챗봇과 대화하며 가입 가능 여부를 확인할 수 있어요',
-    ],
-    featurePoints: ['가입 가능 여부 상담', '조건별 추가 질문', '로그인 없이 바로 이용'],
-    cardCtaLabel: '바로 상담하기',
-    image: '/images/landing/Carousel3.png',
-    to: '/user-chat',
-  },
-  {
-    id: 'checklist',
-    label: '④ 체크리스트',
-    title: '내 계약에 필요한 서류를 한눈에 확인하세요',
-    heroTitle: ['내가 준비해야 할 서류를', '체크리스트로 확인하세요'],
-    heroSubtitle: [
-      '기본 준비 서류를 바로 확인하고,',
-      '로그인하면 임대차계약서를 바탕으로 필요한 서류만 확인할 수 있어요',
-    ],
-    primaryCtaLabel: '체크리스트 확인',
-    secondaryCtaLabel: '맞춤 서류 확인',
-    heroNote: '기본 체크리스트 바로 이용 · 맞춤 서류 확인은 로그인 필요',
-    description: [
-      '기본 준비 서류를 확인하고,',
-      '로그인하면 임대차계약서를 바탕으로 내게 필요한 서류만 확인할 수 있어요',
-    ],
-    featurePoints: ['기본 준비 서류 확인', '서류별 상세 정보 제공', '계약서 기반 맞춤 서류 확인'],
-    cardCtaLabel: '체크리스트 확인하기',
-    image: '/images/landing/Carousel4.png',
+    key: 'checklist',
+    type: 'document',
+    icon: 'document',
+    className: styles.checklistPoint,
     to: '/guarantee-checklist',
+    label: '보증 체크리스트',
+    description: '계약서로 필요한 서류만 확인해요.',
+    delay: CHECKLIST_REVEAL_DELAY,
+    tabletDelay: TABLET_CHECKLIST_REVEAL_DELAY,
+    entryAnchor: 'checklistEntry',
+    exitAnchor: 'checklistExit',
+  },
+  {
+    key: 'issue-guide',
+    type: 'robot',
+    className: styles.guidePoint,
+    to: '/doc-chat',
+    eyebrow: '안내 챗봇',
+    step: '01',
+    label: '발급처 안내',
+    description: '서류별 발급처와 방법을 안내해요.',
+    delay: GUIDE_REVEAL_DELAY,
+    tabletDelay: TABLET_GUIDE_REVEAL_DELAY,
+    entryAnchor: 'guideEntry',
+    exitAnchor: 'guideExit',
+  },
+  {
+    key: 'status-guide',
+    type: 'robot',
+    className: styles.statusPoint,
+    to: '/doc-chat',
+    eyebrow: '안내 챗봇',
+    step: '02',
+    label: '준비 현황 확인',
+    description: '준비한 서류와 남은 서류를 확인해요.',
+    delay: STATUS_REVEAL_DELAY,
+    tabletDelay: TABLET_STATUS_REVEAL_DELAY,
+    entryAnchor: 'statusEntry',
+    exitAnchor: 'statusExit',
   },
 ];
 
-export default function LandingPage() {
-  const { isAuthenticated, user } = useAuth();
-  const { entryPath: riskEntryPath, hasLastAnalysis } = useLastRiskAnalysis(user?.email);
-  const [activeIndex, setActiveIndex] = useState(0);
-  const [direction, setDirection] = useState(1);
-  const slides = SLIDES.map((slide) => {
-    if (slide.id === 'risk') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated
-          ? hasLastAnalysis
-            ? '최근 분석 결과를 확인해보세요'
-            : '바로 진단을 시작해보세요'
-          : '로그인 후 이용 가능',
-        cardCtaLabel: isAuthenticated
-          ? hasLastAnalysis
-            ? '최근 진단 결과 보기'
-            : '매물 진단 시작하기'
-          : '로그인하고 진단하기',
-        to: isAuthenticated ? riskEntryPath : '/auth/login',
-      };
-    }
+const CONNECTIONS = [
+  { start: 'riskExit', end: 'checklistEntry', startAnchor: 'bottom', endAnchor: 'left', delay: RISK_ROUTE_DELAY, tabletDelay: TABLET_RISK_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
+  { start: 'checklistExit', end: 'guideEntry', startAnchor: 'top', endAnchor: 'left', delay: CHECKLIST_ROUTE_DELAY, tabletDelay: TABLET_CHECKLIST_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
+  { start: 'guideExit', end: 'statusEntry', startAnchor: 'right', endAnchor: 'top', delay: GUIDE_ROUTE_DELAY, tabletDelay: TABLET_GUIDE_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.95 },
+  { start: 'statusExit', end: 'completeEntry', startAnchor: 'right', endAnchor: 'bottom', delay: STATUS_ROUTE_DELAY, tabletDelay: TABLET_STATUS_ROUTE_DELAY, duration: ROUTE_DRAW_DURATION, tabletDuration: TABLET_ROUTE_DRAW_DURATION, curveness: 0.9 },
+];
 
-    if (slide.id === 'doc-chat') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated ? '궁금한 서류를 바로 질문해보세요' : '로그인 후 이용 가능',
-        cardCtaLabel: isAuthenticated ? '서류 챗봇 시작하기' : '로그인하고 질문하기',
-        to: isAuthenticated ? '/doc-chat' : '/auth/login',
-      };
-    }
+const JOURNEY_BUBBLES = [
+  { key: 'safe', text: '안전하네, 계약해야겠다!', className: styles.safeBubble, connectionIndex: 0, tabletProgress: 0.22 },
+  { key: 'documents', text: '보증보험엔 어떤 서류가 필요하지?', className: styles.documentsBubble, connectionIndex: 0, tabletProgress: 0.72 },
+  { key: 'required-documents', text: '이 서류들이 필요하구나!', className: styles.requiredDocumentsBubble, connectionIndex: 1, tabletProgress: 0.22 },
+  { key: 'issue-place', text: '이 서류들, 어디서 발급받지?', className: styles.issuePlaceBubble, connectionIndex: 1, tabletProgress: 0.72 },
+  { key: 'issued-documents', text: '필요한 서류를 발급받았어!', className: styles.issuedDocumentsBubble, connectionIndex: 2, tabletProgress: 0.22 },
+  { key: 'upload-status', text: '준비한 서류를 올리고,\n어떤 서류가 남았는지 확인해볼까?', className: styles.uploadStatusBubble, connectionIndex: 2, tabletProgress: 0.72 },
+];
 
-    if (slide.id === 'user-chat') {
-      return {
-        ...slide,
-        heroNote: isAuthenticated ? '내 조건으로 바로 상담해보세요' : '로그인 없이 바로 이용 가능',
-        featurePoints: isAuthenticated
-          ? ['가입 가능 여부 상담', '조건별 추가 질문', '바로 상담 가능']
-          : slide.featurePoints,
-      };
-    }
+const MOBILE_JOURNEY_ITEMS = [
+  { key: 'risk', type: 'feature', featureKey: 'risk', initial: true },
+  { key: 'safe', type: 'thought', text: '안전하네, 계약해야겠다!', tone: 'dark' },
+  { key: 'documents', type: 'thought', text: '보증보험엔 어떤 서류가 필요하지?', tone: 'blue', compact: true },
+  { key: 'checklist', type: 'feature', featureKey: 'checklist' },
+  { key: 'required-documents', type: 'thought', text: '이 서류들이 필요하구나!', tone: 'dark' },
+  { key: 'issue-place', type: 'thought', text: '이 서류들, 어디서 발급받지?', tone: 'blue', compact: true },
+  { key: 'issue-guide', type: 'feature', featureKey: 'issue-guide' },
+  { key: 'issued-documents', type: 'thought', text: '필요한 서류를 발급받았어!', tone: 'dark' },
+  { key: 'upload-status', type: 'thought', text: '준비한 서류를 올리고,\n어떤 서류가 남았는지 확인해볼까?', tone: 'blue', compact: true },
+  { key: 'status-guide', type: 'feature', featureKey: 'status-guide' },
+  { key: 'complete', type: 'complete' },
+];
 
-    if (slide.id === 'checklist') {
-      return {
-        ...slide,
-        heroSubtitle: isAuthenticated
-          ? ['기본 준비 서류를 바로 확인하고,', '상세 체크리스트에서 필요한 서류를 살펴볼 수 있어요']
-          : slide.heroSubtitle,
-        description: isAuthenticated
-          ? ['기본 준비 서류를 확인하고,', '상세 체크리스트에서 필요한 항목을 바로 살펴볼 수 있어요']
-          : slide.description,
-        heroNote: isAuthenticated ? '내 계약에 필요한 서류를 확인해보세요' : '기본 체크리스트 바로 이용',
-      };
-    }
+const getRouteKey = ({ start, end }) => `${start}-${end}`;
 
-    return slide;
-  });
-  const activeSlide = slides[activeIndex];
+function ShapeOutline({ type }) {
+  if (type === 'house') {
+    return (
+      <svg className={styles.shapeOutline} viewBox="0 0 300 250" aria-hidden="true">
+        <path d="M 30 100 Q 30 90 40 82 L 140 18 Q 150 10 160 18 L 260 82 Q 270 90 270 100 Q 270 108 260 108 H 250 V 220 Q 250 232 238 232 H 62 Q 50 232 50 220 V 108 H 40 Q 30 108 30 100 Z" />
+      </svg>
+    );
+  }
 
-  const paginate = (nextDirection) => {
-    setDirection(nextDirection);
-    setActiveIndex((prev) => {
-      if (nextDirection > 0) {
-        return prev === slides.length - 1 ? 0 : prev + 1;
-      }
-      return prev === 0 ? slides.length - 1 : prev - 1;
-    });
-  };
-
-  const goTo = (index) => {
-    if (index === activeIndex) return;
-    setDirection(index > activeIndex ? 1 : -1);
-    setActiveIndex(index);
-  };
+  if (type === 'document') {
+    return (
+      <svg className={styles.shapeOutline} viewBox="0 0 300 250" aria-hidden="true">
+        <path d="M 48 16 H 202 Q 212 16 220 24 L 264 68 Q 272 76 272 88 V 216 Q 272 232 256 232 H 48 Q 30 232 30 214 V 34 Q 30 16 48 16 Z" />
+        <path className={styles.foldLine} d="M 212 18 V 66 Q 212 76 222 76 H 270" />
+      </svg>
+    );
+  }
 
   return (
-    <div className={styles.root}>
-      <HeroSection slide={activeSlide} direction={direction} />
-      <FeatureCarousel
-        slides={slides}
-        activeIndex={activeIndex}
-        direction={direction}
-        onPrev={() => paginate(-1)}
-        onNext={() => paginate(1)}
-        onGoTo={goTo}
-      />
+    <svg className={styles.shapeOutline} viewBox="0 -22 300 272" aria-hidden="true">
+      <path className={styles.antennaLine} d="M 150 24 V -2" />
+      <circle cx="150" cy="-11" r="9" />
+      <rect className={styles.robotEar} x="16" y="84" width="30" height="64" rx="14" />
+      <rect className={styles.robotEar} x="254" y="84" width="30" height="64" rx="14" />
+      <rect x="36" y="26" width="228" height="206" rx="52" />
+    </svg>
+  );
+}
+
+function FeatureIcon({ icon }) {
+  if (icon === 'shield') return <FiShield />;
+  if (icon === 'document') return <FiFileText />;
+  return null;
+}
+
+function RouteAnchor({ anchorKey, kind }) {
+  if (!anchorKey) return null;
+  return <span id={anchorKey} className={`${styles.routeAnchor} ${styles[`${kind}Anchor`]}`} aria-hidden="true" />;
+}
+
+function FeaturePoint({ feature, prefersReducedMotion, isTabletLayout }) {
+  return (
+    <div id={`journey-${feature.key}`} className={`${styles.featurePosition} ${feature.className}`}>
+      <RouteAnchor anchorKey={feature.entryAnchor} kind="entry" />
+      <RouteAnchor anchorKey={feature.exitAnchor} kind="exit" />
+      <Link className={styles.featureLink} to={feature.to} aria-label={`${feature.label} 바로가기`}>
+        <motion.div
+          className={`${styles.featureBox} ${styles[`${feature.type}Box`]}`}
+          initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 16, scale: prefersReducedMotion ? 1 : 0.95 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: prefersReducedMotion ? 0.2 : FEATURE_REVEAL_DURATION, delay: prefersReducedMotion ? 0 : (isTabletLayout ? feature.tabletDelay : feature.delay), ease: [0.16, 1, 0.3, 1] }}
+        >
+          <ShapeOutline type={feature.type} />
+          <span className={styles.featureCopy}>
+            {feature.icon && (
+              <span className={`${styles.featureIcon} ${styles[`${feature.type}FeatureIcon`]}`} aria-hidden="true">
+                <FeatureIcon icon={feature.icon} />
+              </span>
+            )}
+            {feature.eyebrow && (
+              <span className={styles.chatbotEyebrow}>
+                {feature.eyebrow}<em>{feature.step}</em>
+              </span>
+            )}
+            <strong>{feature.label}</strong>
+            <small>{feature.description}</small>
+          </span>
+        </motion.div>
+      </Link>
     </div>
+  );
+}
+
+function CompletePoint({ prefersReducedMotion, isTabletLayout }) {
+  const revealDelay = isTabletLayout ? TABLET_COMPLETE_REVEAL_DELAY : COMPLETE_REVEAL_DELAY;
+
+  return (
+    <div id="journey-complete" className={`${styles.featurePosition} ${styles.completePoint}`}>
+      <RouteAnchor anchorKey="completeEntry" kind="entry" />
+      <motion.div
+        className={styles.completeBox}
+        initial={{ opacity: 0, y: prefersReducedMotion ? 0 : 14, scale: prefersReducedMotion ? 1 : 0.92 }}
+        animate={{ opacity: 1, y: 0, scale: 1 }}
+        transition={{ duration: prefersReducedMotion ? 0.2 : 0.65, delay: prefersReducedMotion ? 0 : revealDelay, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <motion.span
+          className={styles.completeGlow}
+          aria-hidden="true"
+          animate={{ opacity: prefersReducedMotion ? 0 : [0, 0.34, 0], scale: prefersReducedMotion ? 1 : [0.86, 1.13, 1.28] }}
+          transition={{ duration: prefersReducedMotion ? 0.2 : 1.1, delay: prefersReducedMotion ? 0 : revealDelay }}
+        />
+        <span className={styles.completeIcon} aria-hidden="true"><FiCheck /></span>
+        <strong>서류 준비 완료!</strong>
+        <small>보증보험을 신청할 준비가 끝났어요.</small>
+      </motion.div>
+    </div>
+  );
+}
+
+function MobileFeatureCard({ feature }) {
+  return (
+    <Link className={`${styles.featureLink} ${styles.mobileFeatureLink}`} to={feature.to} aria-label={`${feature.label} 바로가기`}>
+      <div className={`${styles.featureBox} ${styles.mobileFeatureBox} ${styles[`${feature.type}Box`]}`}>
+        <ShapeOutline type={feature.type} />
+        <span className={styles.featureCopy}>
+          {feature.icon && (
+            <span className={`${styles.featureIcon} ${styles[`${feature.type}FeatureIcon`]}`} aria-hidden="true">
+              <FeatureIcon icon={feature.icon} />
+            </span>
+          )}
+          {feature.eyebrow && (
+            <span className={styles.chatbotEyebrow}>
+              {feature.eyebrow}<em>{feature.step}</em>
+            </span>
+          )}
+          <strong>{feature.label}</strong>
+          <small>{feature.description}</small>
+        </span>
+      </div>
+    </Link>
+  );
+}
+
+function MobileCompleteCard() {
+  return (
+    <div className={`${styles.completeBox} ${styles.mobileCompleteBox}`}>
+      <span className={styles.completeIcon} aria-hidden="true"><FiCheck /></span>
+      <strong>서류 준비 완료!</strong>
+      <small>보증보험을 신청할 준비가 끝났어요.</small>
+    </div>
+  );
+}
+
+function MobileJourneyItem({ item, prefersReducedMotion }) {
+  const itemRef = useRef(null);
+  const [isVisible, setIsVisible] = useState(item.initial || prefersReducedMotion);
+
+  useEffect(() => {
+    if (isVisible || prefersReducedMotion) return undefined;
+
+    const element = itemRef.current;
+    if (!element || typeof IntersectionObserver === 'undefined') {
+      setIsVisible(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setIsVisible(true);
+      observer.disconnect();
+    }, { threshold: 0.08, rootMargin: '0px 0px -50% 0px' });
+
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [isVisible, prefersReducedMotion]);
+
+  const feature = item.featureKey ? FEATURES.find(({ key }) => key === item.featureKey) : null;
+
+  return (
+    <div
+      ref={itemRef}
+      className={`${styles.mobileJourneyItem} ${styles[`mobileJourneyItem${item.type[0].toUpperCase()}${item.type.slice(1)}`]} ${item.compact ? styles.mobileJourneyItemCompact : ''} ${item.initial ? styles.mobileJourneyFirstItem : ''} ${isVisible ? styles.mobileJourneyItemVisible : ''}`}
+    >
+      {!item.initial && <span className={styles.mobileJourneyLine} aria-hidden="true" />}
+      <div className={styles.mobileJourneyContent}>
+        {item.type === 'feature' && <MobileFeatureCard feature={feature} />}
+        {item.type === 'thought' && (
+          <p className={`${styles.mobileThoughtBubble} ${item.tone === 'blue' ? styles.mobileThoughtBubbleBlue : ''}`}>
+            {item.text}
+          </p>
+        )}
+        {item.type === 'complete' && <MobileCompleteCard />}
+      </div>
+    </div>
+  );
+}
+
+function MobileJourney({ prefersReducedMotion }) {
+  return (
+    <div className={styles.mobileJourney} aria-label="HUGME 모바일 이용 여정">
+      {MOBILE_JOURNEY_ITEMS.map((item) => (
+        <MobileJourneyItem key={item.key} item={item} prefersReducedMotion={prefersReducedMotion} />
+      ))}
+    </div>
+  );
+}
+
+function JourneyBubble({ bubble, canvasRef, prefersReducedMotion, routeRevision }) {
+  const pointRef = useRef(null);
+  const routeProgressRef = useRef({ desktop: null, tablet: bubble.tabletProgress });
+  const [routeSync, setRouteSync] = useState(prefersReducedMotion ? { delay: 0 } : null);
+  const isRouteReady = prefersReducedMotion || routeSync?.left !== undefined;
+
+  useLayoutEffect(() => {
+    if (prefersReducedMotion) {
+      setRouteSync({ delay: 0 });
+      return undefined;
+    }
+
+    const connection = CONNECTIONS[bubble.connectionIndex];
+    const routeKey = getRouteKey(connection);
+    let retryId = 0;
+    let cancelled = false;
+
+    const syncWithRoute = () => {
+      if (cancelled) return;
+
+      const canvas = canvasRef.current;
+      const point = pointRef.current;
+      const path = document.querySelector(`path[data-journey-route="${routeKey}"]`);
+
+      // 모바일에서는 생각 노드를 숨긴다. display:none 상태의 0 좌표가
+      // 다른 반응형 구간의 인라인 위치로 남지 않도록 측정도 중단한다.
+      if (window.matchMedia('(max-width: 767px)').matches) {
+        setRouteSync((previous) => (previous?.left === undefined ? previous : { delay: previous.delay }));
+        return;
+      }
+
+      if (!canvas || !point || !path || typeof path.getTotalLength !== 'function') {
+        retryId = window.setTimeout(syncWithRoute, 50);
+        return;
+      }
+
+      const totalLength = path.getTotalLength();
+      const matrix = path.getScreenCTM();
+      const svg = path.ownerSVGElement;
+      if (!totalLength || !matrix || !svg) {
+        retryId = window.setTimeout(syncWithRoute, 50);
+        return;
+      }
+
+      const canvasRect = canvas.getBoundingClientRect();
+      const svgPoint = svg.createSVGPoint();
+      const layoutKey = window.matchMedia(TABLET_JOURNEY_QUERY).matches ? 'tablet' : 'desktop';
+      const routeDuration = layoutKey === 'tablet' ? connection.tabletDuration : connection.duration;
+      let progress = routeProgressRef.current[layoutKey];
+
+      // 최초 데스크탑 렌더에서만 CSS로 지정한 디자인 위치와 가장 가까운
+      // 선의 진행률을 구한다. 이후에는 이전 픽셀 좌표가 아니라 이 진행률을
+      // 사용하므로 화면 크기를 반복해서 바꿔도 위치가 누적되어 틀어지지 않는다.
+      if (progress === null) {
+        const target = {
+          x: canvasRect.left + point.offsetLeft + point.offsetWidth / 2,
+          y: canvasRect.top + point.offsetTop + point.offsetHeight / 2,
+        };
+        let closest = null;
+        const sampleCount = 360;
+
+        for (let index = 0; index <= sampleCount; index += 1) {
+          const candidateProgress = index / sampleCount;
+          const routePoint = path.getPointAtLength(totalLength * candidateProgress);
+          svgPoint.x = routePoint.x;
+          svgPoint.y = routePoint.y;
+          const screenPoint = svgPoint.matrixTransform(matrix);
+          const distance = Math.hypot(screenPoint.x - target.x, screenPoint.y - target.y);
+
+          if (!closest || distance < closest.distance) {
+            closest = { progress: candidateProgress, distance };
+          }
+        }
+
+        if (!closest) return;
+        progress = closest.progress;
+        routeProgressRef.current[layoutKey] = progress;
+      }
+
+      const routePoint = path.getPointAtLength(totalLength * progress);
+      svgPoint.x = routePoint.x;
+      svgPoint.y = routePoint.y;
+      const screenPoint = svgPoint.matrixTransform(matrix);
+
+      setRouteSync((previous) => ({
+        left: screenPoint.x - canvasRect.left,
+        top: screenPoint.y - canvasRect.top,
+        delay: previous?.delay ?? Math.max(0, routeDuration * progress - 0.08),
+      }));
+    };
+
+    syncWithRoute();
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(retryId);
+    };
+  }, [bubble.connectionIndex, canvasRef, prefersReducedMotion, routeRevision]);
+
+  return (
+    <motion.div
+      ref={pointRef}
+      className={`${styles.journeyBubblePoint} ${bubble.className}`}
+      style={routeSync?.left === undefined ? undefined : { left: routeSync.left, top: routeSync.top }}
+      initial={{ opacity: 0, scale: prefersReducedMotion ? 1 : 0.96 }}
+      animate={{ opacity: isRouteReady ? 1 : 0, scale: isRouteReady ? 1 : 0.96 }}
+      transition={{ duration: prefersReducedMotion ? 0.2 : 0.32, delay: routeSync?.delay ?? 0, ease: [0.16, 1, 0.3, 1] }}
+    >
+      <span className={styles.journeyBubbleConnector} aria-hidden="true" />
+      <span className={styles.journeyBubbleNode} aria-hidden="true" />
+      <p className={styles.journeyBubble}>{bubble.text}</p>
+    </motion.div>
+  );
+}
+
+function JourneyConnections({ canvasRef, prefersReducedMotion, onRoutesUpdated, isTabletLayout }) {
+  const updateXarrow = useXarrow();
+  const updateXarrowRef = useRef(updateXarrow);
+  const [visibleCount, setVisibleCount] = useState(prefersReducedMotion ? CONNECTIONS.length : 0);
+  const [readyCount, setReadyCount] = useState(prefersReducedMotion ? CONNECTIONS.length : 0);
+  const startedAtRef = useRef(performance.now());
+  updateXarrowRef.current = updateXarrow;
+
+  useEffect(() => {
+    if (prefersReducedMotion) {
+      setVisibleCount(CONNECTIONS.length);
+      return undefined;
+    }
+
+    const elapsed = (performance.now() - startedAtRef.current) / 1000;
+    const getDelay = (connection) => (isTabletLayout ? connection.tabletDelay : connection.delay);
+    const elapsedVisibleCount = CONNECTIONS.filter((connection) => getDelay(connection) <= elapsed).length;
+    setVisibleCount((currentCount) => Math.max(currentCount, elapsedVisibleCount));
+    const timerIds = CONNECTIONS
+      .map((connection, index) => ({ delay: getDelay(connection), index }))
+      .filter(({ delay }) => delay > elapsed)
+      .map(({ delay, index }) => window.setTimeout(() => {
+        setVisibleCount((currentCount) => Math.max(currentCount, index + 1));
+      }, (delay - elapsed) * 1000));
+    return () => timerIds.forEach((timerId) => window.clearTimeout(timerId));
+  }, [isTabletLayout, prefersReducedMotion]);
+
+  useLayoutEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return undefined;
+
+    let frameId = 0;
+    let settleFrameId = 0;
+    let notifyFrameId = 0;
+    const scheduleUpdate = () => {
+      window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(settleFrameId);
+      window.cancelAnimationFrame(notifyFrameId);
+      frameId = window.requestAnimationFrame(() => {
+        updateXarrowRef.current();
+        // react-xarrows가 새 SVG 경로를 DOM에 반영한 다음 프레임에
+        // 노드와 말풍선 좌표를 같은 경로 기준으로 다시 계산한다.
+        // 새 선은 이 측정이 끝날 때까지 투명하게 유지해 초기 좌표가
+        // 한 프레임 노출되는 깜빡임을 방지한다.
+        settleFrameId = window.requestAnimationFrame(() => {
+          notifyFrameId = window.requestAnimationFrame(() => {
+            onRoutesUpdated();
+            setReadyCount((currentCount) => Math.max(currentCount, visibleCount));
+          });
+        });
+      });
+    };
+
+    const resizeObserver = new ResizeObserver(scheduleUpdate);
+    resizeObserver.observe(canvas);
+    window.addEventListener('resize', scheduleUpdate);
+    window.addEventListener('orientationchange', scheduleUpdate);
+    document.fonts?.ready.then(scheduleUpdate).catch(() => {});
+    scheduleUpdate();
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+      window.cancelAnimationFrame(settleFrameId);
+      window.cancelAnimationFrame(notifyFrameId);
+      resizeObserver.disconnect();
+      window.removeEventListener('resize', scheduleUpdate);
+      window.removeEventListener('orientationchange', scheduleUpdate);
+    };
+  }, [canvasRef, isTabletLayout, onRoutesUpdated, visibleCount]);
+
+  return CONNECTIONS.slice(0, visibleCount).map((connection, index) => (
+    <Xarrow
+      key={`${connection.start}-${connection.end}`}
+      start={connection.start}
+      end={connection.end}
+      startAnchor={isTabletLayout ? 'middle' : connection.startAnchor}
+      endAnchor={isTabletLayout ? 'middle' : connection.endAnchor}
+      path={isTabletLayout ? 'straight' : 'smooth'}
+      curveness={connection.curveness}
+      color="#3d86b9"
+      strokeWidth={3.5}
+      showHead={false}
+      animateDrawing={prefersReducedMotion ? false : (isTabletLayout ? connection.tabletDuration : connection.duration)}
+      zIndex={2}
+      arrowBodyProps={{ strokeLinecap: 'round', strokeLinejoin: 'round', 'data-journey-route': getRouteKey(connection) }}
+      divContainerStyle={{ pointerEvents: 'none', opacity: index < readyCount ? 1 : 0 }}
+      SVGcanvasStyle={{ maxWidth: 'none', overflow: 'visible' }}
+    />
+  ));
+}
+
+export default function LandingPage() {
+  const [showJourney, setShowJourney] = useState(false);
+  const [routeRevision, setRouteRevision] = useState(0);
+  const canvasRef = useRef(null);
+  const prefersReducedMotion = useReducedMotion();
+  const handleRoutesUpdated = useRef(() => setRouteRevision((revision) => revision + 1)).current;
+  const [isTabletLayout, setIsTabletLayout] = useState(() => window.matchMedia(TABLET_JOURNEY_QUERY).matches);
+
+  useEffect(() => {
+    const timerId = window.setTimeout(() => setShowJourney(true), INTRO_DURATION_MS);
+    return () => window.clearTimeout(timerId);
+  }, []);
+
+  useEffect(() => {
+    const tabletMedia = window.matchMedia(TABLET_JOURNEY_QUERY);
+    const handleLayoutChange = (event) => setIsTabletLayout(event.matches);
+    tabletMedia.addEventListener('change', handleLayoutChange);
+    return () => tabletMedia.removeEventListener('change', handleLayoutChange);
+  }, []);
+
+  useEffect(() => {
+    if (!showJourney) return undefined;
+
+    const tabletMedia = window.matchMedia(TABLET_JOURNEY_QUERY);
+    const journeyStartedAt = performance.now();
+    let frameId = 0;
+    let activeRouteIndex = -1;
+    let routeStartScroll = window.scrollY;
+    const completedRoutes = new Set();
+    const scrollRoutes = [
+      { start: TABLET_RISK_ROUTE_DELAY, end: TABLET_RISK_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-checklist' },
+      { start: TABLET_CHECKLIST_ROUTE_DELAY, end: TABLET_CHECKLIST_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-issue-guide' },
+      { start: TABLET_GUIDE_ROUTE_DELAY, end: TABLET_GUIDE_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-status-guide' },
+      { start: TABLET_STATUS_ROUTE_DELAY, end: TABLET_STATUS_ROUTE_DELAY + TABLET_ROUTE_DRAW_DURATION, id: 'journey-complete' },
+    ];
+
+    const getTargetScroll = (id) => {
+      const element = document.getElementById(id);
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      const absoluteTop = window.scrollY + rect.top;
+      return Math.max(0, absoluteTop + rect.height / 2 - window.innerHeight / 2);
+    };
+
+    const followRoute = () => {
+      const elapsed = (performance.now() - journeyStartedAt) / 1000;
+      if (tabletMedia.matches && !prefersReducedMotion) {
+        scrollRoutes.forEach((route, index) => {
+          if (elapsed >= route.end && !completedRoutes.has(index)) {
+            const targetScroll = getTargetScroll(route.id);
+            if (targetScroll !== null) window.scrollTo(0, targetScroll);
+            completedRoutes.add(index);
+          }
+        });
+
+        const routeIndex = scrollRoutes.findIndex((route) => elapsed >= route.start && elapsed < route.end);
+        if (routeIndex >= 0) {
+          const route = scrollRoutes[routeIndex];
+          if (activeRouteIndex !== routeIndex) {
+            activeRouteIndex = routeIndex;
+            routeStartScroll = window.scrollY;
+          }
+          const targetScroll = getTargetScroll(route.id);
+          if (targetScroll !== null) {
+            const progress = (elapsed - route.start) / (route.end - route.start);
+            const easedProgress = progress * progress * (3 - 2 * progress);
+            window.scrollTo(0, routeStartScroll + (targetScroll - routeStartScroll) * easedProgress);
+          }
+        } else {
+          activeRouteIndex = -1;
+        }
+      }
+
+      if (elapsed <= TABLET_COMPLETE_REVEAL_DELAY + 1) {
+        frameId = window.requestAnimationFrame(followRoute);
+      }
+    };
+
+    frameId = window.requestAnimationFrame(followRoute);
+
+    return () => {
+      window.cancelAnimationFrame(frameId);
+    };
+  }, [prefersReducedMotion, showJourney]);
+
+  return (
+    <main className={styles.root}>
+      <header className={styles.topbar}>
+        <Link to="/" className={styles.logoLink} aria-label="HUGME 홈"><img className={styles.logo} src="/images/Logo.png" alt="HUGME" /></Link>
+        <nav className={styles.authLinks} aria-label="인증">
+          <Link className={styles.loginLink} to="/auth/login">로그인</Link>
+          <Link className={styles.signupLink} to="/auth/signup">회원가입</Link>
+        </nav>
+      </header>
+
+      <AnimatePresence mode="sync">
+        {!showJourney ? (
+          <motion.div key="landing-intro" className={styles.sceneLayer} initial={{ x: 0, opacity: 1 }} animate={{ x: 0, opacity: 1 }} exit={{ x: prefersReducedMotion ? 0 : '-105%', opacity: prefersReducedMotion ? 0 : 1 }} transition={{ duration: prefersReducedMotion ? 0.2 : 1.05, ease: SCENE_EASE }}>
+            <LandingIntro />
+          </motion.div>
+        ) : (
+          <motion.section key="landing-journey" className={styles.journey} aria-labelledby="landing-title" initial={{ x: prefersReducedMotion ? 0 : '105%', opacity: prefersReducedMotion ? 0 : 1 }} animate={{ x: 0, opacity: 1 }} transition={{ duration: prefersReducedMotion ? 0.2 : 1.05, ease: SCENE_EASE }}>
+            <div className={styles.titleGroup}>
+              <p className={styles.eyebrow}>나의 안전한 전세 여정</p>
+              <h1 id="landing-title">전세위험진단부터 보증보험 서류 준비까지</h1>
+            </div>
+            <Xwrapper>
+              <div ref={canvasRef} className={styles.journeyCanvas}>
+                <JourneyConnections canvasRef={canvasRef} prefersReducedMotion={prefersReducedMotion} onRoutesUpdated={handleRoutesUpdated} isTabletLayout={isTabletLayout} />
+                {FEATURES.map((feature) => <FeaturePoint key={feature.key} feature={feature} prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />)}
+                {JOURNEY_BUBBLES.map((bubble) => <JourneyBubble key={bubble.key} bubble={bubble} canvasRef={canvasRef} prefersReducedMotion={prefersReducedMotion} routeRevision={routeRevision} />)}
+                <CompletePoint prefersReducedMotion={prefersReducedMotion} isTabletLayout={isTabletLayout} />
+              </div>
+            </Xwrapper>
+            <MobileJourney prefersReducedMotion={prefersReducedMotion} />
+            <div className={styles.responsiveStartButtonWrap}>
+              <Link className={styles.responsiveStartButton} to="/auth/login">HUGME 시작하기</Link>
+            </div>
+          </motion.section>
+        )}
+      </AnimatePresence>
+    </main>
   );
 }

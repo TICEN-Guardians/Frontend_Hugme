@@ -1,12 +1,32 @@
 .pageWrapper {
   display: flex;
-  flex-direction: column;
+  align-items: flex-start;
   min-height: 100vh;
 }
 
+.fullWidthPageWrapper {
+  width: 100%;
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.fullWidthPageWrapper > .main {
+  width: 100%;
+}
+
 .chatPageWrapper {
-  display: block;
+  height: 100vh;
+  height: 100dvh;
   min-height: 0;
+  overflow: hidden;
+}
+
+.contentColumn {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100vh;
 }
 
 .main {
@@ -27,10 +47,45 @@
   flex-direction: column;
   width: 100%;
   max-width: none;
-  height: calc(100vh - var(--header-height));
-  height: calc(100dvh - var(--header-height));
+  height: 100vh;
+  height: 100dvh;
   min-height: 0;
   margin: 0;
   padding: 0;
   overflow: hidden;
+}
+
+@media (max-width: 140rem) {
+  .wideMain {
+    padding-right: var(--space-5);
+    padding-left: var(--space-5);
+  }
+}
+
+@media (max-width: 76.7rem) {
+  .pageWrapper {
+    flex-direction: column;
+  }
+
+  .chatPageWrapper {
+    height: auto;
+    min-height: 100dvh;
+    overflow: visible;
+  }
+
+  .contentColumn {
+    width: 100%;
+    min-height: 0;
+  }
+
+  .wideMain {
+    padding-right: var(--space-4);
+    padding-left: var(--space-4);
+  }
+
+  .chatMain {
+    height: auto;
+    min-height: calc(100dvh - 19rem);
+    overflow: visible;
+  }
 }

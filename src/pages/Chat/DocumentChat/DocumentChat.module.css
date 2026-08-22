@@ -328,6 +328,22 @@
   background: #0b67aa;
 }
 
+@media (max-width: 140rem) {
+  .messages {
+    padding-right: var(--space-6);
+    padding-left: var(--space-6);
+  }
+
+  .chatContent {
+    width: min(calc(100% - var(--space-8)), 96rem);
+  }
+
+  .sidePane {
+    flex-basis: clamp(34rem, 30vw, 44rem);
+    width: clamp(34rem, 30vw, 44rem);
+  }
+}
+
 @media (max-width: 76.7rem) {
   .root {
     min-height: auto;

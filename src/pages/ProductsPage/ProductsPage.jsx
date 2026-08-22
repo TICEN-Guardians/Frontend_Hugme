@@ -6,12 +6,17 @@ import {
 import { PRODUCT_CODES, PRODUCT_DETAIL_PATH, PRODUCT_THEME } from '../../constants/products.js';
 import ProductGroup from './ProductGroup/ProductGroup.jsx';
 import styles from './ProductsPage.module.css';
+import { useNavigate } from 'react-router-dom';
+import {
+  LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
+} from '../../hooks/useContractUpload.js';
 
 const ENTRY_EASE = [0.16, 1, 0.3, 1];
 
 const GROUPS = [
   {
     id: 'no-loan',
+    productCode: PRODUCT_CODES.GENERAL,
     theme: PRODUCT_THEME.GENERAL,
     icon: <HiShieldCheck aria-hidden="true" />,
     badgeLabel: '일반 전세계약',
@@ -32,6 +37,7 @@ const GROUPS = [
   },
   {
     id: 'special-return',
+    productCode: PRODUCT_CODES.SPECIAL,
     theme: PRODUCT_THEME.SPECIAL,
     icon: <HiArrowPathRoundedSquare aria-hidden="true" />,
     badgeLabel: '역전세 특례대출 연계',
@@ -53,7 +59,14 @@ const GROUPS = [
 ];
 
 export default function ProductsPage() {
+  const navigate = useNavigate();
   const prefersReducedMotion = useReducedMotion();
+
+  const handleProductClick = (product) => {
+    // 기존 신청 확인은 상세 화면의 계약서 업로드 시점에 수행한다.
+    sessionStorage.removeItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+    navigate(product.to);
+  };
 
   return (
     <div className={styles.root}>
@@ -80,6 +93,7 @@ export default function ProductsPage() {
             index={index}
             prefersReducedMotion={prefersReducedMotion}
             {...group}
+            onClick={() => handleProductClick(group)}
           />
         ))}
       </div>

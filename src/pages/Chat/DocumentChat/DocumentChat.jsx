@@ -14,29 +14,6 @@ const DOCUMENT_CHAT_TRANSITION = {
   ease: [0.16, 1, 0.3, 1],
 };
 
-const CONTRACT_VARIANTS = [
-  {
-    variantId: 'new-fixed',
-    title: '확정일자부 신규 전세계약서',
-    description: '최초 체결한 계약 · 확정일자 받은본',
-  },
-  {
-    variantId: 'renewal',
-    title: '갱신(재계약) 전세계약서',
-    description: '기존 계약 갱신 · 변경된 조건 확인',
-  },
-  {
-    variantId: 'increase',
-    title: '보증금 증액 전세계약서',
-    description: '증액된 보증금 및 변경 계약 확인',
-  },
-  {
-    variantId: 'house',
-    title: '단독·다중·다가구 전세계약서',
-    description: '단독·다중·다가구 주택 계약 시 필요',
-  },
-];
-
 function normalizeSectionName(sectionCode, sectionName) {
   if (sectionName) return sectionName;
   if (sectionCode === 'BASIC') return '기본서류';
@@ -47,7 +24,6 @@ function normalizeSectionName(sectionCode, sectionName) {
 
 function withUiDocumentFields(document, sectionCode, variantSelections) {
   const documentName = document.documentName ?? document.title ?? '';
-  const isLeaseContract = documentName.includes('전세계약서') || documentName.includes('임대차계약서');
 
   return {
     ...document,
@@ -55,8 +31,8 @@ function withUiDocumentFields(document, sectionCode, variantSelections) {
     documentName,
     description: document.description ?? '',
     prepared: Boolean(document.prepared),
-    selectableVariants: document.selectableVariants ?? (isLeaseContract ? CONTRACT_VARIANTS : undefined),
-    selectedVariantId: variantSelections[document.documentId] ?? document.selectedVariantId ?? 'renewal',
+    selectableVariants: document.selectableVariants,
+    selectedVariantId: variantSelections[document.documentId] ?? document.selectedVariantId,
   };
 }
 
@@ -125,7 +101,7 @@ export default function DocumentChat() {
   };
 
   const handleSelectDocument = (documentId) => {
-    setSelectedDocumentId(documentId);
+    setSelectedDocumentId((prev) => (prev === documentId ? null : documentId));
     setExpandedDocumentId((prev) => (prev === documentId ? prev : null));
   };
 
@@ -189,7 +165,12 @@ export default function DocumentChat() {
                     }
               }
             >
-              <MessageList messages={messages} animateMessages />
+              <MessageList
+                messages={messages}
+                animateMessages
+                showOrderedLists={false}
+                documentChatMode
+              />
               {isSending && (
                 <motion.div
                   className={styles.typingRow}

@@ -158,7 +158,40 @@ function ReanalysisConfirmModal({ isOpen, onClose, onConfirm }) {
   );
 }
 
-function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset, onChat }) {
+function ExistingChecklistConfirmModal({ isOpen, onClose, onUseExisting, onStartNew }) {
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} panelClassName={styles.reanalysisModal}>
+      <div className={styles.reanalysisContent}>
+        <p className={styles.reanalysisEyebrow}>기존 내역 확인</p>
+        <h2 className={styles.reanalysisTitle}>기존 준비서류 내역이 있어요</h2>
+        <p className={styles.reanalysisDescription}>
+          기존 신청의 최종 준비서류를 확인하거나,
+          <br />
+          새 계약서로 다시 진행할 수 있어요.
+        </p>
+        <div className={styles.reanalysisActions}>
+          <Button type="button" variant="secondary" onClick={onStartNew}>
+            신규 진행
+          </Button>
+          <Button type="button" onClick={onUseExisting}>
+            기존 내역 보기
+          </Button>
+        </div>
+      </div>
+    </Modal>
+  );
+}
+
+function ContractAnalysisPanel({
+  isDone,
+  ocrInfo,
+  onUpload,
+  onBeforeUpload,
+  isPreparingUpload,
+  uploadError,
+  onReset,
+  onChat,
+}) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
   const fileInputRef = useRef(null);
   const [fileError, setFileError] = useState('');
@@ -196,7 +229,11 @@ function ContractAnalysisPanel({ isDone, ocrInfo, onUpload, uploadError, onReset
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, ease: PANEL_EASE }}
       >
-        <ChecklistBanner onFileSelected={onUpload} />
+        <ChecklistBanner
+          onFileSelected={onUpload}
+          onBeforeUpload={onBeforeUpload}
+          isPreparingUpload={isPreparingUpload}
+        />
         {uploadError && (
           <p className={styles.uploadError}>계약서 업로드에 실패했습니다. 다시 시도해주세요.</p>
         )}
@@ -472,7 +509,13 @@ export default function ProductChecklistPage() {
     uploadError,
     isConfirming,
     isRestoring,
+    isPreparingUpload,
+    isExistingChecklistModalOpen,
     finalDocuments,
+    prepareUpload,
+    useExistingChecklist,
+    startNewChecklist,
+    closeExistingChecklistModal,
     startUpload,
     restartUpload,
     confirmOcrInfo,
@@ -518,6 +561,13 @@ export default function ProductChecklistPage() {
     reopenOcrConfirm();
   };
 
+  const handleQuestionClose = () => {
+    if (questionFlow.isSubmitting) return;
+
+    questionFlow.reset();
+    closeOcrConfirm();
+  };
+
   if (!theme) {
     return <ErrorPage />;
   }
@@ -532,7 +582,7 @@ export default function ProductChecklistPage() {
     key: group.groupId,
     label: group.groupName,
   }));
-  const hasAnalysisResult = Boolean(ocrInfo);
+  const hasAnalysisResult = step === 'done' && Boolean(ocrInfo);
   const selectedItem = items.find((item) => item.itemId === selectedItemId) ?? null;
   const modalDocumentEntries = groupModalDocuments(documents);
 
@@ -650,6 +700,8 @@ export default function ProductChecklistPage() {
             <ContractAnalysisPanel
               isDone={false}
               onUpload={startUpload}
+              onBeforeUpload={prepareUpload}
+              isPreparingUpload={isPreparingUpload}
               uploadError={uploadError}
             />
             <motion.section
@@ -697,6 +749,13 @@ export default function ProductChecklistPage() {
 
       <AnalyzingModal isOpen={step === 'analyzing'} />
 
+      <ExistingChecklistConfirmModal
+        isOpen={isExistingChecklistModalOpen}
+        onClose={closeExistingChecklistModal}
+        onUseExisting={useExistingChecklist}
+        onStartNew={startNewChecklist}
+      />
+
       <OcrConfirmModal
         isOpen={step === 'ocrConfirm'}
         onClose={closeOcrConfirm}
@@ -718,6 +777,7 @@ export default function ProductChecklistPage() {
           questionFlow.questionStep == null
         }
         isSubmitting={questionFlow.isSubmitting}
+        onClose={handleQuestionClose}
         onBack={handleQuestionBack}
         onSubmitStep={handleSubmitStep}
       />

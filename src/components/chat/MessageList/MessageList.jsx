@@ -2,7 +2,12 @@ import { useEffect, useRef } from 'react';
 import MessageBubble from '../MessageBubble/MessageBubble.jsx';
 import styles from './MessageList.module.css';
 
-export default function MessageList({ messages, animateMessages = false }) {
+export default function MessageList({
+  messages,
+  animateMessages = false,
+  showOrderedLists = true,
+  documentChatMode = false,
+}) {
   const bottomRef = useRef(null);
 
   useEffect(() => {
@@ -16,6 +21,9 @@ export default function MessageList({ messages, animateMessages = false }) {
           key={index}
           role={message.role}
           content={message.content}
+            sources={message.sources ?? []}
+            showOrderedLists={showOrderedLists}
+            documentChatMode={documentChatMode}
           animate={animateMessages}
         />
       ))}
