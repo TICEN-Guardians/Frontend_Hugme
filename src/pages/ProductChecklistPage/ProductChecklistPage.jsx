@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotion } from 'framer-motion';
 import { FaChevronRight, FaCircleCheck, FaCircleInfo, FaFileLines } from 'react-icons/fa6';
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import AnalyzingModal from '../../components/checklist/AnalyzingModal/AnalyzingModal.jsx';
+import KakaoNotificationModal from '../../components/checklist/KakaoNotificationModal/KakaoNotificationModal.jsx';
 import OcrConfirmModal from '../../components/checklist/OcrConfirmModal/OcrConfirmModal.jsx';
 import QuestionModal from '../../components/checklist/QuestionModal/QuestionModal.jsx';
 import Button from '../../components/common/Button/Button.jsx';
@@ -12,7 +13,12 @@ import {
   getPrepareQuestions,
   submitPrepareAnswers,
 } from '../../api/checklist/prepareChecklistService.js';
+import {
+  createKakaoAuthorization,
+  KAKAO_NOTIFICATION_PENDING_KEY,
+} from '../../api/notification/notificationService.js';
 import { GUARANTEE_THEME, PRODUCT_ROUTE_TO_CODE } from '../../constants/products.js';
+import { useAuth } from '../../context/auth/AuthContext.jsx';
 import { useContractUpload } from '../../hooks/useContractUpload.js';
 import { usePrepareChecklist } from '../../hooks/usePrepareChecklist.js';
 import { useProductChecklist } from '../../hooks/useProductChecklist.js';
@@ -199,6 +205,7 @@ function ContractAnalysisPanel({
   prepareError,
   onReset,
   onChat,
+  onKakaoNotification,
 }) {
   const summaryItems = buildOcrSummaryItems(ocrInfo);
   const fileInputRef = useRef(null);
@@ -278,6 +285,14 @@ function ContractAnalysisPanel({
           />
           <Button type="button" variant="secondary" onClick={() => setIsReanalysisConfirmOpen(true)}>
             다시 분석
+          </Button>
+          <Button
+            type="button"
+            variant="secondary"
+            className={styles.kakaoButton}
+            onClick={onKakaoNotification}
+          >
+            카카오 알림 보내기
           </Button>
           <Button type="button" onClick={onChat}>
             서류안내 챗봇
@@ -503,7 +518,9 @@ function DocumentDetail({
 }
 
 export default function ProductChecklistPage() {
+  const location = useLocation();
   const navigate = useNavigate();
+  const { isAuthenticated, isAuthLoading } = useAuth();
   const prefersReducedMotion = useReducedMotion();
   const { productCode: productCodeParam, guaranteeType } = useParams();
   const productCode = PRODUCT_ROUTE_TO_CODE[productCodeParam] ?? PRODUCT_ROUTE_TO_CODE[guaranteeType];
@@ -542,6 +559,9 @@ export default function ProductChecklistPage() {
 
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [expandedDocumentGroupIds, setExpandedDocumentGroupIds] = useState([]);
+  const [isKakaoModalOpen, setIsKakaoModalOpen] = useState(false);
+  const [isKakaoAuthorizing, setIsKakaoAuthorizing] = useState(false);
+  const [kakaoError, setKakaoError] = useState('');
 
   const {
     step,
@@ -563,7 +583,10 @@ export default function ProductChecklistPage() {
     closeOcrConfirm,
     reopenOcrConfirm,
     finishQuestions,
-  } = useContractUpload(productCode);
+  } = useContractUpload(productCode, {
+    isAuthenticated,
+    isAuthLoading,
+  });
 
   const questionFlow = useQuestionFlow(applicationId);
   const prepareChecklist = usePrepareChecklist(productCode);
@@ -634,6 +657,50 @@ export default function ProductChecklistPage() {
 
     questionFlow.reset();
     closeOcrConfirm();
+  };
+
+  const handleOpenKakaoNotification = () => {
+    setKakaoError('');
+    setIsKakaoModalOpen(true);
+  };
+
+  const handleCloseKakaoNotification = () => {
+    if (isKakaoAuthorizing) return;
+    setIsKakaoModalOpen(false);
+    setKakaoError('');
+  };
+
+  const handleKakaoNotification = async (dates) => {
+    if (applicationId == null || isKakaoAuthorizing) return;
+
+    setIsKakaoAuthorizing(true);
+    setKakaoError('');
+
+    try {
+      const response = await createKakaoAuthorization(applicationId);
+      const authorizationUrl = response?.authorizationUrl;
+
+      if (!authorizationUrl) {
+        throw new Error('카카오 인증 주소가 응답에 없습니다.');
+      }
+
+      sessionStorage.setItem(
+        KAKAO_NOTIFICATION_PENDING_KEY,
+        JSON.stringify({
+          applicationId,
+          returnTo: `${location.pathname}${location.search}`,
+          ...dates,
+        }),
+      );
+
+      window.location.assign(authorizationUrl);
+    } catch (error) {
+      setKakaoError(
+        error?.response?.data?.message ??
+          '카카오 인증을 시작하지 못했습니다. 다시 시도해 주세요.',
+      );
+      setIsKakaoAuthorizing(false);
+    }
   };
 
   const handlePrepareStart = async () => {
@@ -758,6 +825,7 @@ export default function ProductChecklistPage() {
             onUpload={restartUpload}
             uploadError={uploadError}
             onChat={() => navigate('/doc-chat', { state: { applicationId } })}
+            onKakaoNotification={handleOpenKakaoNotification}
           />
           {finalDocuments ? (
             <FinalDocumentList result={finalDocuments} />
@@ -878,6 +946,14 @@ export default function ProductChecklistPage() {
         onClose={handlePrepareClose}
         onBack={handlePrepareQuestionBack}
         onSubmitStep={handlePrepareSubmitStep}
+      />
+
+      <KakaoNotificationModal
+        isOpen={isKakaoModalOpen}
+        onClose={handleCloseKakaoNotification}
+        onSubmit={handleKakaoNotification}
+        isSubmitting={isKakaoAuthorizing}
+        error={kakaoError}
       />
     </motion.div>
   );

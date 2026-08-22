@@ -11,6 +11,7 @@ import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import GuideChatSidebarSection from '../../chat/GuideChatSidebarSection/GuideChatSidebarSection.jsx';
 import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
+import ChecklistHistorySection from './ChecklistHistorySection.jsx';
 import styles from './Sidebar.module.css';
 
 const LOGO_SRC = '/images/Logo.png';
@@ -21,6 +22,10 @@ export default function Sidebar({ showHistory = true }) {
   const { pathname } = useLocation();
   const navigate = useNavigate();
   const { entryPath: riskEntryPath, hasLastAnalysis } = useLastRiskAnalysis(user?.email);
+  const isChecklistPath =
+    pathname === '/guarantee-checklist' ||
+    pathname.startsWith('/guarantee-checklist/') ||
+    (pathname.startsWith('/products/') && pathname.endsWith('/checklist'));
 
   const menuItems = [
     {
@@ -119,7 +124,7 @@ export default function Sidebar({ showHistory = true }) {
               <FaClockRotateLeft aria-hidden="true" />
             </div>
 
-            {hasLastAnalysis && (
+            {!isChecklistPath && hasLastAnalysis && (
               <Link to={riskEntryPath} className={styles.historyItem}>
                 <span className={styles.historyIcon} aria-hidden="true">
                   <FaHouse />
@@ -131,6 +136,7 @@ export default function Sidebar({ showHistory = true }) {
               </Link>
             )}
 
+            <ChecklistHistorySection />
             <GuideChatSidebarSection />
           </section>
         )}

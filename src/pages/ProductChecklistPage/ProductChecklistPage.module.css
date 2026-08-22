@@ -68,6 +68,12 @@
   gap: var(--space-2);
 }
 
+.kakaoButton {
+  border-color: #fee500;
+  background: #fee500;
+  color: #191919;
+}
+
 .doneBannerTitle {
   display: inline-flex;
   align-items: center;

@@ -109,10 +109,27 @@ export async function getCurrentApplication(productCode) {
   return res.data;
 }
 
-/** 로그인 사용자의 완료된 체크리스트를 최신순으로 조회한다. */
+/**
+ * 로그인 사용자의 완료된 체크리스트를 최신순으로 조회한다.
+ * @returns {Promise<Array<{
+ *   applicationId: number|string,
+ *   productCode: 'GENERAL'|'SPECIAL',
+ *   contractAddress: string,
+ *   updatedAt: string
+ * }>>}
+ */
 export async function getCompletedApplications() {
   const res = await axiosInstance.get('/api/applications/completed');
-  return Array.isArray(res.data) ? res.data : [];
+  if (!Array.isArray(res.data)) return [];
+
+  return res.data
+    .filter((application) => application?.applicationId != null)
+    .map((application) => ({
+      applicationId: application.applicationId,
+      productCode: application.productCode ?? null,
+      contractAddress: application.contractAddress ?? '',
+      updatedAt: application.updatedAt ?? '',
+    }));
 }
 
 /**

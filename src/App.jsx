@@ -8,6 +8,7 @@ import DocumentChat from './pages/Chat/DocumentChat/DocumentChat.jsx';
 import EmailVerifyPage from './pages/EmailVerifyPage/EmailVerifyPage.jsx';
 import ErrorPage from './pages/ErrorPage/ErrorPage.jsx';
 import LandingPage from './pages/LandingPage/LandingPage.jsx';
+import KakaoMessageCallbackPage from './pages/KakaoMessageCallbackPage/KakaoMessageCallbackPage.jsx';
 import LoginPage from './pages/LoginPage/LoginPage.jsx';
 import MainPage from './pages/MainPage/MainPage.jsx';
 import ProductChecklistPage from './pages/ProductChecklistPage/ProductChecklistPage.jsx';
@@ -81,6 +82,7 @@ export default function App() {
             <Route path="/risk/new" element={<RiskFormPage />} />
             <Route path="/risk/:reportId" element={<RiskReportPage />} />
             <Route path="/doc-chat" element={<DocumentChat />} />
+            <Route path="/oauth/kakao/message/callback" element={<KakaoMessageCallbackPage />} />
             <Route path="/main" element={<MainPage />} />
           </Route>
         </Route>
