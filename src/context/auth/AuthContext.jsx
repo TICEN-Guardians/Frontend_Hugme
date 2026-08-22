@@ -30,7 +30,6 @@ export function AuthProvider({ children }) {
   const [isIdleLogoutNoticeOpen, setIsIdleLogoutNoticeOpen] = useState(false);
   const [isSessionExpiredNoticeOpen, setIsSessionExpiredNoticeOpen] = useState(false);
   const AUTH_ENTRY_PATHS = [
-    '/auth/login',
     '/auth/signup',
     '/auth/mail/verify',
     '/api/auth/mail/verify',

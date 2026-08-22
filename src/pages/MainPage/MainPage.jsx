@@ -71,10 +71,12 @@ const cardVariants = {
 };
 
 export default function MainPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { entryPath: riskEntryPath } = useLastRiskAnalysis(user?.email);
   const prefersReducedMotion = useReducedMotion();
-  const userName = user?.name ?? '사용자';
+  const greeting = isAuthenticated
+    ? `안녕하세요, ${user?.name ?? '사용자'}님`
+    : '안녕하세요, HUGME입니다';
   const motionState = prefersReducedMotion ? 'visible' : undefined;
 
   return (
@@ -89,10 +91,10 @@ export default function MainPage() {
           HUGME HOME
         </motion.p>
         <motion.p className={styles.greeting} variants={introItemVariants}>
-          안녕하세요, {userName}님
+          {greeting}
         </motion.p>
         <motion.h1 variants={introItemVariants}>
-          보증보험 가입 전 위험은 먼저 확인하고,
+          보증보험 가입 전 전세 위험은 먼저 확인하고,
           <br />내게 맞는 보증 준비는 빠짐없이 챙겨보세요.
         </motion.h1>
       </motion.header>

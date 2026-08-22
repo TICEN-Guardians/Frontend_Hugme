@@ -129,9 +129,13 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
     navigate(`/doc-chat?applicationId=${applicationId}`);
   };
 
+  const usesOverlaySidebar = mode === 'main' || isNarrowViewport;
+
   return (
-    <>
-      {(mode === 'main' || isNarrowViewport) && !isCollapsed && (
+    <div
+      className={`${styles.sidebarSlot} ${usesOverlaySidebar ? styles.overlaySidebarSlot : ''}`}
+    >
+      {usesOverlaySidebar && !isCollapsed && (
         <button
           type="button"
           className={styles.overlayBackdrop}
@@ -141,7 +145,7 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
       )}
 
       <aside
-        className={`${styles.sidebar} ${mode === 'main' || isNarrowViewport ? styles.mainSidebar : ''}`}
+        className={`${styles.sidebar} ${usesOverlaySidebar ? styles.mainSidebar : ''}`}
         data-collapsed={isCollapsed}
       >
         <div className={styles.identityRegion}>
@@ -279,7 +283,7 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
           )}
         </div>
 
-        {(mode === 'main' || isNarrowViewport) && (
+        {usesOverlaySidebar && (
           <button
             type="button"
             className={styles.collapseButton}
@@ -291,6 +295,6 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
           </button>
         )}
       </aside>
-    </>
+    </div>
   );
 }
