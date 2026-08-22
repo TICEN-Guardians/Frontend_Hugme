@@ -43,7 +43,11 @@ export default function ReportAnalysis({ report, motionSet }) {
         )}
         <div className={styles.metricChips}>
           {report.metricChips.map((chip) => (
-            <span key={chip.label} className={styles.metricChip}>{chip.label} {chip.value}</span>
+            <span key={chip.label} className={styles.metricChip}>
+              <span>{chip.label}</span>
+              {chip.help && <TermHelp label={chip.label} description={chip.help} />}
+              <strong>{chip.value}</strong>
+            </span>
           ))}
         </div>
       </section>
@@ -55,14 +59,17 @@ export default function ReportAnalysis({ report, motionSet }) {
         <MarketComparableSection comparable={report.marketComparables} />
       </ReportSection>
 
+      <ReportSection index="03" icon={<LuFileCheck />} title="시세 산출 데이터 품질" motionSet={motionSet}>
+        <DataQualitySection quality={report.dataQuality} />
+      </ReportSection>
 
       {report.isDetailed && (
-        <ReportSection index="03" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
+        <ReportSection index="04" icon={<LuShieldCheck />} title="담보 · 등기 분석" motionSet={motionSet}>
           <RecoveryRegistrySection report={report} />
         </ReportSection>
       )}
 
-      <ReportSection index={report.isDetailed ? '04' : '03'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
+      <ReportSection index={report.isDetailed ? '05' : '04'} icon={<LuChartNoAxesColumnIncreasing />} title="위험 점수 구성" motionSet={motionSet}>
         <RiskBreakdownSection report={report} />
       </ReportSection>
 
@@ -103,7 +110,12 @@ function PriceRiskSection({ report }) {
         <div className={styles.chartArea}>
           <div className={styles.subHeader}>
             <h3>가격 비교</h3>
-            {report.reliabilityLabel && <span className={styles.reliabilityBadge}>시세 신뢰도 {report.reliabilityLabel}</span>}
+            {report.reliabilityLabel && (
+              <span className={styles.reliabilityBadge}>
+                시세 신뢰도 {report.reliabilityLabel}
+                <TermHelp label="시세 신뢰도" description={report.reliabilityHelp} />
+              </span>
+            )}
           </div>
           <div className={styles.priceChart}>
             <ResponsiveContainer width="100%" height="100%">
@@ -123,7 +135,10 @@ function PriceRiskSection({ report }) {
 
         {report.scenarios.length > 0 && (
           <div className={styles.scenarioArea}>
-            <h3>가격 하락 시나리오</h3>
+            <h3 className={styles.titleWithHelp}>
+              가격 하락 시나리오
+              <TermHelp label="가격 하락 시나리오" description="AI 예상 매매가가 하락한다고 가정했을 때 담보부담률이 어떻게 변하는지 계산한 값입니다." />
+            </h3>
             <div className={styles.scenarioRows}>
               {report.scenarios.map((scenario) => (
                 <div key={scenario.label} className={styles.scenarioRow}>
@@ -242,6 +257,46 @@ function MarketComparableSection({ comparable }) {
   );
 }
 
+function DataQualitySection({ quality }) {
+  return (
+    <div className={`${styles.dataQualityPanel} ${styles[quality.tone]}`}>
+      <div className={styles.dataQualitySummary}>
+        <div>
+          <span>AI 시세 신뢰도</span>
+          <TermHelp label="AI 시세 신뢰도" description={quality.help} />
+        </div>
+        <strong>{quality.label}</strong>
+        <p>{quality.summary}</p>
+      </div>
+
+      {quality.hasIssues ? (
+        <div className={styles.dataQualityDetails}>
+          {quality.warningItems.length > 0 && (
+            <div>
+              <h3>원천 데이터 확인사항</h3>
+              <ul>
+                {quality.warningItems.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          )}
+          {quality.fallbackItems.length > 0 && (
+            <div>
+              <h3>대체값을 사용한 예측 Feature</h3>
+              <ul>
+                {quality.fallbackItems.map((item) => <li key={item}>{item}</li>)}
+              </ul>
+            </div>
+          )}
+        </div>
+      ) : (
+        <div className={styles.dataQualityClear}>
+          <LuShieldCheck aria-hidden="true" />
+          <span>저장된 분석 결과에서 별도의 데이터 품질 경고를 확인하지 못했습니다.</span>
+        </div>
+      )}
+    </div>
+  );
+}
 function TermHelp({ label, description }) {
   return (
     <span
@@ -285,7 +340,10 @@ function RecoveryRegistrySection({ report }) {
           <dl className={styles.recoveryRows}>
             {report.collateral.rows.map((row) => (
               <div key={row.label} className={styles.recoveryRow}>
-                <dt>{row.label}</dt>
+                <dt>
+                  {row.label}
+                  {row.help && <TermHelp label={row.label} description={row.help} />}
+                </dt>
                 <dd className={row.tone === 'danger' ? styles.dangerText : ''}>{row.value}</dd>
               </div>
             ))}
@@ -303,6 +361,7 @@ function RecoveryRegistrySection({ report }) {
                 <span className={styles.registryLabel}>
                   <LuLandmark aria-hidden="true" />
                   {item.label}
+                  {item.help && <TermHelp label={item.label} description={item.help} />}
                 </span>
                 <span className={styles.registryDetail}>{item.detail}</span>
                 <span className={`${styles.registryBadge} ${styles[item.state]}`}>{item.statusIcon} {item.statusLabel}</span>
@@ -331,7 +390,10 @@ function RegistryVerificationDetails({ verification }) {
       <dl className={styles.verificationGrid}>
         {verification.rows.map((row) => (
           <div key={row.label}>
-            <dt>{row.label}</dt>
+            <dt>
+              {row.label}
+              {row.help && <TermHelp label={row.label} description={row.help} />}
+            </dt>
             <dd>{row.value}</dd>
           </div>
         ))}
@@ -414,7 +476,7 @@ function BottomAnalysis({ report, motionSet }) {
       variants={motionSet.section}
     >
       <InsightSection
-        index={report.isDetailed ? '05' : '04'}
+        index={report.isDetailed ? '06' : '05'}
         evidence={evidence.slice(0, PRIMARY_REASON_COUNT)}
         cautions={report.reasonGroups?.cautions ?? []}
       />

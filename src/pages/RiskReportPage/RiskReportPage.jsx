@@ -141,6 +141,58 @@ const MARKET_COMPARABLE_WARNING = {
   RTMS_AREA_AND_PERIOD_EXPANDED: '표본 확보를 위해 비교 기간과 면적 범위를 함께 넓혔습니다.',
 };
 
+const DATA_WARNING = {
+  TOTAL_AREA_MISSING: '건축물대장에서 연면적을 확인하지 못했습니다.',
+  USE_APPROVAL_YEAR_MISSING: '건축물대장에서 사용승인연도를 확인하지 못했습니다.',
+  GROUND_FLOOR_COUNT_MISSING: '건축물대장에서 지상층 수를 확인하지 못했습니다.',
+  MAIN_PURPOSE_MISSING: '건축물대장에서 주용도를 확인하지 못했습니다.',
+  STRUCTURE_MISSING: '건축물대장에서 건물 구조를 확인하지 못했습니다.',
+  LAND_AREA_UNAVAILABLE: '대지면적을 확인하지 못해 모델의 대체값을 사용할 수 있습니다.',
+  BUILDING_COVERAGE_RATIO_UNAVAILABLE: '건폐율을 확인하지 못해 모델의 대체값을 사용할 수 있습니다.',
+  FLOOR_AREA_RATIO_UNAVAILABLE: '용적률을 확인하지 못해 모델의 대체값을 사용할 수 있습니다.',
+  PASSENGER_ELEVATOR_COUNT_UNKNOWN: '승용 엘리베이터 수를 확인하지 못했습니다.',
+  EMERGENCY_ELEVATOR_COUNT_UNKNOWN: '비상용 엘리베이터 수를 확인하지 못했습니다.',
+  HOUSEHOLD_COUNT_UNKNOWN: '세대 수를 확인하지 못했습니다.',
+  SEISMIC_DESIGN_UNKNOWN: '내진설계 적용 여부를 확인하지 못했습니다.',
+  LAND_RIGHT_AREA_UNAVAILABLE: '대지권면적을 확인하지 못했습니다.',
+  PROPERTY_FEATURE_UNAVAILABLE: '예측에 필요한 물건 특성 일부를 확인하지 못했습니다.',
+  PROPERTY_REFERENCE_AMBIGUOUS: '입력한 건물과 일치하는 학습 참조 대상을 하나로 확정하지 못했습니다.',
+  PROPERTY_REFERENCE_NOT_FOUND: '입력한 건물과 일치하는 학습 참조 대상을 찾지 못했습니다.',
+  UNSEEN_PROPERTY_NAME: '학습 데이터에 없는 건물명으로 확인됐습니다.',
+  PROPERTY_NAME_FALLBACK: '건물명 Feature에 대체값을 사용했습니다.',
+  RONE_DATA_NOT_FOUND: '한국부동산원 가격지수를 확인하지 못했습니다.',
+  RONE_DATA_STALE: '최신 한국부동산원 가격지수가 없어 이전 시점 자료를 사용했습니다.',
+  RONE_REGION_FALLBACK: '해당 지역 가격지수가 없어 더 넓은 지역 자료를 사용했습니다.',
+  ECOS_DATA_NOT_FOUND: '한국은행 시장지표를 확인하지 못했습니다.',
+  ECOS_DATA_STALE: '최신 한국은행 시장지표가 없어 이전 시점 자료를 사용했습니다.',
+  ECOS_PROVISIONAL_VALUE: '한국은행 잠정치를 사용했습니다.',
+  KOSIS_DATA_NOT_FOUND: '국가통계포털 시장지표를 확인하지 못했습니다.',
+  KOSIS_DATA_STALE: '최신 국가통계포털 시장지표가 없어 이전 시점 자료를 사용했습니다.',
+  KOSIS_PROVISIONAL_VALUE: '국가통계포털 잠정치를 사용했습니다.',
+  COFIX_DATA_NOT_FOUND: 'COFIX 금리 자료를 확인하지 못했습니다.',
+};
+
+const TERM_HELP = {
+  leaseToSaleRate: '계약 보증금을 AI 예상 매매가로 나눈 비율입니다. 높을수록 매매가 하락 시 보증금 회수 여유가 작습니다.',
+  leasePriceGapRate: '계약 보증금이 AI 예상 전세가보다 얼마나 높거나 낮은지를 나타냅니다.',
+  collateralBurdenRate: '선순위 근저당 채권최고액과 계약 보증금의 합을 AI 예상 매매가로 나눈 비율입니다.',
+  valuationReliability: '입력 누락, 대체값 사용, 시장 데이터 상태를 종합해 AI 시세를 어느 정도 참고할 수 있는지 나타냅니다.',
+  recoverableAmount: 'AI 예상 매매가에서 등기부상 활성 선순위 근저당 채권최고액을 뺀 단순 비교 기준액입니다.',
+  seniorMortgage: '보증금보다 먼저 변제될 수 있는 등기부상 활성 근저당의 채권최고액입니다.',
+  registryParseConfidence: '등기 원문에서 주소·소유자·권리관계를 구조화할 때 확보한 문서 판독 신뢰도입니다.',
+  registryAddressMatch: '사용자가 확정한 주소와 등기부에서 추출한 부동산 주소를 비교한 결과입니다.',
+  ownerMatch: '사용자가 입력한 계약 상대방 이름이 등기부의 현재 소유자 목록에 포함되는지 확인한 결과입니다.',
+  watchlist: '등기부 현재 소유자를 악성임대인 조회 결과와 비교한 상태입니다.',
+  mortgage: '부동산을 담보로 설정한 권리입니다. 리포트에서는 현재 유효한 채권최고액을 담보부담 계산에 사용합니다.',
+  seizure: '채권자의 강제집행을 위해 부동산 처분을 제한한 등기입니다.',
+  provisionalSeizure: '금전채권의 집행을 보전하기 위해 재산 처분을 임시로 제한한 등기입니다.',
+  provisionalDisposition: '권리관계가 확정될 때까지 부동산 처분이나 권리변동을 제한하는 등기입니다.',
+  auctionCommenced: '법원이 해당 부동산에 대한 경매 절차를 시작했음을 나타내는 등기입니다.',
+  trustRegistration: '부동산 소유권이나 관리 권한이 신탁회사에 이전된 상태를 나타낼 수 있는 등기입니다.',
+  jeonseRight: '등기부에 설정된 전세권입니다. 순위와 말소 여부에 따라 보증금 회수에 영향을 줄 수 있습니다.',
+  leaseholdRegistration: '임차인의 대항력·우선변제권 보전을 위해 법원 명령으로 설정되는 등기입니다.',
+};
+
 
 
 export default function RiskReportPage() {
@@ -285,6 +337,11 @@ function toReportViewModel(data) {
     ?? findMetric(data, 'collateral', 'deposit')?.value,
   );
   const marketComparables = marketComparableViewModel(data.marketComparables, deposit);
+  const dataQuality = dataQualityViewModel(
+    data.valuationReliability,
+    data.dataWarnings,
+    data.fallbackFeatures,
+  );
   const mortgage = numberOrNull(registry?.totalActiveMaxClaimAmount);
   const recoverableAmount = numberOrNull(indicators.recoverableAmount);
   const remaining = numberOrNull(indicators.remainingCollateralCapacity);
@@ -357,13 +414,15 @@ function toReportViewModel(data) {
       floorReasons: risk.floorReasons,
     }),
     metricChips: [
-      { label: '전세가율', value: ratio(leaseToSaleRate) },
-      { label: '전세시세 괴리율', value: ratio(leasePriceGapRate) },
-      isDetailed ? { label: '담보부담률', value: ratio(collateralBurdenRate) } : null,
+      { label: '전세가율', value: ratio(leaseToSaleRate), help: TERM_HELP.leaseToSaleRate },
+      { label: '전세시세 괴리율', value: ratio(leasePriceGapRate), help: TERM_HELP.leasePriceGapRate },
+      isDetailed ? { label: '담보부담률', value: ratio(collateralBurdenRate), help: TERM_HELP.collateralBurdenRate } : null,
     ].filter(Boolean),
     priceBars,
     marketComparables,
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
+    reliabilityHelp: TERM_HELP.valuationReliability,
+    dataQuality,
     scenarios: scenarios.map((item) => ({
       ...item,
       progressWidth: Math.max((item.rateValue / maxScenarioRate) * 100, item.rateValue > 0 ? 8 : 0),
@@ -379,9 +438,9 @@ function toReportViewModel(data) {
       excessWidth: Math.max(depositWidth - recoverableWidth, 0),
       shortfallLabel: recovery.tone === 'danger' ? recovery.label : '',
       rows: [
-        { label: '선순위 근저당', value: money(mortgage) },
+        { label: '선순위 근저당', value: money(mortgage), help: TERM_HELP.seniorMortgage },
         { label: '계약 보증금', value: money(deposit) },
-        { label: '보증금 회수 가능 기준액', value: money(recoverableAmount) },
+        { label: '보증금 회수 가능 기준액', value: money(recoverableAmount), help: TERM_HELP.recoverableAmount },
         { label: '부족액', value: recovery.tone === 'danger' ? recovery.label : '없음', tone: recovery.tone },
       ],
     },
@@ -397,6 +456,35 @@ function toReportViewModel(data) {
   };
 }
 
+function dataQualityViewModel(reliability, warnings = [], fallbackFeatures = []) {
+  const label = reliabilityLabel(reliability) ?? '확인 불가';
+  const tone = reliability === 'HIGH' ? 'high' : reliability === 'LOW' ? 'low' : 'medium';
+  const warningItems = [...new Set(warnings)]
+    .map((code) => DATA_WARNING[code] ?? '예측 입력 데이터 일부를 확인하지 못했습니다.')
+    .filter((message, index, items) => items.indexOf(message) === index);
+  const fallbackItems = [...new Set(fallbackFeatures)].map((feature) => {
+    const [scope, ...names] = String(feature).split(':');
+    const name = names.join(':').trim();
+    if (!name) return String(feature);
+    return `${scope.trim()} 예측 · ${name}`;
+  });
+  const hasIssues = warningItems.length > 0 || fallbackItems.length > 0;
+  const summary = reliability === 'HIGH'
+    ? '이번 분석에는 확인된 입력 누락이나 대체값 사용 기록이 없습니다.'
+    : reliability === 'LOW'
+      ? '예측 Feature에 대체값이 사용되어 AI 시세 오차가 커질 수 있습니다.'
+      : '일부 원천 데이터가 누락되거나 최신값이 아니어서 추정치를 보조자료로 확인해야 합니다.';
+
+  return {
+    label,
+    tone,
+    summary,
+    warningItems,
+    fallbackItems,
+    hasIssues,
+    help: TERM_HELP.valuationReliability,
+  };
+}
 function marketComparableViewModel(value, deposit) {
   const sourceLabel = '국토교통부 실거래 공개시스템';
   const warningCode = value?.warnings?.[0];
@@ -780,6 +868,7 @@ function registryChecks(registry) {
   const rows = [{
     key: 'mortgage',
     label: '근저당권',
+    help: TERM_HELP.mortgage,
     detail: mortgages.length
       ? mortgages.map((item) => `${item.holder ?? '권리자 미상'} (${money(numberOrNull(item.amount))})`).join(', ')
       : '없음',
@@ -791,6 +880,7 @@ function registryChecks(registry) {
     rows.push({
       key,
       label,
+      help: TERM_HELP[key],
       detail: value === 'TRUE' ? '확인됨' : value === 'FALSE' ? '없음' : '확인 필요',
       state: value === 'TRUE' ? 'risk' : value === 'FALSE' ? 'safe' : 'unknown',
     });
@@ -855,11 +945,13 @@ function registryVerificationViewModel(value) {
       { label: '등기 문서 발급일', value: registryIssueDate(value.issueDate) },
       {
         label: '문서 판독',
+        help: TERM_HELP.registryParseConfidence,
         value: `${REGISTRY_PARSE_STATUS[value.parseStatus] ?? '확인 불가'} · 신뢰도 ${REGISTRY_CONFIDENCE[value.parseConfidence] ?? '확인 불가'}`,
       },
       { label: '등기부 주소', value: value.registryAddress || '판독 불가' },
       {
         label: '주소 일치',
+        help: TERM_HELP.registryAddressMatch,
         value: value.addressMatchReviewConfirmed
           ? `${addressMatch} · 사용자 확인 완료`
           : addressMatch,
@@ -867,9 +959,10 @@ function registryVerificationViewModel(value) {
       { label: '현재 소유자', value: owners.length ? owners.join(', ') : '확인 불가' },
       {
         label: '계약 상대방과 소유자',
+        help: TERM_HELP.ownerMatch,
         value: `${value.contractPartyName || '계약 상대방 미입력'} · ${ownerMatch}`,
       },
-      { label: '악성임대인 조회', value: watchlist },
+      { label: '악성임대인 조회', value: watchlist, help: TERM_HELP.watchlist },
       {
         label: '소유자별 조회',
         value: ownerChecks.length ? ownerChecks.join(', ') : '조회 내역 없음',
