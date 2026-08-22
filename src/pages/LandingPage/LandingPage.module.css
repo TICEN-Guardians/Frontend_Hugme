@@ -32,11 +32,10 @@
 .activePath { fill: none; stroke: #3d86b9; stroke-width: 3.5; stroke-linecap: round; stroke-linejoin: round; filter: drop-shadow(0 0.4rem 0.7rem rgba(15, 117, 189, 0.15)); }
 
 .featurePosition { position: absolute; z-index: 8; box-sizing: border-box; transform: translate(-50%, -50%); }
-.riskPoint { top: 14%; left: 13%; width: 36rem; height: 28rem; }
+.riskPoint { top: 10%; left: 13%; width: 36rem; height: 28rem; }
 .checklistPoint { top: 77%; left: 32%; width: 34rem; height: 26rem; }
-.guidePoint { top: 14%; left: 54%; width: 38rem; height: 28rem; }
-.statusPoint { top: 77%; left: 75%; width: 38rem; height: 28rem; }
-.completePoint { top: 14%; left: 88%; width: 30rem; height: 20rem; }
+.preparationPoint { top: 77%; left: 69%; width: 40rem; height: 29rem; }
+.completePoint { top: 10%; left: 88%; width: 30rem; height: 20rem; }
 .featureLink, .featureBox { display: block; width: 100%; height: 100%; }
 .featureLink { border-radius: 3rem; color: inherit; text-decoration: none; }
 .featureBox { position: relative; transition: filter 0.25s ease, transform 0.28s cubic-bezier(0.22, 1, 0.36, 1); }
@@ -49,68 +48,59 @@
 .robotBox .shapeOutline .antennaLine { fill: none; }
 
 .featureCopy { position: absolute; top: 50%; left: 50%; z-index: 3; display: flex; width: calc(100% - 7.2rem); max-width: 25rem; align-items: center; flex-direction: column; justify-content: center; text-align: center; transform: translate(-50%, -50%); }
-.houseBox .featureCopy { margin-top: 1.6rem; max-width: 23rem; }
+.houseBox .featureCopy { margin-top: 1.6rem; max-width: 25rem; }
 .documentBox .featureCopy { max-width: 25rem; }
 .robotBox .featureCopy { width: calc(100% - 10rem); max-width: 28rem; }
 .featureCopy strong { color: #1b2d3b; font-size: 2.25rem; font-style: normal; font-weight: 850; line-height: 1.28; text-wrap: balance; white-space: nowrap; word-break: keep-all; }
-.featureCopy small { max-width: 100%; margin-top: 1rem; color: #586671; font-size: 1.4rem; font-weight: 650; letter-spacing: -0.035em; line-height: 1.45; text-wrap: balance; white-space: nowrap; word-break: keep-all; }
+.featureCopy small { max-width: 100%; margin-top: 1rem; color: #586671; font-size: 1.4rem; font-weight: 650; letter-spacing: -0.035em; line-height: 1.55; text-wrap: balance; white-space: pre-line; word-break: keep-all; }
 .featureIcon { display: inline-flex; width: 4.2rem; height: 4.2rem; align-items: center; justify-content: center; margin-bottom: 0.8rem; border-radius: 1.25rem; font-size: 2.5rem; }
 .houseFeatureIcon { background: rgba(15, 117, 189, 0.09); color: #377fa9; }
 .documentFeatureIcon { background: rgba(184, 137, 53, 0.1); color: #a87520; }
-.chatbotEyebrow { display: inline-flex; align-items: center; gap: 0.65rem; margin-bottom: 1rem; padding: 0.45rem 0.8rem 0.45rem 1rem; border-radius: 99rem; background: #e9f5fc; color: #0f75bd; font-size: 1.2rem; font-weight: 850; letter-spacing: 0.06em; }
-.chatbotEyebrow em { display: inline-flex; min-width: 2.6rem; height: 2rem; align-items: center; justify-content: center; border-radius: 99rem; background: #fff; color: #0f75bd; font-size: 1.08rem; font-style: normal; letter-spacing: 0.04em; }
+.robotFeatureIcon { background: rgba(15, 117, 189, 0.09); color: #287da8; }
 
 .routeAnchor { position: absolute; z-index: 1; display: block; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 .riskPoint .exitAnchor { bottom: 6.8%; left: 50%; }
 .checklistPoint .entryAnchor { top: 50%; left: calc(10% + 1rem); }
-.checklistPoint .exitAnchor { top: calc(6.5% + 1rem); left: 50%; }
-.guidePoint .entryAnchor { top: 50.7%; left: calc(5.3% + 3.2rem); }
-.guidePoint .exitAnchor { top: 50.7%; right: calc(5.3% + 3.2rem); }
-.statusPoint .entryAnchor { top: calc(17.5% + 1rem); left: 50%; }
-.statusPoint .exitAnchor { top: 50.7%; right: calc(5.3% + 3.2rem); }
+.checklistPoint .exitAnchor { top: 50%; right: calc(10% + 1rem); }
+.preparationPoint .entryAnchor { top: 50.7%; left: calc(5.3% + 3.2rem); }
+.preparationPoint .exitAnchor { top: 50.7%; right: calc(5.3% + 3.2rem); }
 .completePoint .entryAnchor { bottom: 1rem; left: 50%; }
 
 .completeBox { position: relative; display: flex; box-sizing: border-box; width: 100%; height: 100%; align-items: center; justify-content: center; flex-direction: column; border: 0.2rem solid rgba(62, 154, 67, 0.28); border-radius: 3.6rem; background: #fff; box-shadow: 0 1.6rem 3.5rem rgba(38, 122, 47, 0.13), inset 0 0 0 0.7rem rgba(234, 246, 234, 0.72); text-align: center; }
 .completeGlow { position: absolute; inset: -0.5rem; border: 0.3rem solid rgba(62, 154, 67, 0.25); border-radius: 4rem; pointer-events: none; }
 .completeIcon { display: flex; width: 4.5rem; height: 4.5rem; align-items: center; justify-content: center; margin-bottom: 0.85rem; border-radius: 50%; background: var(--green-tint-50); color: var(--brand-green); font-size: 3.2rem; }
 .completeBox strong { color: var(--text-green-dark); font-size: 1.9rem; font-weight: 850; }
-.completeBox small { max-width: 21rem; margin-top: 0.75rem; color: #4f7452; font-size: 1.3rem; font-weight: 650; line-height: 1.4; text-wrap: balance; word-break: keep-all; }
+.completeBox small { max-width: 26rem; margin-top: 0.75rem; color: #4f7452; font-size: 1.3rem; font-weight: 650; line-height: 1.45; text-wrap: balance; white-space: pre-line; word-break: keep-all; }
 
 .journeyBubblePoint { position: absolute; z-index: 12; width: 1px; height: 1px; }
 .journeyBubbleNode { position: absolute; top: 50%; left: 50%; z-index: 4; display: block; box-sizing: border-box; width: 1.65rem; height: 1.65rem; border: 0.25rem solid #fff; border-radius: 50%; background: #0f75bd; box-shadow: 0 0 0 0.2rem rgba(15, 117, 189, 0.28), 0 0.5rem 1.2rem rgba(15, 117, 189, 0.18); transform: translate(-50%, -50%); }
 .journeyBubbleConnector { position: absolute; top: 50%; right: 0; z-index: 2; display: block; width: 4.2rem; height: 0.18rem; border-radius: 99rem; background: rgba(15, 117, 189, 0.48); transform: translateY(-50%); }
 .journeyBubble { position: absolute; top: 50%; right: 4.2rem; z-index: 3; width: max-content; max-width: 27rem; margin: 0; padding: 1rem 1.5rem; border: 0.12rem solid rgba(67, 85, 98, 0.2); border-radius: 1.5rem; background: rgba(255, 253, 249, 0.78); box-shadow: 0 0.9rem 2.2rem rgba(31, 52, 67, 0.08); backdrop-filter: blur(0.8rem); color: #31404d; font-size: 1.5rem; font-weight: 800; line-height: 1.35; letter-spacing: -0.025em; white-space: nowrap; transform: translateY(-50%); }
 .journeyBubble::after { content: none; }
-.safeBubble { top: 45%; left: 13%; }
-.documentsBubble { top: 75%; left: 16.1%; }
-.documentsBubble .journeyBubbleConnector { width: 4.8rem; transform: translateY(-50%) rotate(-55deg); transform-origin: right center; }
-.documentsBubble .journeyBubble { top: 6rem; right: 0.5rem; width: max-content; max-width: none; color: #0b649f; text-align: center; white-space: nowrap; word-break: keep-all; }
-.documentsBubble .journeyBubble::after { top: -0.5rem; right: 2.2rem; border: 0; border-top: 0.12rem solid rgba(67, 85, 98, 0.2); border-left: 0.12rem solid rgba(67, 85, 98, 0.2); transform: rotate(45deg); }
-.requiredDocumentsBubble { top: 47%; left: 32%; }
-.requiredDocumentsBubble .journeyBubbleConnector { right: auto; left: 0; width: 6.8rem; }
-.requiredDocumentsBubble .journeyBubble { right: auto; left: 6.8rem; color: #31404d; }
-.requiredDocumentsBubble .journeyBubble::after { right: auto; left: -0.5rem; border: 0; border-bottom: 0.12rem solid rgba(67, 85, 98, 0.2); border-left: 0.12rem solid rgba(67, 85, 98, 0.2); }
-.issuePlaceBubble { top: 17%; left: 34.25%; }
-.issuePlaceBubble .journeyBubbleConnector { width: 6.8rem; transform: translateY(-50%) rotate(48deg); transform-origin: right center; }
-.issuePlaceBubble .journeyBubble { top: -7.4rem; right: -4.4rem; box-sizing: border-box; width: 20rem; color: #0b649f; text-align: center; }
-.issuePlaceBubble .journeyBubble::after { top: auto; right: 9rem; bottom: -0.5rem; border: 0; border-right: 0.12rem solid rgba(67, 85, 98, 0.2); border-bottom: 0.12rem solid rgba(67, 85, 98, 0.2); transform: rotate(45deg); }
-.issuedDocumentsBubble { top: 14.45%; left: 64%; }
-.issuedDocumentsBubble .journeyBubbleConnector { top: auto; right: auto; bottom: 0; left: 50%; width: 0.18rem; height: 5.4rem; transform: translateX(-50%); }
-.issuedDocumentsBubble .journeyBubble { top: auto; right: auto; bottom: 5.4rem; left: 50%; color: #31404d; transform: translateX(-50%); }
-.issuedDocumentsBubble .journeyBubble::after { top: auto; right: auto; bottom: -0.5rem; left: 50%; border: 0; border-right: 0.12rem solid rgba(67, 85, 98, 0.2); border-bottom: 0.12rem solid rgba(67, 85, 98, 0.2); transform: translateX(-50%) rotate(45deg); }
-.uploadStatusBubble { top: 48%; left: 74.9%; }
-.uploadStatusBubble .journeyBubbleConnector { width: 7rem; }
-.uploadStatusBubble .journeyBubble { right: 7rem; box-sizing: border-box; width: 34rem; color: #0b649f; text-align: center; white-space: pre-line; word-break: keep-all; }
+.riskToChecklistBubble { top: 53%; left: 17%; }
+.riskToChecklistBubble .journeyBubbleConnector { top: 50%; right: auto; bottom: auto; left: 0; width: 12rem; height: 0.18rem; transform: translateY(-50%) rotate(-28deg); transform-origin: left center; }
+.riskToChecklistBubble .journeyBubble { top: -11.5rem; right: auto; bottom: auto; left: 7.5rem; box-sizing: border-box; width: 29rem; color: #0b649f; text-align: center; white-space: pre-line; word-break: keep-all; transform: none; }
+.checklistToPreparationBubble { top: 50%; left: 50%; }
+.checklistToPreparationBubble .journeyBubbleConnector { top: auto; right: auto; bottom: 0; left: 50%; width: 0.18rem; height: 14rem; transform: translateX(-50%); }
+.checklistToPreparationBubble .journeyBubble { top: auto; right: auto; bottom: 14rem; left: 50%; box-sizing: border-box; width: 27rem; color: #0b649f; text-align: center; white-space: pre-line; word-break: keep-all; transform: translateX(-50%); }
+.preparationToCompleteBubble { top: 53%; left: 82%; }
+.preparationToCompleteBubble .journeyBubbleConnector { top: 50%; right: 0; bottom: auto; left: auto; width: 12rem; height: 0.18rem; transform: translateY(-50%) rotate(28deg); transform-origin: right center; }
+.preparationToCompleteBubble .journeyBubble { top: -11.5rem; right: 7.5rem; bottom: auto; left: auto; box-sizing: border-box; width: 29rem; color: #0b649f; text-align: center; white-space: pre-line; word-break: keep-all; transform: none; }
 
 .mobileJourney { display: none; }
+.desktopStartButtonWrap { display: none; }
 .responsiveStartButtonWrap { display: none; }
 .responsiveStartButton { text-decoration: none; }
 
 @media (min-width: 1440px) {
   .root { height: 100vh; height: 100dvh; min-height: 0; }
   .journey { height: 100%; min-height: 0; overflow: hidden; }
-  .titleGroup, .journeyCanvas { top: -20px; }
-  .guidePoint { left: calc(54% - 6rem); }
+  .titleGroup { top: 10%; }
+  .journeyCanvas { top: -20px; }
+  .desktopStartButtonWrap { position: absolute; top: calc(100% + 3rem); left: 50%; z-index: 10; display: block; transform: translateX(-50%); }
+  .desktopStartButton { display: inline-flex; box-sizing: border-box; min-width: 25rem; height: 6.2rem; align-items: center; justify-content: center; padding: 0 3.8rem; border-radius: 1.6rem; background: var(--brand-blue); box-shadow: 0 1.2rem 2.8rem rgba(15, 117, 189, 0.22); color: #fff; font-size: 1.72rem; font-weight: 850; text-decoration: none; transition: box-shadow 0.22s ease, transform 0.22s ease; white-space: nowrap; }
+  .desktopStartButton:hover { box-shadow: 0 1.6rem 3.4rem rgba(15, 117, 189, 0.28); transform: translateY(-0.25rem); }
+  .desktopStartButton:focus-visible { outline: 0.3rem solid rgba(15, 117, 189, 0.3); outline-offset: 0.4rem; }
 }
 
 @media (min-width: 768px) and (max-width: 1439px) {
@@ -119,46 +109,42 @@
   .topbar { width: calc(100% - 3.2rem); }
   .journey { min-height: auto; padding: 9rem 2.4rem 7rem; }
   .titleGroup h1 { font-size: clamp(2rem, 3.1vw, 3.2rem); }
-  .journeyCanvas { display: flex; box-sizing: border-box; width: min(100%, 92rem); height: auto; min-height: 230rem; flex-direction: column; gap: 22rem; margin-top: 5rem; padding: 7rem 0 10rem; }
+  .journeyCanvas { display: flex; box-sizing: border-box; width: min(100%, 92rem); height: auto; min-height: 175rem; flex-direction: column; gap: 22rem; margin-top: 5rem; padding: 7rem 0 10rem; }
   .featurePosition { position: relative; inset: auto; box-sizing: border-box; transform: none; }
-  .featurePosition { display: flex; width: 50%; height: 20rem; }
-  .featureLink { width: 23rem; height: 20rem; }
-  .riskPoint, .guidePoint, .completePoint { align-self: flex-start; justify-content: flex-end; padding-right: 3rem; }
-  .checklistPoint, .statusPoint { align-self: flex-end; justify-content: flex-start; padding-left: 3rem; }
+  .featurePosition { display: flex; width: 50%; height: 22rem; }
+  .featureLink { width: 25.5rem; height: 22rem; }
+  .riskPoint, .preparationPoint { align-self: flex-start; justify-content: flex-end; padding-right: 3rem; }
+  .checklistPoint, .completePoint { align-self: flex-end; justify-content: flex-start; padding-left: 3rem; }
   .riskPoint { order: 1; }
   .checklistPoint { order: 4; }
-  .guidePoint { order: 6; }
-  .statusPoint { order: 8; }
-  .completePoint { order: 9; }
-  .featureCopy { width: calc(100% - 5.2rem); max-width: 18rem; }
-  .robotBox .featureCopy { width: calc(100% - 5.2rem); max-width: 18rem; }
-  .featureCopy strong { font-size: 1.7rem; }
-  .featureCopy small { font-size: 1.18rem; }
-  .featureCopy strong, .featureCopy small { white-space: normal; }
-  .chatbotEyebrow { font-size: 1.05rem; }
-  .completePoint { height: 16.5rem; }
-  .completePoint .completeBox { width: 21rem; height: 16.5rem; }
+  .preparationPoint { order: 6; }
+  .completePoint { order: 8; }
+  .featureCopy { width: calc(100% - 4rem); max-width: 21.5rem; }
+  .robotBox .featureCopy { width: calc(100% - 4rem); max-width: 21.5rem; }
+  .featureCopy strong { font-size: 1.8rem; }
+  .featureCopy small { font-size: 1.2rem; }
+  .featureCopy strong { white-space: normal; }
+  .featureCopy small { white-space: pre-line; }
+  .completePoint { width: 100%; height: 20.5rem; align-self: center; justify-content: center; padding-right: 0; padding-left: 0; }
+  .completePoint .completeBox { width: 28rem; height: 20.5rem; }
+  .completePoint .completeBox small { max-width: 27rem; font-size: 1.18rem; white-space: nowrap; }
   .routeAnchor { top: 50% !important; right: auto !important; bottom: auto !important; transform: translateY(-50%); }
-  .riskPoint .exitAnchor, .guidePoint .entryAnchor, .guidePoint .exitAnchor, .completePoint .entryAnchor { right: 0 !important; left: auto !important; }
-  .checklistPoint .entryAnchor, .checklistPoint .exitAnchor, .statusPoint .entryAnchor, .statusPoint .exitAnchor { right: auto !important; left: 0 !important; }
+  .riskPoint .exitAnchor, .preparationPoint .entryAnchor, .preparationPoint .exitAnchor { right: 0 !important; left: auto !important; }
+  .checklistPoint .entryAnchor, .checklistPoint .exitAnchor { right: auto !important; left: 0 !important; }
+  .completePoint .entryAnchor { top: 0 !important; right: auto !important; left: 50% !important; transform: translateX(-50%); }
 
   .journeyBubblePoint .journeyBubbleConnector { top: 50%; right: 0; bottom: auto; left: auto; width: 3.4rem; height: 0.18rem; transform: translateY(-50%); transform-origin: center; }
   .journeyBubblePoint .journeyBubble { top: 50%; right: 3.4rem; bottom: auto; left: auto; box-sizing: border-box; width: max-content; max-width: none; padding: 0.85rem 1.2rem; font-size: 1.25rem; white-space: nowrap; transform: translateY(-50%); }
   .journeyBubblePoint .journeyBubble::after { top: 50%; right: -0.5rem; bottom: auto; left: auto; border: 0; border-top: 0.12rem solid rgba(67, 85, 98, 0.2); border-right: 0.12rem solid rgba(67, 85, 98, 0.2); transform: translateY(-50%) rotate(45deg); }
 
-  .safeBubble .journeyBubbleConnector,
-  .issuePlaceBubble .journeyBubbleConnector,
-  .issuedDocumentsBubble .journeyBubbleConnector { right: auto; left: 0; }
-  .safeBubble .journeyBubble,
-  .issuePlaceBubble .journeyBubble,
-  .issuedDocumentsBubble .journeyBubble { right: auto; left: 3.4rem; text-align: left; }
-  .safeBubble .journeyBubble::after,
-  .issuePlaceBubble .journeyBubble::after,
-  .issuedDocumentsBubble .journeyBubble::after { top: 50%; right: auto; bottom: auto; left: -0.5rem; border: 0; border-bottom: 0.12rem solid rgba(67, 85, 98, 0.2); border-left: 0.12rem solid rgba(67, 85, 98, 0.2); transform: translateY(-50%) rotate(45deg); }
+  .checklistToPreparationBubble .journeyBubbleConnector { right: auto; left: 0; }
+  .checklistToPreparationBubble .journeyBubble { right: auto; left: 3.4rem; text-align: center; }
+  .checklistToPreparationBubble .journeyBubble::after { top: 50%; right: auto; bottom: auto; left: -0.5rem; border: 0; border-bottom: 0.12rem solid rgba(67, 85, 98, 0.2); border-left: 0.12rem solid rgba(67, 85, 98, 0.2); transform: translateY(-50%) rotate(45deg); }
+  .riskToChecklistBubble .journeyBubble,
+  .checklistToPreparationBubble .journeyBubble,
+  .preparationToCompleteBubble .journeyBubble { width: min(27rem, 36vw); white-space: pre-line; }
 
-  .uploadStatusBubble .journeyBubble { width: min(30rem, 38vw); white-space: pre-line; }
-
-  .responsiveStartButtonWrap { display: flex; width: 100%; justify-content: center; margin: 1rem auto 7rem; }
+  .responsiveStartButtonWrap { position: relative; z-index: 20; display: flex; width: 100%; justify-content: center; margin: -12rem auto 7rem; }
   .responsiveStartButton { display: inline-flex; box-sizing: border-box; min-width: 22rem; height: 5.4rem; align-items: center; justify-content: center; padding: 0 3rem; border-radius: 1.4rem; background: var(--brand-blue); box-shadow: 0 1.2rem 2.8rem rgba(15, 117, 189, 0.2); color: #fff; font-size: 1.55rem; font-weight: 850; transition: box-shadow 0.22s ease, transform 0.22s ease; }
   .responsiveStartButton:hover { box-shadow: 0 1.5rem 3.2rem rgba(15, 117, 189, 0.26); transform: translateY(-0.25rem); }
   .responsiveStartButton:focus-visible { outline: 0.3rem solid rgba(15, 117, 189, 0.3); outline-offset: 0.4rem; }
@@ -181,22 +167,21 @@
   .featureLink { width: min(29rem, 84vw); height: min(22rem, 67vw); }
   .riskPoint { order: 1; }
   .checklistPoint { order: 4; }
-  .guidePoint { order: 6; }
-  .statusPoint { order: 8; }
-  .completePoint { order: 9; height: 17rem; }
+  .preparationPoint { order: 6; }
+  .completePoint { order: 8; height: 17rem; }
   .completePoint .completeBox { width: min(26rem, 78vw); height: 17rem; }
   .featureCopy { width: calc(100% - 5.4rem); max-width: 21rem; }
   .robotBox .featureCopy { width: calc(100% - 5.4rem); max-width: 21rem; }
   .featureCopy strong { font-size: 1.72rem; }
   .featureCopy small { font-size: 1.22rem; }
-  .featureCopy strong, .featureCopy small { white-space: normal; }
-  .chatbotEyebrow { font-size: 1.05rem; }
+  .featureCopy strong { white-space: normal; }
+  .featureCopy small { white-space: pre-line; }
   .routeAnchor { right: auto !important; left: 50% !important; transform: translateX(-50%); }
   .featurePosition .entryAnchor { top: 0 !important; bottom: auto !important; }
   .featurePosition .exitAnchor { top: auto !important; bottom: 0 !important; }
   .completePoint .entryAnchor { top: 0 !important; bottom: auto !important; }
   .completeBox strong { font-size: 1.75rem; }
-  .completeBox small { max-width: 19rem; font-size: 1.2rem; }
+  .completeBox small { max-width: 24rem; font-size: 1.2rem; }
 
   .mobileJourney { position: relative; display: flex; width: 100%; align-items: center; flex-direction: column; margin: 5rem auto 0; padding-bottom: 8rem; }
   .mobileJourneyItem { --mobile-line-height: clamp(14rem, 24vh, 18rem); display: flex; width: 100%; align-items: center; flex-direction: column; }
@@ -204,9 +189,9 @@
   .mobileJourneyItemComplete { --mobile-line-height: clamp(20rem, 32vh, 25rem); }
   .mobileJourneyItemCompact { --mobile-line-height: clamp(9rem, 16vh, 12rem); }
   .mobileJourneyFirstItem { padding-top: 2rem; }
-  .mobileJourneyLine { position: relative; z-index: 1; display: block; width: 0.3rem; height: calc(var(--mobile-line-height) + 3.2rem); flex: 0 0 auto; margin-top: -1.6rem; margin-bottom: -1.6rem; border-radius: 99rem; background: linear-gradient(to bottom, #70add2 0%, #3d86b9 72%, #2f7eae 100%); box-shadow: 0 0.4rem 1rem rgba(15, 117, 189, 0.12); transform: scaleY(0); transform-origin: top center; transition: transform 1.15s cubic-bezier(0.22, 1, 0.36, 1); }
-  .mobileJourneyContent { position: relative; z-index: 2; display: flex; width: 100%; align-items: center; justify-content: center; opacity: 0; transform: translateY(1.8rem) scale(0.97); transition: opacity 0.48s ease 0.72s, transform 0.58s cubic-bezier(0.16, 1, 0.3, 1) 0.72s; }
-  .mobileJourneyFirstItem .mobileJourneyContent { transition-delay: 0.15s; }
+  .mobileJourneyLine { position: relative; z-index: 1; display: block; width: 0.3rem; height: calc(var(--mobile-line-height) + 3.2rem); flex: 0 0 auto; margin-top: -1.6rem; margin-bottom: -1.6rem; border-radius: 99rem; background: linear-gradient(to bottom, #70add2 0%, #3d86b9 72%, #2f7eae 100%); box-shadow: 0 0.4rem 1rem rgba(15, 117, 189, 0.12); transform: scaleY(0); transform-origin: top center; transition: transform 0.8s cubic-bezier(0.22, 1, 0.36, 1); }
+  .mobileJourneyContent { position: relative; z-index: 2; display: flex; width: 100%; align-items: center; justify-content: center; opacity: 0; transform: translateY(1.8rem) scale(0.97); transition: opacity 0.36s ease 0.12s, transform 0.46s cubic-bezier(0.16, 1, 0.3, 1) 0.12s; }
+  .mobileJourneyFirstItem .mobileJourneyContent { transition-delay: 0.08s; }
   .mobileJourneyItemVisible .mobileJourneyLine { transform: scaleY(1); }
   .mobileJourneyItemVisible .mobileJourneyContent { opacity: 1; transform: translateY(0) scale(1); }
 
@@ -215,7 +200,7 @@
   .mobileFeatureBox .featureCopy { width: calc(100% - 5.4rem); max-width: 22rem; }
   .mobileFeatureBox.robotBox .featureCopy { width: calc(100% - 6rem); max-width: 22rem; }
   .mobileFeatureBox .featureCopy strong { font-size: 1.85rem; white-space: normal; }
-  .mobileFeatureBox .featureCopy small { font-size: 1.23rem; white-space: normal; }
+  .mobileFeatureBox .featureCopy small { font-size: 1.23rem; white-space: pre-line; }
 
   .mobileThoughtBubble { position: relative; box-sizing: border-box; width: fit-content; max-width: min(31rem, 88vw); margin: 0; padding: 1.25rem 1.6rem; border: 0.12rem solid rgba(67, 85, 98, 0.2); border-radius: 1.6rem; background: #fffdf9; box-shadow: 0 1.1rem 2.6rem rgba(31, 52, 67, 0.09); color: #31404d; font-size: 1.42rem; font-weight: 800; line-height: 1.48; letter-spacing: -0.03em; text-align: center; white-space: pre-line; word-break: keep-all; }
   .mobileThoughtBubble::before { content: none; }

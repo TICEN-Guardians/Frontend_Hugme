@@ -5,18 +5,8 @@
 .conclusion {
   padding: 2.8rem 3.2rem;
   border-left: 0.4rem solid var(--brand-blue);
-  border-radius: var(--radius-lg);
+  border-radius: 0 1.6rem 1.6rem 0;
   background: var(--blue-tint-50);
-  box-shadow: 0 1.2rem 3rem rgba(15, 117, 189, 0.07);
-  animation: analysis-card-enter 0.72s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease;
-}
-
-.conclusion:hover {
-  transform: translateY(-0.1rem);
-  box-shadow: 0 1.6rem 3.6rem rgba(15, 117, 189, 0.1);
 }
 
 .conclusionLabel {
@@ -429,15 +419,30 @@
 .bottomAnalysisGrid {
   position: relative;
   display: grid;
-  gap: 3.4rem;
+  grid-template-columns: minmax(0, 1.15fr) minmax(30rem, 0.85fr);
+  gap: 4.6rem;
   margin-top: 4.8rem;
   padding-top: 3.4rem;
   border-top: 0.1rem solid #e5e7eb;
 }
 
-.primaryReasonSection {
-  display: grid;
-  gap: 0.4rem;
+.bottomAnalysisGrid.singleColumn {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.actionsColumn {
+  position: relative;
+  padding-left: 4.6rem;
+}
+
+.actionsColumn::before {
+  content: '';
+  position: absolute;
+  top: 0.4rem;
+  bottom: 0.4rem;
+  left: 0;
+  width: 0.1rem;
+  background: #edf0f2;
 }
 
 .reasonGroups {
@@ -450,23 +455,6 @@
   gap: 1.6rem;
 }
 
-.primaryReasonGroup {
-  padding: 2.8rem 3.2rem;
-  border-left: 0.4rem solid var(--brand-blue);
-  border-radius: var(--radius-lg);
-  background: var(--blue-tint-50);
-  box-shadow: 0 1.2rem 3rem rgba(15, 117, 189, 0.07);
-  animation: analysis-card-enter 0.72s 0.08s cubic-bezier(0.16, 1, 0.3, 1) both;
-  transition:
-    transform 0.24s ease,
-    box-shadow 0.24s ease;
-}
-
-.primaryReasonGroup:hover {
-  transform: translateY(-0.1rem);
-  box-shadow: 0 1.6rem 3.6rem rgba(15, 117, 189, 0.1);
-}
-
 .reasonGroupTitle {
   margin: 0;
   color: var(--text-primary);
@@ -477,11 +465,6 @@
 .reasonList {
   display: grid;
   gap: 2rem;
-}
-
-.primaryReasonGroup .reasonList {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: 3.2rem 3.6rem;
 }
 
 .reasonItem {
@@ -528,38 +511,6 @@
   font-size: 1.5rem;
 }
 
-@keyframes analysis-card-enter {
-  from {
-    opacity: 0;
-    transform: translateY(0.8rem);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-@media (max-width: 140rem) {
-  .priceAnalysisGrid {
-    grid-template-columns: minmax(0, 1fr) minmax(28rem, 0.8fr);
-    gap: 2.8rem;
-  }
-
-  .collateralRegistryGrid {
-    gap: 3rem;
-  }
-
-  .scenarioArea,
-  .registryArea {
-    padding-left: 2.8rem;
-  }
-
-  .primaryReasonGroup {
-    padding: 2.6rem 2.8rem;
-  }
-}
-
 @media (max-width: 900px) {
   .conclusion {
     padding: 2.6rem 2.4rem;
@@ -570,35 +521,26 @@
   }
 
   .priceAnalysisGrid,
-  .collateralRegistryGrid {
+  .collateralRegistryGrid,
+  .bottomAnalysisGrid {
     grid-template-columns: 1fr;
   }
 
   .scenarioArea,
-  .registryArea {
+  .registryArea,
+  .actionsColumn {
     border-top: 0.1rem solid #e5e7eb;
     border-left: 0;
     padding-top: 3rem;
     padding-left: 0;
   }
 
-  .primaryReasonGroup .reasonList {
-    grid-template-columns: 1fr;
-    gap: 2.8rem;
+  .actionsColumn::before {
+    display: none;
   }
 }
 
 @media (max-width: 640px) {
-  .conclusion,
-  .primaryReasonGroup {
-    padding: 2rem;
-  }
-
-  .sectionTitleRow {
-    align-items: flex-start;
-    gap: 0.7rem;
-  }
-
   .sectionTitle {
     font-size: 2rem;
   }
@@ -616,32 +558,5 @@
 
   .breakdownChart {
     height: 28rem;
-  }
-
-  .trackLabel,
-  .recoveryRow {
-    grid-template-columns: 1fr;
-  }
-
-  .trackLabel {
-    display: grid;
-    gap: 0.4rem;
-  }
-
-  .recoveryRow dd {
-    text-align: left;
-  }
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .conclusion,
-  .primaryReasonGroup {
-    animation: none;
-    transition: none;
-  }
-
-  .conclusion:hover,
-  .primaryReasonGroup:hover {
-    transform: none;
   }
 }
