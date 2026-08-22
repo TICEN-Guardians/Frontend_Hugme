@@ -1,5 +1,7 @@
 import axiosInstance from '../axiosInstance.js';
 
+export const KAKAO_NOTIFICATION_PENDING_KEY = 'hugme:pendingKakaoNotification';
+
 function getNotificationBaseUrl(applicationId) {
   return `/api/applications/${applicationId}/notifications`;
 }
