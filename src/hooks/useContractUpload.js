@@ -10,12 +10,19 @@ import {
 } from '../api/checklist/checklistService.js';
 
 export const LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY = 'hugme:lastDocumentChatApplicationId';
+export const CHECKLIST_COMPLETED_EVENT = 'hugme:checklist-completed';
 
 /**
  * 계약서 업로드 → 분석 중 → OCR 결과 확인 → 질문 → 완료 흐름을 관리한다.
  * step: 'idle' | 'analyzing' | 'ocrConfirm' | 'questions' | 'done'
  */
-export function useContractUpload(productCode) {
+export function useContractUpload(
+  productCode,
+  {
+    isAuthenticated = true,
+    isAuthLoading = false,
+  } = {},
+) {
   const [step, setStep] = useState('idle');
   const [applicationId, setApplicationId] = useState(null);
   const [ocrInfo, setOcrInfo] = useState(null);
@@ -28,8 +35,48 @@ export function useContractUpload(productCode) {
   const existingChecklistChoiceResolverRef = useRef(null);
 
   useEffect(() => {
+    // 새 탭·새로고침에서는 AuthProvider가 먼저 Access Token을 복구해야 한다.
+    // 인증 초기화 전에 결과 API를 호출하면 Authorization 헤더가 없어 401이 발생한다.
+    if (isAuthLoading) {
+      setIsRestoring(true);
+      return undefined;
+    }
+
+    if (!isAuthenticated) {
+      setIsRestoring(false);
+      return undefined;
+    }
+
     let ignore = false;
-    const savedApplicationId = sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+    const applicationIdFromUrl = new URLSearchParams(window.location.search).get('applicationId');
+    let savedApplicationId = applicationIdFromUrl;
+
+    if (!savedApplicationId) {
+      try {
+        savedApplicationId = sessionStorage.getItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY);
+      } catch {
+        savedApplicationId = null;
+      }
+    }
+
+    if (applicationIdFromUrl) {
+      try {
+        sessionStorage.setItem(
+          LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY,
+          applicationIdFromUrl,
+        );
+      } catch {
+        // URL의 ID로 현재 결과는 계속 복원한다.
+      }
+
+      const currentUrl = new URL(window.location.href);
+      currentUrl.searchParams.delete('applicationId');
+      window.history.replaceState(
+        window.history.state,
+        '',
+        `${currentUrl.pathname}${currentUrl.search}${currentUrl.hash}`,
+      );
+    }
 
     if (!savedApplicationId) {
       setIsRestoring(false);
@@ -68,7 +115,7 @@ export function useContractUpload(productCode) {
     return () => {
       ignore = true;
     };
-  }, []);
+  }, [isAuthenticated, isAuthLoading]);
 
   const resetForNewApplication = useCallback(() => {
     setApplicationId(null);
@@ -254,6 +301,7 @@ export function useContractUpload(productCode) {
       setFinalDocuments(result);
 
       setStep('done');
+      window.dispatchEvent(new Event(CHECKLIST_COMPLETED_EVENT));
     } catch (err) {
       setUploadError(err);
     }
