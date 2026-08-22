@@ -129,6 +129,18 @@ const WATCHLIST_MATCH_TYPE = {
   EXACT: '정확 일치',
   MANUAL_REVIEW: '수동 확인 필요',
 };
+const MARKET_COMPARABLE_SCOPE = {
+  SAME_BUILDING: '같은 건물 · 유사 면적',
+  SAME_LEGAL_DONG: '같은 법정동 · 유사 면적',
+  SAME_DISTRICT: '같은 시군구 · 유사 면적',
+};
+
+const MARKET_COMPARABLE_WARNING = {
+  RTMS_PERIOD_EXPANDED: '최근 6개월 표본이 부족해 비교 기간을 12개월로 넓혔습니다.',
+  RTMS_SCOPE_EXPANDED_TO_DISTRICT: '같은 법정동 표본이 부족해 같은 시군구의 유사 면적 거래까지 포함했습니다.',
+  RTMS_AREA_AND_PERIOD_EXPANDED: '표본 확보를 위해 비교 기간과 면적 범위를 함께 넓혔습니다.',
+};
+
 
 
 export default function RiskReportPage() {
@@ -272,6 +284,7 @@ function toReportViewModel(data) {
     findMetric(data, 'valuation', 'deposit')?.value
     ?? findMetric(data, 'collateral', 'deposit')?.value,
   );
+  const marketComparables = marketComparableViewModel(data.marketComparables, deposit);
   const mortgage = numberOrNull(registry?.totalActiveMaxClaimAmount);
   const recoverableAmount = numberOrNull(indicators.recoverableAmount);
   const remaining = numberOrNull(indicators.remainingCollateralCapacity);
@@ -349,6 +362,7 @@ function toReportViewModel(data) {
       isDetailed ? { label: '담보부담률', value: ratio(collateralBurdenRate) } : null,
     ].filter(Boolean),
     priceBars,
+    marketComparables,
     reliabilityLabel: reliabilityLabel(data.valuationReliability),
     scenarios: scenarios.map((item) => ({
       ...item,
@@ -381,6 +395,110 @@ function toReportViewModel(data) {
     reasonGroups: riskReasons,
     recommendedActions: recommendedActions(explanation.recommendedActions ?? []),
   };
+}
+
+function marketComparableViewModel(value, deposit) {
+  const sourceLabel = '국토교통부 실거래 공개시스템';
+  const warningCode = value?.warnings?.[0];
+  const bins = (value?.bins ?? [])
+    .map((item) => {
+      const lower = numberOrNull(item.lowerBound);
+      const upper = numberOrNull(item.upperBound);
+      const count = numberOrNull(item.count);
+      if (lower == null || upper == null || count == null) return null;
+      return {
+        lower,
+        upper,
+        midpoint: (lower + upper) / 2,
+        count,
+        rangeLabel: `${shortMoney(lower)} ~ ${shortMoney(upper)}`,
+      };
+    })
+    .filter(Boolean);
+  const available = value?.status === 'AVAILABLE' && bins.length > 0 && deposit != null;
+
+  if (!available) {
+    let statusTitle = '주변 실거래 분포를 표시할 수 없습니다.';
+    let statusDescription = '이 분석에는 주변 전세 실거래 분포가 저장되지 않았습니다. 다시 진단하면 최신 비교 데이터 조회를 시도합니다.';
+
+    if (warningCode === 'RTMS_API_NOT_CONFIGURED') {
+      statusTitle = '국토부 실거래 API 연결 승인이 필요합니다.';
+      statusDescription = '실거래 서비스 사용 승인이 연결되면 같은 지역의 유사 면적 전세 계약을 조회해 분포를 제공합니다.';
+    } else if (warningCode === 'RTMS_API_UNAVAILABLE') {
+      statusTitle = '국토부 실거래 데이터를 불러오지 못했습니다.';
+      statusDescription = '외부 실거래 서비스가 응답하지 않아 이번 분석에는 분포를 포함하지 않았습니다. 잠시 후 다시 진단해 주세요.';
+    } else if (value?.status === 'INSUFFICIENT') {
+      statusTitle = '비교 가능한 실거래 표본이 부족합니다.';
+      statusDescription = '최근 12개월 동안 같은 지역의 유사 면적 전세 계약이 5건 미만이라 왜곡될 수 있는 그래프는 표시하지 않았습니다.';
+    } else if (value?.status === 'AVAILABLE') {
+      statusDescription = '저장된 실거래 분포 값이 완전하지 않아 그래프를 표시하지 않았습니다.';
+    }
+
+    return {
+      available: false,
+      statusTitle,
+      statusDescription,
+      sourceLabel,
+    };
+  }
+
+  const minimum = numberOrNull(value.minimum) ?? Math.min(...bins.map((item) => item.lower));
+  const maximum = numberOrNull(value.maximum) ?? Math.max(...bins.map((item) => item.upper));
+  const rawMin = Math.min(minimum, deposit);
+  const rawMax = Math.max(maximum, deposit);
+  const padding = Math.max((rawMax - rawMin) * 0.06, 5_000_000);
+  const percentile = numberOrNull(value.userDepositPercentile);
+  const scopeLabel = MARKET_COMPARABLE_SCOPE[value.scope] ?? '같은 시군구 · 유사 면적';
+
+  return {
+    available: true,
+    sourceLabel,
+    scopeLabel,
+    sampleCount: numberOrNull(value.sampleCount) ?? bins.reduce((sum, item) => sum + item.count, 0),
+    description: `${scopeLabel}의 전세 실거래를 비교했습니다. 공개 실거래에는 동·호 정보가 없어 건물 또는 법정동과 면적을 기준으로 선별했습니다.`,
+    periodLabel: dateRange(value.periodStart, value.periodEnd),
+    areaRangeLabel: areaRange(value.areaMin, value.areaMax),
+    depositValue: deposit,
+    depositShortLabel: shortMoney(deposit),
+    domain: [Math.max(0, rawMin - padding), rawMax + padding],
+    bins,
+    statistics: [
+      {
+        label: 'P25',
+        value: shortMoney(numberOrNull(value.percentile25)),
+        help: '비교 표본의 25%가 이 금액 이하에서 계약됐다는 뜻입니다.',
+      },
+      {
+        label: '중앙값',
+        value: shortMoney(numberOrNull(value.median)),
+        help: '비교 표본을 보증금 순서로 놓았을 때 가운데에 있는 계약금액입니다.',
+      },
+      {
+        label: 'P75',
+        value: shortMoney(numberOrNull(value.percentile75)),
+        help: '비교 표본의 75%가 이 금액 이하에서 계약됐다는 뜻입니다.',
+      },
+      {
+        label: '내 보증금 위치',
+        value: percentile == null ? '확인 필요' : `${percentile.toFixed(1)} 백분위`,
+        help: '입력한 보증금이 비교 표본 중 몇 퍼센트의 계약금액 이상인지 나타냅니다.',
+        emphasis: true,
+      },
+    ],
+    warning: MARKET_COMPARABLE_WARNING[warningCode] ?? null,
+  };
+}
+
+function dateRange(start, end) {
+  if (!start || !end) return '확인 필요';
+  return `${String(start).replaceAll('-', '.')} ~ ${String(end).replaceAll('-', '.')}`;
+}
+
+function areaRange(minimum, maximum) {
+  const min = numberOrNull(minimum);
+  const max = numberOrNull(maximum);
+  if (min == null || max == null) return '확인 필요';
+  return `${min.toFixed(1)}㎡ ~ ${max.toFixed(1)}㎡`;
 }
 
 function riskContributions({ breakdown, weights, isDetailed }) {

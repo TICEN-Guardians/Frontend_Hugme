@@ -626,6 +626,236 @@
   font-size: 1.5rem;
 }
 
+.comparablePanel {
+  display: grid;
+  gap: 2.4rem;
+  padding: 2.6rem;
+  border: 0.1rem solid #dfe7ef;
+  border-radius: 1.6rem;
+  background: linear-gradient(145deg, #fbfdff 0%, #f6f9fc 100%);
+}
+
+.comparableHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.comparableHeader h3,
+.comparableHeader p {
+  margin: 0;
+}
+
+.comparableHeader h3 {
+  color: var(--text-primary);
+  font-size: 1.8rem;
+  font-weight: 800;
+}
+
+.comparableHeader p {
+  max-width: 72rem;
+  margin-top: 0.8rem;
+  color: var(--text-secondary);
+  font-size: 1.4rem;
+  line-height: 1.65;
+}
+
+.comparableScope {
+  flex-shrink: 0;
+  padding: 0.65rem 1rem;
+  border: 0.1rem solid #cfe0ef;
+  border-radius: 999rem;
+  background: #fff;
+  color: var(--text-blue-dark);
+  font-size: 1.25rem;
+  font-weight: 750;
+}
+
+.comparableContent {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(22rem, 0.34fr);
+  gap: 2.8rem;
+  align-items: stretch;
+}
+
+.comparableChart {
+  min-width: 0;
+  height: 30rem;
+}
+
+.comparableStats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.comparableStats > div {
+  display: grid;
+  align-content: center;
+  gap: 0.9rem;
+  min-height: 10rem;
+  padding: 1.5rem;
+  border: 0.1rem solid #e1e8ef;
+  border-radius: 1.2rem;
+  background: #fff;
+}
+
+.comparableStats > div > span {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #6b7787;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.comparableStats strong {
+  color: var(--text-primary);
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.comparableStats .comparableStatEmphasis {
+  border-color: rgba(217, 72, 65, 0.28);
+  background: rgba(217, 72, 65, 0.045);
+}
+
+.comparableStats .comparableStatEmphasis strong {
+  color: #b42318;
+}
+
+.comparableMeta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.8rem 2.2rem;
+  padding-top: 1.8rem;
+  border-top: 0.1rem solid #e1e8ef;
+}
+
+.comparableMeta span {
+  color: #748190;
+  font-size: 1.25rem;
+}
+
+.comparableMeta strong {
+  color: #344054;
+  font-weight: 750;
+}
+
+.comparableWarning {
+  margin: -1rem 0 0;
+  color: #9a6700;
+  font-size: 1.3rem;
+  line-height: 1.6;
+}
+
+.comparableUnavailable {
+  display: flex;
+  align-items: flex-start;
+  gap: 1.4rem;
+  padding: 2.4rem;
+  border: 0.1rem solid #eadfbf;
+  border-radius: 1.4rem;
+  background: #fffaf0;
+}
+
+.comparableUnavailable svg {
+  flex-shrink: 0;
+  margin-top: 0.2rem;
+  color: #c07a00;
+  font-size: 2rem;
+}
+
+.comparableUnavailable div {
+  display: grid;
+  gap: 0.7rem;
+}
+
+.comparableUnavailable strong {
+  color: var(--text-primary);
+  font-size: 1.6rem;
+}
+
+.comparableUnavailable p,
+.comparableUnavailable span {
+  margin: 0;
+  color: #697586;
+  font-size: 1.35rem;
+  line-height: 1.65;
+}
+
+.comparableUnavailable span {
+  font-size: 1.2rem;
+}
+
+.termHelp {
+  position: relative;
+  display: inline-grid;
+  width: 1.55rem;
+  height: 1.55rem;
+  place-items: center;
+  border: 0.1rem solid #a8b6c5;
+  border-radius: 50%;
+  color: #657487;
+  font-size: 1rem;
+  font-weight: 800;
+  cursor: help;
+  outline: none;
+}
+
+.termHelp::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  z-index: 10;
+  right: -1rem;
+  bottom: calc(100% + 0.8rem);
+  width: 22rem;
+  padding: 0.9rem 1rem;
+  border-radius: 0.8rem;
+  background: #132238;
+  color: #fff;
+  font-size: 1.15rem;
+  font-weight: 500;
+  line-height: 1.5;
+  box-shadow: 0 0.8rem 2.4rem rgba(15, 23, 42, 0.18);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(0.4rem);
+  transition: opacity 0.16s ease, transform 0.16s ease;
+}
+
+.termHelp:hover::after,
+.termHelp:focus::after {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (max-width: 900px) {
+  .comparableContent {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .comparablePanel {
+    padding: 2rem 1.6rem;
+  }
+
+  .comparableHeader {
+    flex-direction: column;
+  }
+
+  .comparableStats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .comparableMeta {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 900px) {
   .conclusion {
     padding: 2.6rem 2.4rem;
