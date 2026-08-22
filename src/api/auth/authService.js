@@ -19,12 +19,13 @@ export async function checkEmail(email) {
   return response.data;
 }
 
-export async function login(email, password) {
+export async function login(email, password, rememberMe = false) {
   const response = await axiosInstance.post(
     '/api/auth/login',
     {
       email,
       password,
+      rememberMe,
     },
     {
       skipAuthRefresh: true,
