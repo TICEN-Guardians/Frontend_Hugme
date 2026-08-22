@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import {
   FaArrowRightFromBracket,
   FaBars,
@@ -16,7 +16,6 @@ import { useAuth } from '../../../context/auth/AuthContext.jsx';
 import useLastRiskAnalysis from '../../../hooks/useLastRiskAnalysis.js';
 import { getCompletedApplications } from '../../../api/checklist/checklistService.js';
 import { LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY } from '../../../hooks/useContractUpload.js';
-import { PRODUCT_DETAIL_PATH } from '../../../constants/products.js';
 import styles from './Sidebar.module.css';
 
 const LOGO_SRC = '/images/Logo.png';
@@ -30,8 +29,6 @@ const CHECKLIST_TITLE = {
 };
 
 export default function Sidebar({ showHistory = true, mode = 'default' }) {
-  const profileAreaRef = useRef(null);
-  const [isProfileOpen, setIsProfileOpen] = useState(false);
   const [completedApplications, setCompletedApplications] = useState([]);
   const [isNarrowViewport, setIsNarrowViewport] = useState(
     () => window.matchMedia(NARROW_VIEWPORT_QUERY).matches,
@@ -55,7 +52,6 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
           : null;
 
   useEffect(() => {
-    setIsProfileOpen(false);
     setIsCollapsed(
       mode === 'main' || isNarrowViewport
         ? true
@@ -91,25 +87,6 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
     return () => mediaQuery.removeEventListener('change', handleViewportChange);
   }, []);
 
-  useEffect(() => {
-    if (!isProfileOpen) return undefined;
-
-    const handleOutsideClick = (event) => {
-      if (!profileAreaRef.current?.contains(event.target)) setIsProfileOpen(false);
-    };
-    const handleEscape = (event) => {
-      if (event.key === 'Escape') setIsProfileOpen(false);
-    };
-
-    document.addEventListener('pointerdown', handleOutsideClick);
-    document.addEventListener('keydown', handleEscape);
-
-    return () => {
-      document.removeEventListener('pointerdown', handleOutsideClick);
-      document.removeEventListener('keydown', handleEscape);
-    };
-  }, [isProfileOpen]);
-
   const menuItems = [
     {
       to: riskEntryPath,
@@ -144,10 +121,12 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
 
   const openCompletedApplication = (application) => {
     const applicationId = application.applicationId ?? application.id;
-    if (applicationId != null) {
-      sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(applicationId));
+    if (applicationId == null) {
+      return;
     }
-    navigate(PRODUCT_DETAIL_PATH[application.productCode] ?? '/guarantee-checklist');
+
+    sessionStorage.setItem(LAST_DOCUMENT_CHAT_APPLICATION_ID_KEY, String(applicationId));
+    navigate(`/doc-chat?applicationId=${applicationId}`);
   };
 
   return (
@@ -171,14 +150,10 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
             <img src={LOGO_SRC} alt="Hugme" className={styles.logo} />
           </Link>
 
-          <div ref={profileAreaRef} className={styles.profileArea}>
-            <button
-              type="button"
+          <div className={styles.profileArea}>
+            <div
               className={styles.profile}
-              aria-expanded={isProfileOpen}
-              aria-controls="sidebar-account-menu"
               title={isCollapsed ? (user?.name ?? '사용자') : undefined}
-              onClick={() => setIsProfileOpen((isOpen) => !isOpen)}
             >
               <span className={styles.avatar} aria-hidden="true">
                 <FaUser />
@@ -192,24 +167,7 @@ export default function Sidebar({ showHistory = true, mode = 'default' }) {
                       : '게스트'}
                 </strong>
               </div>
-            </button>
-
-            {isAuthenticated && (
-              <div
-                id="sidebar-account-menu"
-                className={styles.profileMenu}
-                data-open={isProfileOpen}
-                aria-hidden={!isProfileOpen}
-              >
-                <button
-                  type="button"
-                  className={styles.withdrawButton}
-                  tabIndex={isProfileOpen ? 0 : -1}
-                >
-                  탈퇴하기
-                </button>
-              </div>
-            )}
+            </div>
           </div>
         </div>
 
