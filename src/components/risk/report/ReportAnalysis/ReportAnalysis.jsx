@@ -218,7 +218,9 @@ function RiskBreakdownSection({ report }) {
   return (
     <>
       <p className={styles.sectionLead}>
-        총 {report.totalScore ?? '-'}점은 아래 네 가지 위험요소를 합한 값이며, 막대는 각 항목이 해당 요소의 최대 위험 대비 몇 %인지 보여줍니다.
+        {report.hasScoreAdjustments
+          ? `최종 ${report.totalScore ?? '-'}점은 기본 위험요소와 최종 판정 조정을 반영한 값입니다. 기본 항목은 만점 대비 비율로, 조정 항목은 최종점수에 더해진 점수로 표시합니다.`
+          : `총 ${report.totalScore ?? '-'}점은 아래 위험요소를 반영한 값이며, 막대는 항목별 만점 대비 비율을 보여줍니다.`}
       </p>
       <div className={styles.breakdownChart}>
         <ResponsiveContainer width="100%" height="100%">
@@ -227,7 +229,10 @@ function RiskBreakdownSection({ report }) {
             <XAxis type="number" domain={[0, 100]} hide />
             <YAxis dataKey="label" type="category" tick={{ fontSize: 14, fill: '#374151' }} axisLine={false} tickLine={false} width={88} />
             <Tooltip formatter={(value, name, props) => [`${props.payload.ratioLabel} (${props.payload.scoreLabel})`, props.payload.label]} contentStyle={{ fontSize: '14px', borderRadius: '10px', borderColor: '#dfe5eb' }} />
-            <Bar dataKey="ratio" fill="#0F75BD" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
+            <Bar dataKey="ratio" radius={[0, 8, 8, 0]} isAnimationActive animationDuration={650}>
+              {report.contribution.map((entry) => (
+                <Cell key={entry.label} fill={entry.color} />
+              ))}
               <LabelList dataKey="ratioLabel" position="right" fill="#111827" fontSize={14} fontWeight={700} />
             </Bar>
           </BarChart>
@@ -237,7 +242,6 @@ function RiskBreakdownSection({ report }) {
   );
 }
 
-/** 근거가 많으면 앞 4개만 왼쪽에 두고 나머지는 오른쪽 열로 넘긴다. */
 const PRIMARY_REASON_COUNT = 4;
 
 function BottomAnalysis({ report, motionSet }) {

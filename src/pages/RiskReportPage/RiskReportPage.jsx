@@ -28,8 +28,23 @@ import styles from './RiskReportPage.module.css';
 const GRADE = {
   LOW: { label: '낮음', tone: 'success' },
   MEDIUM: { label: '보통', tone: 'warning' },
-  HIGH: { label: '높음', tone: 'danger' },
-  CRITICAL: { label: '매우 높음', tone: 'danger' },
+  HIGH: { label: '주의', tone: 'warning' },
+  CRITICAL: { label: '위험', tone: 'danger' },
+};
+
+const SCORE_FLOOR_REASON = {
+  RECOVERY_SHORTFALL: '담보부담액이 예상 매매가를 초과함',
+  NO_RECOVERY_BUFFER: '담보부담액이 예상 매매가와 같아 회수 여유가 없음',
+  EXTREME_LEASE_DEVIATION: '보증금이 예상 전세가보다 25% 이상 높음',
+  COMBINED_PRICE_RISK: '담보부담률 80% 이상과 전세시세 이탈 5% 이상',
+  SEIZURE: '압류 확인',
+  PROVISIONAL_SEIZURE: '가압류 확인',
+  PROVISIONAL_DISPOSITION: '가처분 확인',
+  AUCTION_COMMENCED: '경매개시 확인',
+  TRUST_REGISTRATION: '신탁등기 확인',
+  SENIOR_LEASE_RIGHT: '유효한 선순위 전세권·임차권등기 확인',
+  OWNER_MISMATCH: '임대인과 등기 소유자 불일치',
+  BAD_LANDLORD_MATCH: '악성임대인 확인 대상과 일치',
 };
 
 const HOUSING = {
@@ -203,20 +218,10 @@ function toReportViewModel(data) {
   const leasePriceGapRate = numberOrNull(indicators.leasePriceGapRate);
   const collateralBurdenRate = numberOrNull(indicators.collateralBurdenRate);
   const recovery = recoveryInfo({ remaining, depositShortfall });
-  const contribution = [
-    { label: '깡통전세 위험', score: numberOrZero(breakdown.underwater), max: numberOrZero(weights.underwater) },
-    { label: '역전세 위험', score: numberOrZero(breakdown.rollover), max: numberOrZero(weights.rollover) },
-    { label: '주택 특성', score: numberOrZero(breakdown.property), max: numberOrZero(weights.property) },
-    { label: '시장 상황', score: numberOrZero(breakdown.market), max: numberOrZero(weights.market) },
-  ].filter((item) => item.max > 0).map((item) => {
-    // 만점이 항목마다 달라 '24 / 35'는 비교가 어렵다. 만점 대비 비율로 보여준다.
-    const ratio = Math.round((item.score / item.max) * 100);
-    return {
-      ...item,
-      ratio,
-      ratioLabel: `${ratio}%`,
-      scoreLabel: `${item.score} / ${item.max}점`,
-    };
+  const contribution = riskContributions({
+    breakdown,
+    weights,
+    isDetailed,
   });
   const notices = reportDetail.notices ?? [];
   const riskReasons = analysisReasons({
@@ -274,6 +279,7 @@ function toReportViewModel(data) {
       valuationReliability: data.valuationReliability,
       collateralBurdenRate,
       notices,
+      floorReasons: risk.floorReasons,
     }),
     metricChips: [
       { label: '전세가율', value: ratio(leaseToSaleRate) },
@@ -307,10 +313,98 @@ function toReportViewModel(data) {
     registrySummaryTone: registrySummary(registryChecks(registry)).tone,
     registryChecks: registryChecks(registry),
     contribution,
+    hasScoreAdjustments: contribution.some((item) => item.isAdjustment),
     riskReasons,
     reasonGroups: riskReasons,
     recommendedActions: recommendedActions(explanation.recommendedActions ?? []),
   };
+}
+
+function riskContributions({ breakdown, weights, isDetailed }) {
+  const hasCurrentContract = [
+    breakdown.priceBurden,
+    breakdown.leaseMarketDeviation,
+    breakdown.marketTrend,
+  ].some((value) => value != null);
+  const items = hasCurrentContract
+    ? [
+      {
+        label: isDetailed ? '담보 회수부담' : '계약가격 부담',
+        score: numberOrZero(breakdown.priceBurden),
+        max: numberOrZero(weights.priceBurden),
+        color: '#0F75BD',
+      },
+      {
+        label: '주변 전세수준 이탈',
+        score: numberOrZero(breakdown.leaseMarketDeviation),
+        max: numberOrZero(weights.leaseMarketDeviation),
+        color: '#2F8F68',
+      },
+      {
+        label: '시장 추세',
+        score: numberOrZero(breakdown.marketTrend),
+        max: numberOrZero(weights.marketTrend),
+        color: '#7C6BC4',
+      },
+      {
+        label: '가격 위험 하한 조정',
+        score: numberOrZero(breakdown.policyAdjustment),
+        isAdjustment: true,
+        color: '#D68A16',
+      },
+      {
+        label: '등기 권리 하한 조정',
+        score: numberOrZero(breakdown.rightsAdjustment),
+        isAdjustment: true,
+        color: '#D94841',
+      },
+    ]
+    : [
+      {
+        label: '깡통전세 위험',
+        score: numberOrZero(breakdown.underwater),
+        max: numberOrZero(weights.underwater),
+        color: '#0F75BD',
+      },
+      {
+        label: '역전세 위험',
+        score: numberOrZero(breakdown.rollover),
+        max: numberOrZero(weights.rollover),
+        color: '#2F8F68',
+      },
+      {
+        label: '주택 특성',
+        score: numberOrZero(breakdown.property),
+        max: numberOrZero(weights.property),
+        color: '#7C6BC4',
+      },
+      {
+        label: '시장 상황',
+        score: numberOrZero(breakdown.market),
+        max: numberOrZero(weights.market),
+        color: '#64748B',
+      },
+    ];
+
+  return items
+    .filter((item) => (item.isAdjustment ? item.score > 0 : item.max > 0))
+    .map((item) => {
+      if (item.isAdjustment) {
+        return {
+          ...item,
+          ratio: Math.min(item.score, 100),
+          ratioLabel: `+${item.score}점`,
+          scoreLabel: `최종점수에 +${item.score}점`,
+        };
+      }
+      const contributionRatio = Math.round((item.score / item.max) * 100);
+      return {
+        ...item,
+        ratio: contributionRatio,
+        ratioLabel: `${contributionRatio}%`,
+        scoreLabel: `${item.score} / ${item.max}점`,
+      };
+    });
 }
 
 function money(value) {
@@ -355,7 +449,6 @@ function reliabilityLabel(value) {
   return { HIGH: '높음', MEDIUM: '보통', LOW: '낮음' }[value] ?? null;
 }
 
-/** 서버 규칙(gap_severity)과 같은 5% 기준. 이보다 크면 전세시세 대비 고평가로 본다. */
 const LEASE_GAP_DANGER_RATE = 5;
 
 function isDepositRisk({ deposit, sale, lease, leasePriceGapRate, recoverableAmount }) {
@@ -380,8 +473,19 @@ function recoveryInfo({ remaining, depositShortfall }) {
   return { label: `${money(room).replace('원', '')}원 여유`, tone: 'success' };
 }
 
-function majorRisks({ depositShortfall, leaseToSaleRate, valuationReliability, collateralBurdenRate, notices }) {
+function majorRisks({
+  depositShortfall,
+  leaseToSaleRate,
+  valuationReliability,
+  collateralBurdenRate,
+  notices,
+  floorReasons = [],
+}) {
   const risks = [];
+  floorReasons.forEach((code) => {
+    const label = SCORE_FLOOR_REASON[code];
+    if (label && !risks.includes(label)) risks.push(label);
+  });
   if ((depositShortfall ?? 0) > 0) risks.push('보증금 회수 부족');
   if ((leaseToSaleRate ?? 0) > 100) risks.push('전세가율 100% 초과');
   if (valuationReliability === 'LOW') risks.push('시세 신뢰도 낮음');
@@ -431,7 +535,6 @@ function analysisReasons({ riskNotices, keyFindings, cautions }) {
     evidence.push({ label: normalizeReasonLabel(label), description, icon });
   };
 
-  // 주의 문구는 근거 카드와 같은 문장을 쓰는 경우가 많아 이미 노출된 설명은 건너뛴다.
   const addCaution = (description) => {
     if (!description || shownDescriptions.has(reasonKey(description))) return;
     shownDescriptions.add(reasonKey(description));
@@ -472,7 +575,6 @@ function normalizeReasonLabel(label) {
 }
 
 function recommendedActions(actions) {
-  // 구버전 응답은 문장 배열이라 두 형태를 모두 받는다.
   const items = actions
     .map((item) => (typeof item === 'string'
       ? { label: '', description: item }
