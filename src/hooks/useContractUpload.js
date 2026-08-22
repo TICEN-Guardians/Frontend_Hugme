@@ -136,7 +136,7 @@ export function useContractUpload(productCode) {
         return true;
       }
 
-      const application = await getCurrentApplication();
+      const application = await getCurrentApplication(productCode);
 
       // /check 결과와 현재 신청 사이에 상태가 바뀐 경우 신규 업로드로 전환한다.
       if (application.productCode !== productCode) {
