@@ -81,6 +81,18 @@ const entrySuggestionVariants = {
   },
 };
 
+const followUpVariants = {
+  hidden: (reducedMotion) => ({
+    opacity: 0,
+    y: reducedMotion ? 0 : 14,
+  }),
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: 0.66, ease: ENTRY_EASE },
+  },
+};
+
 const DOCUMENT_ENTRY_QUESTIONS = [
   '이 서류는 왜 필요한가요?',
   '이 서류는 어떻게 발급받나요?',
@@ -89,6 +101,22 @@ const DOCUMENT_ENTRY_QUESTIONS = [
   '이 서류 발급하려면 뭘 가져가야 하나요?',
   '발급 비용이 얼마인가요?',
 ];
+
+function pickRandomQuestions(excludedQuestion, count = 2) {
+  const candidates = DOCUMENT_ENTRY_QUESTIONS.filter(
+    (question) => question !== excludedQuestion,
+  );
+
+  for (let index = candidates.length - 1; index > 0; index -= 1) {
+    const randomIndex = Math.floor(Math.random() * (index + 1));
+    [candidates[index], candidates[randomIndex]] = [
+      candidates[randomIndex],
+      candidates[index],
+    ];
+  }
+
+  return candidates.slice(0, count);
+}
 
 function normalizeSectionName(sectionCode, sectionName) {
   if (sectionName) return sectionName;
@@ -125,6 +153,7 @@ export default function DocumentChat() {
   const [variantSelections, setVariantSelections] = useState({});
   const [isSending, setIsSending] = useState(false);
   const [messages, setMessages] = useState([]);
+  const [suggestedQuestions, setSuggestedQuestions] = useState([]);
 
   const {
     preparation,
@@ -200,6 +229,7 @@ export default function DocumentChat() {
       ...prev,
       { role: 'user', content: text },
     ]);
+    setSuggestedQuestions([]);
 
     setIsSending(true);
 
@@ -213,6 +243,7 @@ export default function DocumentChat() {
           sources: response.sources ?? [],
         },
       ]);
+      setSuggestedQuestions(pickRandomQuestions(text));
     } catch (requestError) {
       setMessages((prev) => [
         ...prev,
@@ -266,6 +297,53 @@ export default function DocumentChat() {
                       <span />
                       <span />
                     </span>
+                  </div>
+                </motion.div>
+              )}
+              {!isSending && suggestedQuestions.length > 0 && (
+                <motion.div
+                  className={styles.followUps}
+                  initial="hidden"
+                  animate="visible"
+                  variants={{
+                    hidden: { opacity: 0 },
+                    visible: {
+                      opacity: 1,
+                      transition: {
+                        delayChildren: 0.16,
+                        staggerChildren: 0.07,
+                      },
+                    },
+                  }}
+                >
+                  <motion.p
+                    className={styles.followUpLabel}
+                    custom={prefersReducedMotion}
+                    variants={followUpVariants}
+                  >
+                    이어서 물어볼 수 있어요
+                  </motion.p>
+                  <div className={styles.followUpRow}>
+                    {suggestedQuestions.map((question) => (
+                      <motion.button
+                        key={question}
+                        type="button"
+                        className={styles.followUpChip}
+                        onClick={() => handleSend(question)}
+                        disabled={isSending || !selectedDocument}
+                        custom={prefersReducedMotion}
+                        variants={followUpVariants}
+                        whileHover={
+                          prefersReducedMotion || isSending ? undefined : { y: -1 }
+                        }
+                        whileTap={
+                          prefersReducedMotion || isSending ? undefined : { scale: 0.985 }
+                        }
+                        transition={{ duration: 0.22, ease: 'easeOut' }}
+                      >
+                        {question}
+                      </motion.button>
+                    ))}
                   </div>
                 </motion.div>
               )}

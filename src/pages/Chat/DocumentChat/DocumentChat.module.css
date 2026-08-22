@@ -238,6 +238,40 @@
   opacity: 0.58;
 }
 
+.followUps {
+  box-sizing: border-box;
+  width: 100%;
+  margin-top: var(--space-5);
+}
+
+.followUpLabel {
+  margin: 0 0 var(--space-3);
+  color: var(--text-disabled);
+  font-size: var(--text-xs);
+}
+
+.followUpRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.followUpChip {
+  padding: var(--space-2) var(--space-4);
+  border: 0.1rem solid var(--brand-green);
+  border-radius: var(--radius-pill);
+  background: var(--on-accent);
+  color: var(--brand-green);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.followUpChip:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .typingDots {
   display: inline-flex;
   align-items: center;
