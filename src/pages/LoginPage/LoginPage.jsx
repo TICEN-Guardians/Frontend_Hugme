@@ -85,7 +85,7 @@ export default function LoginPage() {
 
     setIsSubmitting(true);
     try {
-      await login(email, password);
+      await login(email, password, rememberMe);
       navigate('/main', { replace: true });
     } catch (error) {
       setErrorModal({
