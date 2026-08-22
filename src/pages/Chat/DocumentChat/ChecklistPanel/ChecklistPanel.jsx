@@ -168,7 +168,13 @@ export default function ChecklistPanel({
                       )}
                       isUploading={uploadState.busyDocumentId === document.documentId}
                       busyUploadId={uploadState.busyUploadId}
-                      onUpload={uploadState.upload}
+                      onUpload={async (documentId, file) => {
+                        const uploaded = await uploadState.upload(documentId, file);
+                        if (!document.prepared) {
+                          await onTogglePrepared(document);
+                        }
+                        return uploaded;
+                      }}
                       onPreview={(uploadId) => {
                         const upload = uploadState.uploads.find((item) => item.uploadId === uploadId);
                         if (upload) handlePreview(upload);
