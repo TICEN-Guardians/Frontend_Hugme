@@ -14,7 +14,7 @@ export default function FullWidthLayout() {
   const shouldHideChrome = isAuthPage || isLandingPage;
 
   return (
-    <div className={styles.pageWrapper}>
+    <div className={`${styles.pageWrapper} ${styles.fullWidthPageWrapper}`}>
       {!shouldHideChrome && <Header />}
       <main className={styles.main}>
         <Outlet />

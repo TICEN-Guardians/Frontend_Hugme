@@ -17,6 +17,20 @@
   align-items: center;
 }
 
+.dockedWrap {
+  position: relative;
+  right: auto;
+  bottom: auto;
+  z-index: auto;
+}
+
+.dockedWrap .tooltip {
+  position: absolute;
+  right: 0;
+  bottom: calc(100% + var(--space-3));
+  width: max-content;
+}
+
 .button {
   display: flex;
   align-items: center;

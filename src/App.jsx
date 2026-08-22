@@ -1,6 +1,7 @@
 import { Navigate, Outlet, Route, Routes, useLocation } from 'react-router-dom';
 import FloatingChatWidget from './components/floatingChat/FloatingChatWidget.jsx';
 import { useAuth } from './context/auth/AuthContext.jsx';
+import { GuideChatProvider } from './context/guideChat/GuideChatContext.jsx';
 import FullWidthLayout from './layout/FullWidthLayout.jsx';
 import Layout from './layout/Layout.jsx';
 import ConditionChat from './pages/Chat/ConditionChat/ConditionChat.jsx';
@@ -46,18 +47,12 @@ function ProtectedRoute() {
 }
 
 function GlobalFloatingChatWidget() {
-  const location = useLocation();
-
-  if (location.pathname === '/') {
-    return null;
-  }
-
   return <FloatingChatWidget />;
 }
 
 export default function App() {
   return (
-    <>
+    <GuideChatProvider>
       <Routes>
         {/* 화면 폭 전체를 쓰는 예외 페이지 */}
         {/* 배경(히어로/스플릿)만 풀블리드가 필요한 예외 페이지. 콘텐츠 자체는 각 페이지가
@@ -88,6 +83,6 @@ export default function App() {
         <Route path="*" element={<ErrorPage />} />
       </Routes>
       <GlobalFloatingChatWidget />
-    </>
+    </GuideChatProvider>
   );
 }
