@@ -120,7 +120,10 @@ export default function FinalDocumentList({ result }) {
   const sectionTabs = sections.map((section) => ({
     key: section.sectionCode,
     label: section.sectionName,
-    count: section.items?.length ?? 0,
+    count: (section.items ?? []).reduce(
+      (documentCount, item) => documentCount + (item.documents?.length ?? 0),
+      0,
+    ),
   }));
 
   const groupTabs = groups.map((group) => ({
